@@ -2,7 +2,6 @@ export * from './authenticated-cipher';
 export * from './authenticated-decipher';
 export * from './checksum-config';
 export * from './checksum-consts';
-export * from './fec-consts';
 export * from './keypair-buffer-with-un-encrypted-private-key';
 export * from './keyring-consts';
 export * from './member-operational';

@@ -4,17 +4,17 @@ import { ObjectId } from 'mongodb';
 import { IChecksumConsts } from './interfaces/checksum-consts';
 import { IConstants } from './interfaces/constants';
 import { IEncryptionConsts } from './interfaces/encryption-consts';
-import { IFECConsts } from './interfaces/fec-consts';
 import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
+import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
 
 /**
  * Constants for checksum operations
  * These values are critical for data integrity and MUST NOT be changed
  * in an already established system as it will break all existing checksums.
  */
-export const CHECKSUM: IChecksumConsts = {
+export const CHECKSUM: IChecksumConsts = Object.freeze({
   /** Default hash bits for SHA3 */
   SHA3_DEFAULT_HASH_BITS: 512 as const,
 
@@ -26,15 +26,15 @@ export const CHECKSUM: IChecksumConsts = {
 
   /** encoding to use for checksum */
   ENCODING: 'hex' as const,
-} as const;
+} as const);
 
-export const KEYRING: IKeyringConsts = {
+export const KEYRING: IKeyringConsts = Object.freeze({
   ALGORITHM: 'aes' as const,
   KEY_BITS: 256 as const,
   MODE: 'gcm' as const,
-} as const;
+} as const);
 
-export const PBKDF2: IPBkdf2Consts = {
+export const PBKDF2: IPBkdf2Consts = Object.freeze({
   ALGORITHM: 'sha256' as const, // Changed from sha512 to match key-wrapping
   SALT_BYTES: 32 as const, // Changed from 16 to match key-wrapping and improve security
   /**
@@ -42,56 +42,63 @@ export const PBKDF2: IPBkdf2Consts = {
    * This is the high-security default for user login operations.
    */
   ITERATIONS_PER_SECOND: 1304000 as const,
-} as const;
+} as const);
 
 /**
  * Predefined PBKDF2 configuration profiles for different use cases
  * These profiles provide standardized, well-tested parameter combinations
  */
-export const PBKDF2_PROFILES: PbkdfProfiles = {
+export const PBKDF2_PROFILES: PbkdfProfiles = Object.freeze({
+  /** Balanced profile for browser-based password hashing */
+  BROWSER_PASSWORD: Object.freeze({
+    hashBytes: 32 as const,
+    saltBytes: 64 as const,
+    iterations: 2000000 as const,
+    algorithm: 'SHA-512' as const,
+  } as const),
   /** High-security profile for user login operations */
-  USER_LOGIN: {
+  USER_LOGIN: Object.freeze({
     saltBytes: 32,
     iterations: 1304000,
     algorithm: 'sha256',
     hashBytes: 32,
-  },
+  }),
   /** Optimized profile for key-wrapping operations */
-  KEY_WRAPPING: {
+  KEY_WRAPPING: Object.freeze({
     saltBytes: 32,
     iterations: 100000,
     algorithm: 'sha256',
     hashBytes: 32,
-  },
+  }),
   /** Standard profile for backup codes and general use */
-  BACKUP_CODES: {
+  BACKUP_CODES: Object.freeze({
     saltBytes: 32,
     iterations: 1304000,
     algorithm: 'sha256',
     hashBytes: 32,
-  },
+  }),
   /** Ultra-high security profile for sensitive operations */
-  HIGH_SECURITY: {
+  HIGH_SECURITY: Object.freeze({
     saltBytes: 64,
     iterations: 2000000,
     algorithm: 'sha512',
     hashBytes: 64,
-  },
+  }),
   /** Fast profile for testing and development */
-  FAST_TEST: {
+  TEST_FAST: Object.freeze({
     saltBytes: 16,
     iterations: 1000,
     algorithm: 'sha256',
     hashBytes: 32,
-  },
-} as const;
+  }),
+} as const);
 
-export const WRAPPED_KEY: IWrappedKeyConsts = {
+export const WRAPPED_KEY: IWrappedKeyConsts = Object.freeze({
   SALT_SIZE: PBKDF2.SALT_BYTES, // Use PBKDF2 standard salt size
   IV_SIZE: 16 as const,
   MASTER_KEY_SIZE: 32 as const,
   MIN_ITERATIONS: 100000 as const, // Keep lower for key-wrapping operations
-} as const;
+} as const);
 
 export const KEYRING_ALGORITHM_CONFIGURATION =
   `${KEYRING.ALGORITHM}-${KEYRING.KEY_BITS}-${KEYRING.MODE}` as CipherGCMTypes;
@@ -99,13 +106,14 @@ export const KEYRING_ALGORITHM_CONFIGURATION =
 /**
  * Constants for encrypted data
  */
-export const ENCRYPTION: IEncryptionConsts = {
+export const ENCRYPTION: IEncryptionConsts = Object.freeze({
   ENCRYPTION_TYPE_SIZE: 1 as const,
   RECIPIENT_ID_SIZE: GUID_SIZE,
-} as const;
+} as const);
 
 const objectIdLength = Buffer.from(new ObjectId().toHexString(), 'hex').length;
 export const Constants: IConstants = {
+  ...BaseConstants,
   /**
    * The length of a raw object ID (not the hex string representation)
    */

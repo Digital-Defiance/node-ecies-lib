@@ -193,7 +193,7 @@ The library includes several predefined PBKDF2 profiles for different use cases:
 | `KEY_WRAPPING` | 32 bytes | 100,000 | SHA-256 | 32 bytes | Key encryption |
 | `BACKUP_CODES` | 32 bytes | 1,304,000 | SHA-256 | 32 bytes | Backup codes |
 | `HIGH_SECURITY` | 64 bytes | 2,000,000 | SHA-512 | 64 bytes | Sensitive operations |
-| `FAST_TEST` | 16 bytes | 1,000 | SHA-256 | 32 bytes | Testing/development |
+| `TEST_FAST` | 16 bytes | 1,000 | SHA-256 | 32 bytes | Testing/development |
 
 ## Encryption Types
 
@@ -329,6 +329,11 @@ Please read the contributing guidelines in the main repository.
 - `@digitaldefiance/i18n-lib`: Internationalization support
 
 ## ChangeLog
+
+### Version 1.0.6
+
+- Sun Oct 12 2025 16:47:00 GMT-0700 (Pacific Daylight Time)
+  - Improved constants inheritance and froze objects
 
 ### Version 1.0.5
 

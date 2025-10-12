@@ -217,7 +217,7 @@ describe('Pbkdf2Service API E2E', () => {
         Pbkdf2ProfileEnum.KEY_WRAPPING,
         Pbkdf2ProfileEnum.BACKUP_CODES,
         Pbkdf2ProfileEnum.HIGH_SECURITY,
-        Pbkdf2ProfileEnum.FAST_TEST,
+        Pbkdf2ProfileEnum.TEST_FAST,
       ];
 
       for (const profile of profiles) {
@@ -234,7 +234,7 @@ describe('Pbkdf2Service API E2E', () => {
       const profiles = [
         Pbkdf2ProfileEnum.USER_LOGIN,
         Pbkdf2ProfileEnum.KEY_WRAPPING,
-        Pbkdf2ProfileEnum.FAST_TEST,
+        Pbkdf2ProfileEnum.TEST_FAST,
       ];
 
       for (const profile of profiles) {
@@ -255,7 +255,7 @@ describe('Pbkdf2Service API E2E', () => {
       const profiles = [
         Pbkdf2ProfileEnum.USER_LOGIN,
         Pbkdf2ProfileEnum.KEY_WRAPPING,
-        Pbkdf2ProfileEnum.FAST_TEST,
+        Pbkdf2ProfileEnum.TEST_FAST,
       ];
 
       for (const profile of profiles) {
@@ -274,18 +274,18 @@ describe('Pbkdf2Service API E2E', () => {
     });
 
     it('should produce consistent results with same profile and salt', async () => {
-      const salt = randomBytes(16); // FAST_TEST profile uses 16-byte salts
+      const salt = randomBytes(16); // TEST_FAST profile uses 16-byte salts
 
       const syncResult = Pbkdf2Service.deriveKeyFromPasswordWithProfile(
         testPassword,
-        Pbkdf2ProfileEnum.FAST_TEST,
+        Pbkdf2ProfileEnum.TEST_FAST,
         salt,
       );
 
       const asyncResult =
         await Pbkdf2Service.deriveKeyFromPasswordWithProfileAsync(
           testPassword,
-          Pbkdf2ProfileEnum.FAST_TEST,
+          Pbkdf2ProfileEnum.TEST_FAST,
           salt,
         );
 

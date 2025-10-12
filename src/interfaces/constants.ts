@@ -5,8 +5,9 @@ import { IEncryptionConsts } from './encryption-consts';
 import { IKeyringConsts } from './keyring-consts';
 import { PbkdfProfiles } from './pbkdf-profiles';
 import { IWrappedKeyConsts } from './wrapped-key-consts';
+import { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
 
-export interface IConstants {
+export interface IConstants extends IBaseConstants {
   /**
    * The length of a raw object ID (not the hex string representation)
    */

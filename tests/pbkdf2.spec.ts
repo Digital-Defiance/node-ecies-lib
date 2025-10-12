@@ -365,17 +365,17 @@ describe('Pbkdf2Service', () => {
 
     it('should support async profile-based derivation', async () => {
       const password = Buffer.from('test-password');
-      const salt = randomBytes(16); // FAST_TEST profile uses 16-byte salts
+      const salt = randomBytes(16); // TEST_FAST profile uses 16-byte salts
 
       const syncResult = Pbkdf2Service.deriveKeyFromPasswordWithProfile(
         password,
-        Pbkdf2ProfileEnum.FAST_TEST,
+        Pbkdf2ProfileEnum.TEST_FAST,
         salt,
       );
       const asyncResult =
         await Pbkdf2Service.deriveKeyFromPasswordWithProfileAsync(
           password,
-          Pbkdf2ProfileEnum.FAST_TEST,
+          Pbkdf2ProfileEnum.TEST_FAST,
           salt,
         );
 
