@@ -1,12 +1,13 @@
 import {
   EciesStringKey,
-  getEciesI18nEngine,
   getLengthEncodingTypeForLength,
   getLengthEncodingTypeFromValue,
   getLengthForLengthType,
   LengthEncodingType,
   TranslatableError,
 } from '@digitaldefiance/ecies-lib';
+import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey } from './i18n/ecies-i18n-factory';
+import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
 /**
  * Encodes the length of the data in the buffer

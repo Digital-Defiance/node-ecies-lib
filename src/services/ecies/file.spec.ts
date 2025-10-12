@@ -1,9 +1,10 @@
-import { getEciesI18nEngine, IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { EciesFileService } from './file';
 import { ECIESService } from './service';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 
 describe('EciesFileService (Backend)', () => {
   let eciesService: ECIESService;
@@ -23,7 +24,7 @@ describe('EciesFileService (Backend)', () => {
       symmetricKeyMode: 'gcm',
     };
 
-    eciesService = new ECIESService(getEciesI18nEngine(), config);
+    eciesService = new ECIESService(getEciesPluginI18nEngine(), config);
 
     // Generate test keys
     const { wallet } = eciesService.walletAndSeedFromMnemonic(

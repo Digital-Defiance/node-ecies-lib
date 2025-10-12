@@ -3,8 +3,8 @@ import {
   IPbkdf2Config,
   Pbkdf2Error,
   Pbkdf2ErrorType,
-  getEciesI18nEngine,
 } from '@digitaldefiance/ecies-lib';
+import { getEciesPluginI18nEngine } from '../i18n/ecies-i18n-factory';
 import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { PBKDF2, PBKDF2_PROFILES } from '../constants';
@@ -93,7 +93,7 @@ export abstract class Pbkdf2Service {
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesI18nEngine());
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesPluginI18nEngine());
     }
 
     const hashBytes = pbkdf2Sync(
@@ -105,7 +105,7 @@ export abstract class Pbkdf2Service {
     );
 
     if (hashBytes.length !== config.hashBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesI18nEngine());
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesPluginI18nEngine());
     }
 
     return {
@@ -143,7 +143,7 @@ export abstract class Pbkdf2Service {
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesI18nEngine());
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesPluginI18nEngine());
     }
 
     const pbkdf2 = promisify(pbkdf2Async);
@@ -156,7 +156,7 @@ export abstract class Pbkdf2Service {
     )) as Buffer;
 
     if (hashBytes.length !== config.hashBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesI18nEngine());
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesPluginI18nEngine());
     }
 
     return {

@@ -13,6 +13,7 @@ import { randomBytes } from 'crypto';
 import { Member as BackendMember } from '../src/member';
 
 import { ECIESService } from '../src/services/ecies/service';
+import { withConsoleMocks } from './support/console';
 
 describe('ECIESService', () => {
   let service: ECIESService;
@@ -20,12 +21,7 @@ describe('ECIESService', () => {
   let recipient1: BackendMember;
   let recipient2: BackendMember;
   let eciesService: ECIESService;
-  let consoleError: typeof console.error;
-
   beforeAll(() => {
-    // mock out console error
-    consoleError = console.error;
-    console.error = jest.fn();
 
     const config: IECIESConfig = {
       curveName: AppConstants.ECIES.CURVE_NAME,
@@ -56,11 +52,6 @@ describe('ECIESService', () => {
       'recipient2',
       new EmailString('recipient2@example.com'),
     ).member;
-  });
-
-  afterAll(() => {
-    // Restore console error
-    console.error = consoleError;
   });
 
   describe('Mnemonic and Wallet Operations', () => {
@@ -191,13 +182,15 @@ describe('ECIESService', () => {
       expect(decryptedForRecipient2).toEqual(message);
     });
 
-    it('should throw error for invalid public key', () => {
-      const message = Buffer.from('test message');
-      const invalidPublicKey = randomBytes(ECIES.RAW_PUBLIC_KEY_LENGTH); // Wrong length
-      expect(() =>
-        service.encryptSimpleOrSingle(true, invalidPublicKey, message),
-      ).toThrow(ECIESError);
-      expect(console.error).toHaveBeenCalledTimes(1);
+    it('should throw error for invalid public key', async () => {
+      await withConsoleMocks({ mute: true }, async (spies) => {
+        const message = Buffer.from('test message');
+        const invalidPublicKey = randomBytes(ECIES.RAW_PUBLIC_KEY_LENGTH); // Wrong length
+        expect(() =>
+          service.encryptSimpleOrSingle(true, invalidPublicKey, message),
+        ).toThrow(ECIESError);
+        expect(spies.error).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('should throw error for too many recipients', () => {

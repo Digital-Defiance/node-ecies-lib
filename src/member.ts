@@ -1,7 +1,6 @@
 import {
   ECIES,
   EmailString,
-  getEciesI18nEngine,
   IMemberStorageData,
   MemberError,
   MemberErrorType,
@@ -9,6 +8,7 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { getEciesPluginI18nEngine } from './i18n/ecies-i18n-factory';
 import { Wallet } from '@ethereumjs/wallet';
 
 import { ECIESService } from './services/ecies/service';
@@ -61,10 +61,10 @@ export class Member implements IMemberOperational<Types.ObjectId> {
     this._id = id ?? new ObjectId();
     this._name = name;
     if (!this._name || this._name.length == 0) {
-      throw new MemberError(MemberErrorType.MissingMemberName, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingMemberName, getEciesPluginI18nEngine());
     }
     if (this._name.trim() != this._name) {
-      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace, getEciesPluginI18nEngine());
     }
     this._email = email;
     this._publicKey = publicKey;
@@ -116,7 +116,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
   }
   public get wallet(): Wallet {
     if (!this._wallet) {
-      throw new MemberError(MemberErrorType.NoWallet, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.NoWallet, getEciesPluginI18nEngine());
     }
     return this._wallet;
   }
@@ -143,7 +143,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
 
   public loadWallet(mnemonic: SecureString): void {
     if (this._wallet) {
-      throw new MemberError(MemberErrorType.WalletAlreadyLoaded, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.WalletAlreadyLoaded, getEciesPluginI18nEngine());
     }
     const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
@@ -156,7 +156,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
     if (
       publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
     ) {
-      throw new MemberError(MemberErrorType.InvalidMnemonic, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.InvalidMnemonic, getEciesPluginI18nEngine());
     }
     this._wallet = wallet;
     this._privateKey = new SecureBuffer(privateKey);
@@ -174,7 +174,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
 
   public sign(data: Buffer): SignatureBuffer {
     if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesPluginI18nEngine());
     }
     return this._eciesService.signMessage(
       Buffer.from(this._privateKey.value),
@@ -184,7 +184,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
 
   public signData(data: Buffer): SignatureBuffer {
     if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesPluginI18nEngine());
     }
     return this._eciesService.signMessage(
       Buffer.from(this._privateKey.value),
@@ -217,7 +217,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
   ): Buffer {
     // Validate input
     if (!data) {
-      throw new MemberError(MemberErrorType.MissingEncryptionData, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingEncryptionData, getEciesPluginI18nEngine());
     }
 
     // Check size limit
@@ -225,7 +225,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
       ? data.length
       : Buffer.byteLength(data);
     if (dataSize > Member.MAX_ENCRYPTION_SIZE) {
-      throw new MemberError(MemberErrorType.EncryptionDataTooLarge, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.EncryptionDataTooLarge, getEciesPluginI18nEngine());
     }
 
     // Create buffer from data
@@ -243,7 +243,7 @@ export class Member implements IMemberOperational<Types.ObjectId> {
 
   public decryptData(encryptedData: Buffer): Buffer {
     if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingPrivateKey, getEciesPluginI18nEngine());
     }
     // decryptSingleWithHeader now returns the Buffer directly
     return this._eciesService.decryptSimpleOrSingleWithHeader(
@@ -335,16 +335,16 @@ export class Member implements IMemberOperational<Types.ObjectId> {
   ): { member: Member; mnemonic: SecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {
-      throw new MemberError(MemberErrorType.MissingMemberName, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingMemberName, getEciesPluginI18nEngine());
     }
     if (name.trim() != name) {
-      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace, getEciesPluginI18nEngine());
     }
     if (!email || email.toString().length == 0) {
-      throw new MemberError(MemberErrorType.MissingEmail, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.MissingEmail, getEciesPluginI18nEngine());
     }
     if (email.toString().trim() != email.toString()) {
-      throw new MemberError(MemberErrorType.InvalidEmailWhitespace, getEciesI18nEngine());
+      throw new MemberError(MemberErrorType.InvalidEmailWhitespace, getEciesPluginI18nEngine());
     }
 
     // Use injected services

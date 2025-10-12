@@ -80,6 +80,7 @@ describe('ECIES Simple Fix Test', () => {
         );
         expect(Buffer.from(frontendDecrypted).toString()).toEqual(testMessage);
 
+        // Success message - this is expected output for this specific test
         console.log('✅ Cross-platform encryption/decryption working!');
       } finally {
         frontendMember.dispose();

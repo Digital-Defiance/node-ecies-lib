@@ -4,9 +4,9 @@ import {
   EciesEncryptionType,
   ECIESError,
   ECIESErrorTypeEnum,
-  getEciesI18nEngine,
   IECIESConfig,
 } from '@digitaldefiance/ecies-lib';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { ECIESService } from './service';
 
 /**
@@ -28,7 +28,7 @@ export class EciesUtilities {
     if (dataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        getEciesI18nEngine(),
+        getEciesPluginI18nEngine(),
       );
     }
     const config: IECIESConfig = {
@@ -40,7 +40,7 @@ export class EciesUtilities {
       symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
     };
     const eciesService: ECIESService = new ECIESService(
-      getEciesI18nEngine(),
+      getEciesPluginI18nEngine(),
       config,
     );
     switch (encryptionMode) {
@@ -61,7 +61,7 @@ export class EciesUtilities {
       default:
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptionType,
-          getEciesI18nEngine(),
+          getEciesPluginI18nEngine(),
         );
     }
   }
@@ -79,7 +79,7 @@ export class EciesUtilities {
     if (encryptedDataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        getEciesI18nEngine(),
+        getEciesPluginI18nEngine(),
       );
     }
 
@@ -90,7 +90,7 @@ export class EciesUtilities {
     if (decryptedLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        getEciesI18nEngine(),
+        getEciesPluginI18nEngine(),
         undefined,
         undefined,
         {

@@ -493,6 +493,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
       }
       const frontendTime = Date.now() - frontendStart;
 
+      // Log performance results for analysis - this is expected output for performance tests
       console.log(
         `Backend decryption: ${backendTime}ms for ${iterations} iterations`,
       );

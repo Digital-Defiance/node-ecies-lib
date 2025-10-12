@@ -2,11 +2,11 @@ import {
   ECIES,
   ECIESError,
   ECIESErrorTypeEnum,
-  getEciesI18nEngine,
   IECIESConfig,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
@@ -36,7 +36,7 @@ export class EciesCryptoCore {
     if (!publicKey) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-        getEciesI18nEngine(),
+        getEciesPluginI18nEngine(),
         undefined,
         undefined,
         {
@@ -63,7 +63,7 @@ export class EciesCryptoCore {
     // Invalid format
     throw new ECIESError(
       ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-      getEciesI18nEngine(),
+      getEciesPluginI18nEngine(),
       undefined,
       undefined,
       {
@@ -106,7 +106,7 @@ export class EciesCryptoCore {
     if (!mnemonic.value || !validateMnemonic(mnemonic.value)) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
-        getEciesI18nEngine(),
+        getEciesPluginI18nEngine(),
       );
     }
 

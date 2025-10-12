@@ -4,3 +4,4 @@ export * from './interfaces';
 export * from './member';
 export * from './services';
 export * from './types';
+export * from './i18n';

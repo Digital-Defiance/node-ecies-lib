@@ -18,6 +18,7 @@ import { Member } from '../src/member';
 import { IBackendMemberWithMnemonic } from '../src/interfaces/member-with-mnemonic';
 import { ECIESService } from '../src/services/ecies/service';
 import { toThrowType } from './matchers/error-matchers';
+import { withConsoleMocks, spyContains } from './support/console';
 
 // Extend Jest with custom matchers
 expect.extend({ toThrowType });
@@ -129,39 +130,49 @@ describe('brightchain', () => {
       });
     });
 
-    it('should fail to create a user with no email', () => {
-      expect(() =>
-        Member.newMember(
-          eciesService,
-          MemberType.User,
-          'alice',
-          new EmailString(''),
-        ),
-      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Missing);
+    it('should fail to create a user with no email', async () => {
+      await withConsoleMocks({ mute: true }, async (spies) => {
+        expect(() =>
+          Member.newMember(
+            eciesService,
+            MemberType.User,
+            'alice',
+            new EmailString(''),
+          ),
+        ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Missing);
+        });
+        
+        // Verify we got the expected translation warning
+        expect(spyContains(spies.warn, 'Error_InvalidEmailError_Missing')).toBe(true);
       });
     });
 
-    it('should fail to create a user with an email that has whitespace at the start or end', () => {
-      expect(() =>
-        Member.newMember(
-          eciesService,
-          MemberType.User,
-          'alice',
-          new EmailString(' alice@example.com'),
-        ),
-      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
-      });
-      expect(() =>
-        Member.newMember(
-          eciesService,
-          MemberType.User,
-          'alice',
-          new EmailString('alice@example.com '),
-        ),
-      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
+    it('should fail to create a user with an email that has whitespace at the start or end', async () => {
+      await withConsoleMocks({ mute: true }, async (spies) => {
+        expect(() =>
+          Member.newMember(
+            eciesService,
+            MemberType.User,
+            'alice',
+            new EmailString(' alice@example.com'),
+          ),
+        ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
+        });
+        expect(() =>
+          Member.newMember(
+            eciesService,
+            MemberType.User,
+            'alice',
+            new EmailString('alice@example.com '),
+          ),
+        ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
+        });
+        
+        // Verify we got the expected translation warnings
+        expect(spyContains(spies.warn, 'Error_InvalidEmailError_Whitespace')).toBe(true);
       });
     });
 

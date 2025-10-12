@@ -427,7 +427,7 @@ describe('ECIES File Service Integration Tests', () => {
         expect(decrypted).toEqual(data);
       });
 
-      // Log performance results for analysis
+      // Log performance results for analysis - this is expected output for performance tests
       console.log('Performance Results:', results);
 
       // Basic performance assertions

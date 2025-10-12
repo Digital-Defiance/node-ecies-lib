@@ -8,7 +8,47 @@ A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve 
 - **Multi-recipient Encryption**: Encrypt data for multiple recipients simultaneously
 - **PBKDF2 Key Derivation**: Password-based key derivation with configurable profiles
 - **Digital Signatures**: Sign and verify data using elliptic curve cryptography
-- **Member Management**: Comprehensive user/member system with key management
+
+- ## 🚀 Plugin-Based I18n Architecture
+
+Version 1.0.4+ includes full support for the new plugin-based internationalization architecture from `@digitaldefiance/i18n-lib`:
+
+### Features
+
+- **Component-Based Translations**: ECIES-specific strings organized in dedicated components
+- **Multi-Language Support**: Built-in translations for English, French, Spanish, German, Chinese, Japanese, and Ukrainian
+- **Type-Safe Translation Calls**: Full TypeScript support with compile-time validation
+- **Automatic Fallback**: Intelligent fallback to default language for missing translations
+- **Custom Engine Support**: Use your own plugin engine instance or let the library manage it automatically
+
+### Advanced Usage
+
+```typescript
+import { 
+  getEciesPluginI18nEngine, 
+  getNodeEciesTranslation,
+  NodeEciesStringKey 
+} from '@digitaldefiance/node-ecies-lib';
+import { CoreLanguage } from '@digitaldefiance/i18n-lib';
+
+// Get the plugin engine instance
+const engine = getEciesPluginI18nEngine();
+
+// Use component-based translations
+const errorMessage = getNodeEciesTranslation(
+  NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
+  {},
+  CoreLanguage.Spanish
+);
+
+// Switch languages globally
+engine.setLanguage(CoreLanguage.French);
+```
+
+### Member
+
+Member management with wallet integration:
+
 - **Cross-platform Compatibility**: Works seamlessly with the browser-based `@digitaldefiance/ecies-lib`
 
 ## Installation
@@ -19,12 +59,19 @@ npm install @digitaldefiance/node-ecies-lib
 
 ## Quick Start
 
+### 🆕 Plugin-Based Architecture (Recommended)
+
 ```typescript
 import { ECIESService, Member, MemberType, EmailString } from '@digitaldefiance/node-ecies-lib';
-import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
-// Initialize the service
-const eciesService = new ECIESService(getEciesI18nEngine());
+// Initialize the service - no need to pass i18n engine explicitly!
+const eciesService = new ECIESService();
+
+// Or with configuration
+const eciesServiceWithConfig = new ECIESService({
+  curveName: 'secp256k1',
+  symmetricAlgorithm: 'aes-256-gcm'
+});
 
 // Create a new member
 const { member, mnemonic } = Member.newMember(
@@ -38,9 +85,20 @@ const { member, mnemonic } = Member.newMember(
 const message = 'Hello, secure world!';
 const encrypted = member.encryptData(message);
 
-// Decrypt data
+// Decrypt data  
 const decrypted = member.decryptData(encrypted);
 console.log(decrypted.toString()); // "Hello, secure world!"
+```
+
+### Legacy API (Still Supported)
+
+```typescript
+import { ECIESService, Member, MemberType, EmailString, getEciesPluginI18nEngine } from '@digitaldefiance/node-ecies-lib';
+
+// Initialize the service with explicit i18n engine
+const eciesService = new ECIESService(getEciesPluginI18nEngine());
+
+// Rest of the usage remains the same...
 ```
 
 ## Core Components
@@ -51,9 +109,13 @@ The main service class providing encryption, decryption, and key management:
 
 ```typescript
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
-import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
-const service = new ECIESService(getEciesI18nEngine());
+// 🆕 Plugin-based architecture - automatic i18n setup
+const service = new ECIESService();
+
+// Or with explicit plugin engine (advanced usage)
+import { getEciesPluginI18nEngine } from '@digitaldefiance/node-ecies-lib';
+const serviceWithExplicitEngine = new ECIESService(getEciesPluginI18nEngine());
 
 // Generate mnemonic
 const mnemonic = service.generateNewMnemonic();
@@ -214,6 +276,7 @@ npm test -- ecies-compatibility.e2e.spec.ts
 ```
 
 Test categories:
+
 - Unit tests for individual components
 - Integration tests for cross-component functionality
 - End-to-end tests for complete workflows
@@ -264,3 +327,15 @@ Please read the contributing guidelines in the main repository.
 
 - `@digitaldefiance/ecies-lib`: Browser-compatible ECIES library
 - `@digitaldefiance/i18n-lib`: Internationalization support
+
+## ChangeLog
+
+### Version 1.0.4
+
+- Sat Oct 11 2025 19:08:00 GMT-0700 (Pacific Daylight Time)
+  - Added plugin-based internationalization architecture with `@digitaldefiance/i18n-lib`
+
+### Version 1.0.3
+
+- Fri Oct 03 2024 10:50:21 GMT-0700 (Pacific Daylight Time)
+  - Initial release

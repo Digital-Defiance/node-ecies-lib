@@ -1316,28 +1316,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:^1.0.20":
-  version: 1.0.20
-  resolution: "@digitaldefiance/ecies-lib@npm:1.0.20"
+"@digitaldefiance/ecies-lib@npm:^1.0.22":
+  version: 1.0.22
+  resolution: "@digitaldefiance/ecies-lib@npm:1.0.22"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:^1.0.33"
+    "@digitaldefiance/i18n-lib": "npm:^1.1.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/f1374e69cd8e39b16a2c578189db436ada508ec570af99d4eacd355c7c5d206fb3bb1fb3fdc682fb3a8a6274877addc85ba01c4b886d11b425d16b2c61992c74
+  checksum: 10c0/bfcaf36f392cdcd19a035218394afed3354e65154630dd9d556c658ad70e4c3d77b8329b37513a2eb20ada4600868350ca21c7fa7aab3c1d13131cba2f183c43
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:^1.0.33":
-  version: 1.0.33
-  resolution: "@digitaldefiance/i18n-lib@npm:1.0.33"
+"@digitaldefiance/i18n-lib@npm:1.1.2, @digitaldefiance/i18n-lib@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@digitaldefiance/i18n-lib@npm:1.1.2"
   dependencies:
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/a4f2a51aa7531b31e966ac6b40b1123d4eaa19c59506dc2792c6cbc8dbd0753974c23c33b9079251f82042513349c4cc228112efdb2952731508ec92bdd01337
+  checksum: 10c0/4aeeef4bd5026ce2bd8ed151f1a9fcb5842d01ea72fa7165e964bcc260cf8b8e30e4f598a8c3ebd053df70185dba53ac2ab8a606361f01bb0ece42aba79a9d7f
   languageName: node
   linkType: hard
 
@@ -1348,8 +1348,8 @@ __metadata:
     "@babel/core": "npm:^7.28.4"
     "@babel/preset-env": "npm:^7.28.3"
     "@babel/preset-typescript": "npm:^7.27.1"
-    "@digitaldefiance/ecies-lib": "npm:^1.0.20"
-    "@digitaldefiance/i18n-lib": "npm:^1.0.33"
+    "@digitaldefiance/ecies-lib": "npm:^1.0.22"
+    "@digitaldefiance/i18n-lib": "npm:1.1.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
