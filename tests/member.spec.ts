@@ -6,7 +6,6 @@ import {
   IECIESConfig,
   InvalidEmailError,
   InvalidEmailErrorType,
-  MemberError,
   MemberErrorType,
   MemberType,
   SecureString,
@@ -14,11 +13,11 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
-import { Member } from '../src/member';
 import { IBackendMemberWithMnemonic } from '../src/interfaces/member-with-mnemonic';
+import { Member, NodeMemberError } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
 import { toThrowType } from './matchers/error-matchers';
-import { withConsoleMocks, spyContains } from './support/console';
+import { spyContains, withConsoleMocks } from './support/console';
 
 // Extend Jest with custom matchers
 expect.extend({ toThrowType });
@@ -75,7 +74,7 @@ describe('brightchain', () => {
     it('should fail to sign when there is no signing key', () => {
       expect(() =>
         noKeyCharlie.member.sign(Buffer.from(faker.lorem.sentence())),
-      ).toThrowType(MemberError, (error: MemberError) => {
+      ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.MissingPrivateKey);
       });
     });
@@ -102,7 +101,7 @@ describe('brightchain', () => {
           '',
           new EmailString('alice@example.com'),
         ),
-      ).toThrowType(MemberError, (error: MemberError) => {
+      ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.MissingMemberName);
       });
     });
@@ -115,7 +114,7 @@ describe('brightchain', () => {
           'alice ',
           new EmailString('alice@example.com'),
         ),
-      ).toThrowType(MemberError, (error: MemberError) => {
+      ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
       });
       expect(() =>
@@ -125,7 +124,7 @@ describe('brightchain', () => {
           ' alice',
           new EmailString('alice@example.com'),
         ),
-      ).toThrowType(MemberError, (error: MemberError) => {
+      ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
       });
     });
@@ -142,9 +141,11 @@ describe('brightchain', () => {
         ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
           expect(error.type).toBe(InvalidEmailErrorType.Missing);
         });
-        
+
         // Verify we got the expected translation warning
-        expect(spyContains(spies.warn, 'Error_InvalidEmailError_Missing')).toBe(true);
+        expect(spyContains(spies.warn, 'Error_InvalidEmailError_Missing')).toBe(
+          true,
+        );
       });
     });
 
@@ -170,9 +171,11 @@ describe('brightchain', () => {
         ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
           expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
         });
-        
+
         // Verify we got the expected translation warnings
-        expect(spyContains(spies.warn, 'Error_InvalidEmailError_Whitespace')).toBe(true);
+        expect(
+          spyContains(spies.warn, 'Error_InvalidEmailError_Whitespace'),
+        ).toBe(true);
       });
     });
 
@@ -257,8 +260,8 @@ describe('brightchain', () => {
       newMember.member.unloadWalletAndPrivateKey();
       expect(newMember.member.hasPrivateKey).toBeFalsy();
       expect(() => newMember.member.wallet).toThrowType(
-        MemberError,
-        (error: MemberError) => {
+        NodeMemberError,
+        (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
         },
       );
@@ -266,8 +269,8 @@ describe('brightchain', () => {
       // Generate a new mnemonic (this should fail to load)
       const wrongMnemonic = eciesService.generateNewMnemonic();
       expect(() => newMember.member.loadWallet(wrongMnemonic)).toThrowType(
-        MemberError,
-        (error: MemberError) => {
+        NodeMemberError,
+        (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.InvalidMnemonic);
         },
       );
@@ -275,8 +278,8 @@ describe('brightchain', () => {
       // The member should still not have a private key
       expect(newMember.member.hasPrivateKey).toBeFalsy();
       expect(() => newMember.member.wallet).toThrowType(
-        MemberError,
-        (error: MemberError) => {
+        NodeMemberError,
+        (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
         },
       );
@@ -327,10 +330,7 @@ describe('brightchain', () => {
   describe('json', () => {
     it('should serialize and deserialize correctly', () => {
       const memberJson = alice.member.toJson();
-      const reloadedMember = Member.fromJson(
-        memberJson,
-        eciesService,
-      );
+      const reloadedMember = Member.fromJson(memberJson, eciesService);
       reloadedMember.loadWallet(alice.mnemonic);
       const encrypted = eciesService.encryptSimpleOrSingle(
         false,

@@ -1,8 +1,7 @@
 import { Constants as ApiConstants } from '../src/constants';
 import { Pbkdf2ProfileEnum } from '../src/enumerations/pbkdf2-profile';
-import { Pbkdf2Service } from '../src/services/pbkdf2';
+import { Pbkdf2Service, NodePbkdf2Error } from '../src/services/pbkdf2';
 import {
-  Pbkdf2Error,
   Pbkdf2ErrorType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -376,11 +375,11 @@ describe('Pbkdf2Service API E2E', () => {
 
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, shortSalt),
-      ).toThrow(Pbkdf2Error);
+      ).toThrow(NodePbkdf2Error);
 
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, longSalt),
-      ).toThrow(Pbkdf2Error);
+      ).toThrow(NodePbkdf2Error);
     });
 
     it('should validate salt length for custom configurations', () => {
@@ -399,7 +398,7 @@ describe('Pbkdf2Service API E2E', () => {
       // Should fail with default 32-byte config
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, salt16),
-      ).toThrow(Pbkdf2Error);
+      ).toThrow(NodePbkdf2Error);
     });
 
     it('should handle invalid inputs gracefully', () => {
@@ -432,15 +431,15 @@ describe('Pbkdf2Service API E2E', () => {
       ).rejects.toThrow();
     });
 
-    it('should throw proper Pbkdf2Error types', () => {
+    it('should throw proper NodePbkdf2Error types', () => {
       const shortSalt = Buffer.alloc(15);
 
       try {
         Pbkdf2Service.deriveKeyFromPassword(testPassword, shortSalt);
-        fail('Should have thrown Pbkdf2Error');
+        fail('Should have thrown NodePbkdf2Error');
       } catch (error) {
-        expect(error).toBeInstanceOf(Pbkdf2Error);
-        expect((error as Pbkdf2Error).type).toBe(
+        expect(error).toBeInstanceOf(NodePbkdf2Error);
+        expect((error as NodePbkdf2Error).type).toBe(
           Pbkdf2ErrorType.InvalidSaltLength,
         );
       }

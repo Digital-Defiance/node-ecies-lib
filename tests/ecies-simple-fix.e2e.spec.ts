@@ -1,18 +1,14 @@
 import {
-  Member as BackendMember,
-} from '../src/member';
-import {
-  ECIESService as BackendECIESService,
-} from '../src/services/ecies/service';
-import {
   Constants as AppConstants,
   EmailString,
-  Member as FrontendMember,
   ECIESService as FrontendECIESService,
+  Member as FrontendMember,
   IECIESConfig,
   MemberType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { Member as BackendMember } from '../src/member';
+import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 

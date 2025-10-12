@@ -1,13 +1,12 @@
 import {
   ECIES,
-  Pbkdf2Error,
   Pbkdf2ErrorType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { randomBytes, pbkdf2Sync } from 'crypto';
 import { Constants as ApiConstants, PBKDF2 } from '../src/constants';
 import { Pbkdf2ProfileEnum } from '../src/enumerations/pbkdf2-profile';
-import { Pbkdf2Service } from '../src/services/pbkdf2';
+import { Pbkdf2Service, NodePbkdf2Error } from '../src/services/pbkdf2';
 
 describe('Pbkdf2Service', () => {
   // Set a longer timeout for all tests in this file
@@ -198,7 +197,7 @@ describe('Pbkdf2Service', () => {
       const shortSalt = Buffer.alloc(31);
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, shortSalt),
-      ).toThrowType(Pbkdf2Error, (error: Pbkdf2Error) => {
+      ).toThrowType(NodePbkdf2Error, (error: NodePbkdf2Error) => {
         expect(error.type).toBe(Pbkdf2ErrorType.InvalidSaltLength);
       });
 
@@ -206,7 +205,7 @@ describe('Pbkdf2Service', () => {
       const longSalt = Buffer.alloc(33);
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, longSalt),
-      ).toThrowType(Pbkdf2Error, (error: Pbkdf2Error) => {
+      ).toThrowType(NodePbkdf2Error, (error: NodePbkdf2Error) => {
         expect(error.type).toBe(Pbkdf2ErrorType.InvalidSaltLength);
       });
     });
@@ -226,7 +225,7 @@ describe('Pbkdf2Service', () => {
       // Test that 16-byte salt fails with default 32-byte config
       expect(() =>
         Pbkdf2Service.deriveKeyFromPassword(testPassword, salt16),
-      ).toThrowType(Pbkdf2Error, (error: Pbkdf2Error) => {
+      ).toThrowType(NodePbkdf2Error, (error: NodePbkdf2Error) => {
         expect(error.type).toBe(Pbkdf2ErrorType.InvalidSaltLength);
       });
     });

@@ -1,24 +1,24 @@
-import { Member as BackendMember } from '../src/member';
-import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
-import { EciesCryptoCore as BackendEciesCryptoCore } from '../src/services/ecies/crypto-core';
-import { ISimpleKeyPairBuffer } from '../src/interfaces/simple-key-pair-buffer';
-import { EciesSingleRecipientCore as BackendEciesSingleRecipient } from '../src/services/ecies/single-recipient';
-import { SignatureBuffer } from '../src/types';
 import {
   Constants as AppConstants,
+  EciesEncryptionTypeEnum,
   EmailString,
-  Member as FrontendMember,
   ECIESService as FrontendECIESService,
   EciesCryptoCore as FrontendEciesCryptoCore,
   EciesSingleRecipient as FrontendEciesSingleRecipient,
+  Member as FrontendMember,
   IECIESConfig,
   MemberType,
   SecureString,
   SignatureUint8Array,
-  EciesEncryptionTypeEnum
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { randomBytes, createECDH } from 'crypto';
+import { createECDH, randomBytes } from 'crypto';
+import { ISimpleKeyPairBuffer } from '../src/interfaces/simple-key-pair-buffer';
+import { Member as BackendMember } from '../src/member';
+import { EciesCryptoCore as BackendEciesCryptoCore } from '../src/services/ecies/crypto-core';
+import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
+import { EciesSingleRecipientCore as BackendEciesSingleRecipient } from '../src/services/ecies/single-recipient';
+import { SignatureBuffer } from '../src/types';
 
 describe('ECIES Cross-Platform Compatibility', () => {
   let config: IECIESConfig;

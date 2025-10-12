@@ -13,13 +13,13 @@ import {
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguage, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import {
   createCipheriv,
   createDecipheriv,
   createECDH,
   randomBytes,
 } from 'crypto';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';

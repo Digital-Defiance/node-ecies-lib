@@ -6,10 +6,10 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
 
@@ -195,10 +195,7 @@ export class EciesCryptoCore {
    * @param publicKey {Buffer} The public key
    * @returns {Buffer} The shared secret
    */
-  public computeSharedSecret(
-    privateKey: Buffer,
-    publicKey: Buffer,
-  ): Buffer {
+  public computeSharedSecret(privateKey: Buffer, publicKey: Buffer): Buffer {
     const sharedSecret = secp256k1.getSharedSecret(privateKey, publicKey, true);
     return Buffer.from(sharedSecret.slice(1)); // Remove the 0x02/0x03 prefix
   }

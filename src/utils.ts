@@ -1,13 +1,23 @@
 import {
-  EciesStringKey,
   getLengthEncodingTypeForLength,
   getLengthEncodingTypeFromValue,
   getLengthForLengthType,
   LengthEncodingType,
-  TranslatableError,
 } from '@digitaldefiance/ecies-lib';
-import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey } from './i18n/ecies-i18n-factory';
-import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
+import {
+  getNodeEciesTranslation,
+  NodeEciesStringKey,
+} from './i18n/ecies-i18n-factory';
+
+/**
+ * Custom error class for length encoding errors
+ */
+class LengthEncodingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LengthEncodingError';
+  }
+}
 
 /**
  * Encodes the length of the data in the buffer
@@ -73,7 +83,11 @@ export function decodeLengthEncodedData(buffer: Buffer): {
       }
       break;
     default:
-      throw new TranslatableError(EciesStringKey.Error_LengthError_LengthIsInvalidType, getEciesI18nEngine());
+      throw new LengthEncodingError(
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
+        ),
+      );
   }
 
   const totalLength = 1 + lengthTypeSize + Number(length);

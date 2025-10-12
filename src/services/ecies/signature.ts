@@ -3,9 +3,9 @@ import {
   ECIESErrorTypeEnum,
   HexString,
 } from '@digitaldefiance/ecies-lib';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { SignatureBuffer, SignatureString } from '../../types';
 import { EciesCryptoCore } from './crypto-core';
 

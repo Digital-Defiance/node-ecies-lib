@@ -22,7 +22,6 @@ describe('ECIESService', () => {
   let recipient2: BackendMember;
   let eciesService: ECIESService;
   beforeAll(() => {
-
     const config: IECIESConfig = {
       curveName: AppConstants.ECIES.CURVE_NAME,
       primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,

@@ -330,6 +330,11 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.0.5
+
+- Sat Oct 11 2025 21:34:00 GMT-0700 (Pacific Daylight Time)
+  - Used latest cleanup code from i18n library and updated dependencies
+
 ### Version 1.0.4
 
 - Sat Oct 11 2025 19:08:00 GMT-0700 (Pacific Daylight Time)

@@ -1,15 +1,24 @@
 import {
   ECIES,
   IPbkdf2Config,
-  Pbkdf2Error,
   Pbkdf2ErrorType,
 } from '@digitaldefiance/ecies-lib';
-import { getEciesPluginI18nEngine } from '../i18n/ecies-i18n-factory';
 import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { PBKDF2, PBKDF2_PROFILES } from '../constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
+import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
+
+/**
+ * Custom PBKDF2 error class that works with the plugin i18n system
+ */
+export class NodePbkdf2Error extends Error {
+  constructor(message: string, public readonly type: Pbkdf2ErrorType) {
+    super(message);
+    this.name = 'NodePbkdf2Error';
+  }
+}
 
 /**
  * Service for handling PBKDF2 (Password-Based Key Derivation Function 2) operations.
@@ -93,7 +102,10 @@ export abstract class Pbkdf2Service {
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesPluginI18nEngine());
+      throw new NodePbkdf2Error(
+        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength),
+        Pbkdf2ErrorType.InvalidSaltLength,
+      );
     }
 
     const hashBytes = pbkdf2Sync(
@@ -105,7 +117,10 @@ export abstract class Pbkdf2Service {
     );
 
     if (hashBytes.length !== config.hashBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesPluginI18nEngine());
+      throw new NodePbkdf2Error(
+        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength),
+        Pbkdf2ErrorType.InvalidHashLength,
+      );
     }
 
     return {
@@ -143,7 +158,10 @@ export abstract class Pbkdf2Service {
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength, getEciesPluginI18nEngine());
+      throw new NodePbkdf2Error(
+        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength),
+        Pbkdf2ErrorType.InvalidSaltLength,
+      );
     }
 
     const pbkdf2 = promisify(pbkdf2Async);
@@ -156,7 +174,10 @@ export abstract class Pbkdf2Service {
     )) as Buffer;
 
     if (hashBytes.length !== config.hashBytes) {
-      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength, getEciesPluginI18nEngine());
+      throw new NodePbkdf2Error(
+        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength),
+        Pbkdf2ErrorType.InvalidHashLength,
+      );
     }
 
     return {

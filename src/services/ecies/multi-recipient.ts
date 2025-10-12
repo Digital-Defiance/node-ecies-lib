@@ -6,7 +6,6 @@ import {
   ECIESErrorTypeEnum,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguage, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import {
   createCipheriv,
   createDecipheriv,
@@ -16,6 +15,7 @@ import {
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
 import { Constants } from '../../constants';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';

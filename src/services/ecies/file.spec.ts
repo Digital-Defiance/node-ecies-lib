@@ -2,9 +2,9 @@ import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { EciesFileService } from './file';
 import { ECIESService } from './service';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 
 describe('EciesFileService (Backend)', () => {
   let eciesService: ECIESService;

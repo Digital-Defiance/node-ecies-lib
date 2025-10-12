@@ -1,5 +1,4 @@
 import { webcrypto } from 'crypto';
-import { PluginI18nEngine } from '@digitaldefiance/i18n-lib';
 import { toThrowType } from './matchers/error-matchers';
 
 // Extend expect with custom matchers
