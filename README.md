@@ -232,6 +232,7 @@ const nodeEncrypted = nodeMember.encryptData('message');
 // Send nodeEncrypted to browser for decryption
 ```
 
+
 ## Security Features
 
 - **Secure Memory Management**: Uses `SecureBuffer` and `SecureString` for sensitive data
@@ -239,6 +240,35 @@ const nodeEncrypted = nodeMember.encryptData('message');
 - **Configurable Security Levels**: Multiple PBKDF2 profiles for different security requirements
 - **Input Validation**: Comprehensive validation of all cryptographic inputs
 - **Error Handling**: Detailed error types for debugging and security analysis
+
+## 🛠️ Runtime Configuration Registry
+
+This package uses a runtime configuration registry for all constants and cryptographic parameters. You can override defaults at runtime for advanced use cases:
+
+```typescript
+import {
+  getNodeRuntimeConfiguration,
+  registerNodeRuntimeConfiguration,
+  NODE_RUNTIME_CONFIGURATION_KEY,
+} from '@digitaldefiance/node-ecies-lib';
+
+// Get current config
+const config = getNodeRuntimeConfiguration();
+
+// Register a custom config
+const customKey = Symbol('custom-node-ecies-config');
+registerNodeRuntimeConfiguration(customKey, { PBKDF2: { ALGORITHM: 'sha512' } });
+const customConfig = getNodeRuntimeConfiguration(customKey);
+```
+
+All constants are immutable and accessible via the registry/config API. See `src/constants.ts` and `src/defaults.ts` for details.
+
+## 🏛️ Architectural Conventions
+
+- Centralized constants file
+- Immutability via Object.freeze
+- Registry/config pattern for runtime overrides
+- Type-safe interfaces for all config objects
 
 ## API Reference
 
