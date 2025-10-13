@@ -1,4 +1,10 @@
-import { GUID_SIZE, IPBkdf2Consts } from '@digitaldefiance/ecies-lib';
+import {
+  Constants as BaseConstants,
+  GUID_SIZE,
+  IPBkdf2Consts,
+  getRuntimeConfiguration,
+  registerRuntimeConfiguration,
+} from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
 import { ObjectId } from 'mongodb';
 import { IChecksumConsts } from './interfaces/checksum-consts';
@@ -7,26 +13,50 @@ import { IEncryptionConsts } from './interfaces/encryption-consts';
 import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
-import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
+import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
 
 /**
  * Constants for checksum operations
  * These values are critical for data integrity and MUST NOT be changed
  * in an already established system as it will break all existing checksums.
  */
-export const CHECKSUM: IChecksumConsts = Object.freeze({
-  /** Default hash bits for SHA3 */
-  SHA3_DEFAULT_HASH_BITS: 512 as const,
+export const NODE_RUNTIME_CONFIGURATION_KEY = Symbol.for(
+  'digitaldefiance.node.ecies.defaults',
+);
 
-  /** Length of a SHA3 checksum buffer in bytes */
-  SHA3_BUFFER_LENGTH: 64 as const,
+type NodeRuntimeConfiguration = ReturnType<typeof getRuntimeConfiguration>;
+type NodeRuntimeOverrides = Parameters<
+  typeof registerRuntimeConfiguration
+>[1];
 
-  /** algorithm to use for checksum */
-  ALGORITHM: 'sha3-512' as const,
+export const NODE_DEFAULTS_OVERRIDES: NodeRuntimeOverrides = Object.freeze({
+  PBKDF2: {
+    ALGORITHM: 'sha256',
+  },
+});
 
-  /** encoding to use for checksum */
-  ENCODING: 'hex' as const,
-} as const);
+let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
+  NODE_RUNTIME_CONFIGURATION_KEY,
+  NODE_DEFAULTS_OVERRIDES,
+);
+
+export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
+  return runtimeDefaults;
+}
+
+export function registerNodeRuntimeConfiguration(
+  configOrOverrides?: NodeRuntimeOverrides | NodeRuntimeConfiguration,
+  options?: Parameters<typeof registerRuntimeConfiguration>[2],
+): NodeRuntimeConfiguration {
+  runtimeDefaults = registerRuntimeConfiguration(
+    NODE_RUNTIME_CONFIGURATION_KEY,
+    configOrOverrides,
+    options,
+  );
+  return runtimeDefaults;
+}
+
+export const CHECKSUM: IChecksumConsts = runtimeDefaults.CHECKSUM;
 
 export const KEYRING: IKeyringConsts = Object.freeze({
   ALGORITHM: 'aes' as const,
@@ -34,60 +64,51 @@ export const KEYRING: IKeyringConsts = Object.freeze({
   MODE: 'gcm' as const,
 } as const);
 
-export const PBKDF2: IPBkdf2Consts = Object.freeze({
-  ALGORITHM: 'sha256' as const, // Changed from sha512 to match key-wrapping
-  SALT_BYTES: 32 as const, // Changed from 16 to match key-wrapping and improve security
-  /**
-   * Number of pbkdf2 iterations per second when hashing a password.
-   * This is the high-security default for user login operations.
-   */
-  ITERATIONS_PER_SECOND: 1304000 as const,
-} as const);
+export const PBKDF2: IPBkdf2Consts = runtimeDefaults.PBKDF2;
 
 /**
  * Predefined PBKDF2 configuration profiles for different use cases
  * These profiles provide standardized, well-tested parameter combinations
  */
+const baseProfiles = runtimeDefaults.PBKDF2_PROFILES;
+
 export const PBKDF2_PROFILES: PbkdfProfiles = Object.freeze({
-  /** Balanced profile for browser-based password hashing */
-  BROWSER_PASSWORD: Object.freeze({
-    hashBytes: 32 as const,
-    saltBytes: 64 as const,
-    iterations: 2000000 as const,
-    algorithm: 'SHA-512' as const,
-  } as const),
-  /** High-security profile for user login operations */
-  USER_LOGIN: Object.freeze({
-    saltBytes: 32,
-    iterations: 1304000,
-    algorithm: 'sha256',
-    hashBytes: 32,
-  }),
-  /** Optimized profile for key-wrapping operations */
-  KEY_WRAPPING: Object.freeze({
-    saltBytes: 32,
-    iterations: 100000,
-    algorithm: 'sha256',
-    hashBytes: 32,
-  }),
-  /** Standard profile for backup codes and general use */
-  BACKUP_CODES: Object.freeze({
-    saltBytes: 32,
-    iterations: 1304000,
-    algorithm: 'sha256',
-    hashBytes: 32,
-  }),
-  /** Ultra-high security profile for sensitive operations */
-  HIGH_SECURITY: Object.freeze({
+  // Align browser password profile with high security expectations (sha512, 64-byte salt/hash, 2M iterations)
+  [NodePbkdf2ProfileEnum.BROWSER_PASSWORD]: Object.freeze({
     saltBytes: 64,
     iterations: 2000000,
     algorithm: 'sha512',
     hashBytes: 64,
   }),
-  /** Fast profile for testing and development */
-  TEST_FAST: Object.freeze({
+  // High security profile (sha512, 64-byte salt/hash, 2M iterations)
+  [NodePbkdf2ProfileEnum.HIGH_SECURITY]: Object.freeze({
+    saltBytes: 64,
+    iterations: 2000000,
+    algorithm: 'sha512',
+    hashBytes: 64,
+  }),
+  // Fast test profile (small salt and iterations for speed)
+  [NodePbkdf2ProfileEnum.TEST_FAST]: Object.freeze({
     saltBytes: 16,
-    iterations: 1000,
+    iterations: 500,
+    algorithm: 'sha256',
+    hashBytes: 32,
+  }),
+  [NodePbkdf2ProfileEnum.USER_LOGIN]: Object.freeze({
+    saltBytes: 32,
+    iterations: 1304000,
+    algorithm: 'sha256',
+    hashBytes: 32,
+  }),
+  [NodePbkdf2ProfileEnum.KEY_WRAPPING]: Object.freeze({
+    saltBytes: 32,
+    iterations: 100000,
+    algorithm: 'sha256',
+    hashBytes: 32,
+  }),
+  [NodePbkdf2ProfileEnum.BACKUP_CODES]: Object.freeze({
+    saltBytes: 32,
+    iterations: 1304000,
     algorithm: 'sha256',
     hashBytes: 32,
   }),
@@ -112,7 +133,7 @@ export const ENCRYPTION: IEncryptionConsts = Object.freeze({
 } as const);
 
 const objectIdLength = Buffer.from(new ObjectId().toHexString(), 'hex').length;
-export const Constants: IConstants = {
+export const Constants: IConstants = Object.freeze({
   ...BaseConstants,
   /**
    * The length of a raw object ID (not the hex string representation)
@@ -146,7 +167,9 @@ export const Constants: IConstants = {
    * Algorithm configuration string for keyring operations
    */
   KEYRING_ALGORITHM_CONFIGURATION: KEYRING_ALGORITHM_CONFIGURATION,
-} as const;
+  PasswordRegex: runtimeDefaults.PasswordRegex,
+  MnemonicRegex: runtimeDefaults.MnemonicRegex,
+} as const);
 
 if (
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8 ||

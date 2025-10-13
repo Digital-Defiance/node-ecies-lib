@@ -1,14 +1,6 @@
 // digital-burnbag-api-lib/src/lib/services/ecies.spec.ts
-import {
-  Constants as AppConstants,
-  ECIES,
-  ECIESError,
-  ECIESErrorTypeEnum,
-  EmailString,
-  IECIESConfig,
-  MemberType,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
+import { ECIES, ECIESError, ECIESErrorTypeEnum, EmailString, IECIESConfig, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { getNodeRuntimeConfiguration, Constants as NodeConstants } from '../src/constants';
 import { randomBytes } from 'crypto';
 import { Member as BackendMember } from '../src/member';
 
@@ -22,13 +14,14 @@ describe('ECIESService', () => {
   let recipient2: BackendMember;
   let eciesService: ECIESService;
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     const config: IECIESConfig = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
     eciesService = new ECIESService(config);
     service = eciesService;
@@ -295,7 +288,7 @@ describe('ECIESService', () => {
       expect(overhead).toBe(
         ECIES.MULTIPLE.DATA_LENGTH_SIZE +
           ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
-          recipientsCount * AppConstants.OBJECT_ID_LENGTH +
+          recipientsCount * NodeConstants.OBJECT_ID_LENGTH +
           recipientsCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );
     });

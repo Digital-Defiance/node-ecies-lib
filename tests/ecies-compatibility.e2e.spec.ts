@@ -1,5 +1,4 @@
 import {
-  Constants as AppConstants,
   EciesEncryptionTypeEnum,
   EmailString,
   ECIESService as FrontendECIESService,
@@ -11,6 +10,7 @@ import {
   SecureString,
   SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
+import { getNodeRuntimeConfiguration, Constants as NodeConstants } from '../src/constants';
 import { Wallet } from '@ethereumjs/wallet';
 import { createECDH, randomBytes } from 'crypto';
 import { ISimpleKeyPairBuffer } from '../src/interfaces/simple-key-pair-buffer';
@@ -30,13 +30,14 @@ describe('ECIES Cross-Platform Compatibility', () => {
   let receiverKeyPair: ISimpleKeyPairBuffer;
 
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
 
     frontendService = new FrontendECIESService(config);

@@ -330,6 +330,17 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.0.8
+
+- Sun Oct 12 2025 22:30:00 GMT-0700 (Pacific Daylight Time)
+  - feat: upgrade to ecies-lib 1.0.26 with runtime configuration system
+    - Bump version to 1.0.8
+    - Update @digitaldefiance/ecies-lib dependency to 1.0.26
+    - Implement runtime configuration system with node-specific defaults
+    - Add PBKDF2 profile enum alignment and configuration overrides
+    - Remove obsolete AES-GCM E2E test file
+    - Update changelog for version 1.0.8
+
 ### Version 1.0.6
 
 - Sun Oct 12 2025 16:47:00 GMT-0700 (Pacific Daylight Time)

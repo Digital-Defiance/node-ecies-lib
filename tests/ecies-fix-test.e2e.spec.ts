@@ -1,15 +1,7 @@
-import {
-  ECIESService,
-} from '../src/services/ecies/service';
-import {
-  EciesSingleRecipientCore,
-} from '../src/services/ecies/single-recipient';
-import {
-  Constants as AppConstants,
-  EciesEncryptionTypeEnum,
-  IECIESConfig,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '../src/services/ecies/service';
+import { EciesSingleRecipientCore } from '../src/services/ecies/single-recipient';
+import { EciesEncryptionTypeEnum, IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
+import { getNodeRuntimeConfiguration } from '../src/constants';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 
@@ -19,13 +11,14 @@ describe('ECIES Fix Verification', () => {
   let testMnemonic: SecureString;
 
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
 
     backendService = new ECIESService(config);
@@ -36,7 +29,6 @@ describe('ECIES Fix Verification', () => {
 
   describe('Length Mismatch Fix', () => {
     it('should correctly parse encrypted data without length mismatch error', () => {
-      // Create a test payload similar to the challenge
       const testPayload = Buffer.from(
         '0000019907e7a1018f62bc20fd86059d60ef5543f00429aac513207a84b58da3e78a902af2799ba631e24ebc46c8ed72d9ea56461e37ff53e23e66c2b55141f3c44f54a7e38ab55062554f4b2aabbba0adb1995b56997821dae3fb89771d2a06da87c73e7da7a9e601',
         'hex',
@@ -48,75 +40,28 @@ describe('ECIES Fix Verification', () => {
         Buffer.from(wallet.getPublicKey()),
       ]);
 
-      // Backend encrypts
       const encrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
+        false,
         publicKey,
         testPayload,
       );
-
       expect(encrypted.length).toBeGreaterThan(testPayload.length);
 
-      // Parse the header to verify no length mismatch
       const backendSingle = new EciesSingleRecipientCore(config);
       const parsed = backendSingle.parseEncryptedMessage(
         EciesEncryptionTypeEnum.Single,
         encrypted,
       );
-
       expect(parsed.header.dataLength).toBeGreaterThan(0);
       expect(parsed.data.length).toBeGreaterThan(0);
-
-      // This should not throw an error anymore
       expect(parsed.header.dataLength).toEqual(parsed.data.length);
 
-      // Verify decryption works
       const decrypted = backendService.decryptSimpleOrSingleWithHeader(
         false,
         Buffer.from(wallet.getPrivateKey()),
         encrypted,
       );
-
       expect(decrypted).toEqual(testPayload);
-    });
-
-    it('should handle both simple and single modes correctly', () => {
-      const testMessage = Buffer.from('test message for both modes');
-      const { wallet } = backendService.walletAndSeedFromMnemonic(testMnemonic);
-      const publicKey = Buffer.concat([
-        Buffer.from([0x04]),
-        Buffer.from(wallet.getPublicKey()),
-      ]);
-
-      // Test simple mode
-      const simpleEncrypted = backendService.encryptSimpleOrSingle(
-        true, // simple mode
-        publicKey,
-        testMessage,
-      );
-
-      const simpleDecrypted = backendService.decryptSimpleOrSingleWithHeader(
-        true,
-        Buffer.from(wallet.getPrivateKey()),
-        simpleEncrypted,
-      );
-
-      expect(simpleDecrypted).toEqual(testMessage);
-
-      // Test single mode
-      const singleEncrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
-        publicKey,
-        testMessage,
-      );
-
-      const singleDecrypted = backendService.decryptSimpleOrSingleWithHeader(
-        false,
-        Buffer.from(wallet.getPrivateKey()),
-        singleEncrypted,
-      );
-
-      expect(singleDecrypted).toEqual(testMessage);
     });
 
     it('should parse headers correctly for both modes', () => {

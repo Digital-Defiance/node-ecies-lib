@@ -3,6 +3,7 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   IECIESConfig,
+  IECIESConstants,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -18,13 +19,19 @@ import { IWalletSeed } from '../../interfaces/wallet-seed';
  * Includes coverage for simple and single modes, does not cover multiple mode which is in a separate module
  */
 export class EciesCryptoCore {
-  private readonly _config: IECIESConfig;
+  protected readonly _config: IECIESConfig;
+  protected readonly _consts: IECIESConstants;
   public get config(): IECIESConfig {
     return this._config;
   }
 
-  constructor(config: IECIESConfig) {
+  public get consts(): IECIESConstants {
+    return this._consts;
+  }
+
+  constructor(config: IECIESConfig, eciesParams?: IECIESConstants) {
     this._config = config;
+    this._consts = eciesParams ?? ECIES;
   }
 
   /**
@@ -49,15 +56,15 @@ export class EciesCryptoCore {
 
     // Already in correct format (65 bytes with 0x04 prefix)
     if (
-      keyLength === ECIES.PUBLIC_KEY_LENGTH &&
-      publicKey[0] === ECIES.PUBLIC_KEY_MAGIC
+      keyLength === this._consts.PUBLIC_KEY_LENGTH &&
+      publicKey[0] === this._consts.PUBLIC_KEY_MAGIC
     ) {
       return publicKey;
     }
 
     // Raw key without prefix (64 bytes) - add the 0x04 prefix
-    if (keyLength === ECIES.RAW_PUBLIC_KEY_LENGTH) {
-      return Buffer.concat([Buffer.from([ECIES.PUBLIC_KEY_MAGIC]), publicKey]);
+    if (keyLength === this._consts.RAW_PUBLIC_KEY_LENGTH) {
+      return Buffer.concat([Buffer.from([this._consts.PUBLIC_KEY_MAGIC]), publicKey]);
     }
 
     // Invalid format
@@ -69,10 +76,10 @@ export class EciesCryptoCore {
       {
         error: 'Invalid public key format or length',
         keyLength: String(keyLength),
-        expectedLength64: String(ECIES.RAW_PUBLIC_KEY_LENGTH),
-        expectedLength65: String(ECIES.PUBLIC_KEY_LENGTH),
+        expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
+        expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),
         keyPrefix: keyLength > 0 ? String(publicKey[0]) : 'N/A',
-        expectedPrefix: String(ECIES.PUBLIC_KEY_MAGIC),
+        expectedPrefix: String(this._consts.PUBLIC_KEY_MAGIC),
       },
     );
   }
@@ -127,7 +134,7 @@ export class EciesCryptoCore {
   public walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
     const privateKey = Buffer.from(wallet.getPrivateKey());
     const buf04 = new Uint8Array(1);
-    buf04[0] = ECIES.PUBLIC_KEY_MAGIC;
+    buf04[0] = this._consts.PUBLIC_KEY_MAGIC;
     const publicKey = Buffer.concat([buf04, wallet.getPublicKey()]);
 
     return {

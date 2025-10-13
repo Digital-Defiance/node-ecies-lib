@@ -1,25 +1,21 @@
 import { ECIESService } from '../src/services/ecies/service';
 import { EciesSingleRecipientCore } from '../src/services/ecies/single-recipient';
-import {
-  Constants as AppConstants,
-  EciesEncryptionTypeEnum,
-  EciesSingleRecipient,
-  IECIESConfig,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
+import { EciesEncryptionTypeEnum, EciesSingleRecipient, IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
+import { getNodeRuntimeConfiguration } from '../src/constants';
 
 describe('ECIES Debug - Length Mismatch Issue', () => {
   let config: IECIESConfig;
   let testMnemonic: SecureString;
 
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
 
     testMnemonic = new SecureString(

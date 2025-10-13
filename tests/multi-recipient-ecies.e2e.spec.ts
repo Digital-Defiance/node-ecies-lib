@@ -2,8 +2,8 @@ import { Member as BackendMember } from '../src/member';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { EciesMultiRecipient } from '../src/services/ecies/multi-recipient';
 import { ECIESService } from '../src/services/ecies/service';
+import { getNodeRuntimeConfiguration } from '../src/constants';
 import {
-  Constants as AppConstants,
   EmailString,
   IECIESConfig,
   MemberType,
@@ -20,13 +20,14 @@ describe('ECIES Multi-Recipient E2E', () => {
   let eciesService: ECIESService;
 
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     const config: IECIESConfig = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
     const cryptoCore = new EciesCryptoCore(config);
     eciesService = new ECIESService(config);

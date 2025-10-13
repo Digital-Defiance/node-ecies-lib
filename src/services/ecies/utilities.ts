@@ -1,6 +1,4 @@
 import {
-  Constants as AppConstants,
-  ECIES,
   EciesEncryptionType,
   ECIESError,
   ECIESErrorTypeEnum,
@@ -8,6 +6,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
 import { ECIESService } from './service';
+import { getNodeRuntimeConfiguration } from '../../constants';
 
 /**
  * Utility functions for ECIES operations
@@ -31,25 +30,29 @@ export class EciesUtilities {
         getEciesPluginI18nEngine(),
       );
     }
+    const runtimeDefaults = getNodeRuntimeConfiguration();
+    const eciesDefaults = runtimeDefaults.ECIES;
     const config: IECIESConfig = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
+    const engine = getEciesPluginI18nEngine();
     const eciesService: ECIESService = new ECIESService(
-      getEciesPluginI18nEngine(),
+      engine,
       config,
+      eciesDefaults,
     );
     switch (encryptionMode) {
       case 'simple':
         // type (1) + public key (65) + IV (16) + auth tag (16) = 98
-        return dataLength + ECIES.SIMPLE.FIXED_OVERHEAD_SIZE;
+        return dataLength + eciesDefaults.SIMPLE.FIXED_OVERHEAD_SIZE;
       case 'single':
         // type (1) + public key (65) + IV (16) + auth tag (16) + data length (4) + crc16 (2) = 104
-        return dataLength + ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+        return dataLength + eciesDefaults.SINGLE.FIXED_OVERHEAD_SIZE;
       case 'multiple':
         return (
           dataLength +
@@ -83,7 +86,8 @@ export class EciesUtilities {
       );
     }
 
-    const overhead = ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+    const { ECIES: eciesDefaults } = getNodeRuntimeConfiguration();
+    const overhead = eciesDefaults.SINGLE.FIXED_OVERHEAD_SIZE;
     const actualPadding = padding !== undefined ? padding : 0;
 
     const decryptedLength = encryptedDataLength - overhead - actualPadding;

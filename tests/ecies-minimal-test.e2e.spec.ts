@@ -1,10 +1,10 @@
 import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 import {
-  Constants as AppConstants,
   ECIESService as FrontendECIESService,
   IECIESConfig,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { getNodeRuntimeConfiguration } from '../src/constants';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 
@@ -15,13 +15,14 @@ describe('ECIES Minimal Cross-Platform Test', () => {
   let testMnemonic: SecureString;
 
   beforeAll(() => {
+    const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
-      curveName: AppConstants.ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: AppConstants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: AppConstants.ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: AppConstants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
-      symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
+      curveName: eciesDefaults.CURVE_NAME,
+      primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesDefaults.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
 
     frontendService = new FrontendECIESService(config);

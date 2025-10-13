@@ -44,9 +44,9 @@ export class EciesSingleRecipientCore {
   public getHeaderSize(encryptionType: EciesEncryptionType): number {
     switch (encryptionType) {
       case 'simple':
-        return ECIES.SIMPLE.FIXED_OVERHEAD_SIZE;
+        return this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE;
       case 'single':
-        return ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+        return this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE;
       default:
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptionType,
@@ -80,7 +80,7 @@ export class EciesSingleRecipientCore {
         encryptionType as keyof typeof EciesEncryptionTypeMap
       ] as number,
     );
-    if (message.length > ECIES.MAX_RAW_DATA_SIZE) {
+    if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
         this.engine,
@@ -142,22 +142,22 @@ export class EciesSingleRecipientCore {
 
     // Get the ephemeral public key and ensure it has the 0x04 prefix
     let ephemeralPublicKey = ecdh.getPublicKey();
-    if (ephemeralPublicKey.length === ECIES.RAW_PUBLIC_KEY_LENGTH) {
+    if (ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH) {
       ephemeralPublicKey = Buffer.concat([
-        Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
+        Buffer.from([this.cryptoCore.consts.PUBLIC_KEY_MAGIC]),
         ephemeralPublicKey,
       ]);
     }
 
     // Generate random IV
-    const iv = randomBytes(ECIES.IV_SIZE);
+    const iv = randomBytes(this.cryptoCore.consts.IV_SIZE);
 
     // Get the key from the shared secret (always use first 32 bytes)
-    const symKey = sharedSecret.subarray(0, ECIES.SYMMETRIC.KEY_SIZE);
+    const symKey = sharedSecret.subarray(0, this.cryptoCore.consts.SYMMETRIC.KEY_SIZE);
 
     // Create cipher with the derived symmetric key
     const cipher = createCipheriv(
-      ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symKey,
       iv,
     ) as unknown as AuthenticatedCipher;
@@ -248,8 +248,8 @@ export class EciesSingleRecipientCore {
     if (
       data.length <
       (includeLengthAndCrc
-        ? ECIES.SINGLE.FIXED_OVERHEAD_SIZE
-        : ECIES.SIMPLE.FIXED_OVERHEAD_SIZE)
+        ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
+        : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE)
     ) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
@@ -257,7 +257,7 @@ export class EciesSingleRecipientCore {
         undefined,
         undefined,
         {
-          required: String(ECIES.SINGLE.FIXED_OVERHEAD_SIZE),
+          required: String(this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE),
           actual: String(data.length),
         },
       );
@@ -273,26 +273,26 @@ export class EciesSingleRecipientCore {
     // Extract components from the header
     const ephemeralPublicKey = data.subarray(
       offset,
-      offset + ECIES.PUBLIC_KEY_LENGTH,
+      offset + this.cryptoCore.consts.PUBLIC_KEY_LENGTH,
     );
-    offset += ECIES.PUBLIC_KEY_LENGTH;
+    offset += this.cryptoCore.consts.PUBLIC_KEY_LENGTH;
 
     // Make sure we normalize the ephemeral public key
     const normalizedKey =
       this.cryptoCore.normalizePublicKey(ephemeralPublicKey);
 
-    const iv = data.subarray(offset, offset + ECIES.IV_SIZE);
-    offset += ECIES.IV_SIZE;
+    const iv = data.subarray(offset, offset + this.cryptoCore.consts.IV_SIZE);
+    offset += this.cryptoCore.consts.IV_SIZE;
 
-    const authTag = data.subarray(offset, offset + ECIES.AUTH_TAG_SIZE);
-    offset += ECIES.AUTH_TAG_SIZE;
+    const authTag = data.subarray(offset, offset + this.cryptoCore.consts.AUTH_TAG_SIZE);
+    offset += this.cryptoCore.consts.AUTH_TAG_SIZE;
 
     // Extract the length prefix (4 bytes) after the header components
     const dataLengthBuffer = includeLengthAndCrc
-      ? data.subarray(offset, offset + ECIES.SINGLE.DATA_LENGTH_SIZE)
+      ? data.subarray(offset, offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE)
       : Buffer.alloc(0);
     if (includeLengthAndCrc) {
-      offset += ECIES.SINGLE.DATA_LENGTH_SIZE;
+      offset += this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE;
     }
 
     const dataLength = includeLengthAndCrc
@@ -347,7 +347,7 @@ export class EciesSingleRecipientCore {
     // No CRC validation needed (AES-GCM provides authentication)
 
     // Validate all header components have the correct lengths
-    if (normalizedKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
+    if (normalizedKey.length !== this.cryptoCore.consts.PUBLIC_KEY_LENGTH) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
         this.engine,
@@ -356,33 +356,33 @@ export class EciesSingleRecipientCore {
         {
           error:
             'Ephemeral public key has incorrect length after normalization',
-          expected: String(ECIES.PUBLIC_KEY_LENGTH),
+          expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
           actual: String(normalizedKey.length),
         },
       );
     }
 
-    if (iv.length !== ECIES.IV_SIZE) {
+    if (iv.length !== this.cryptoCore.consts.IV_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidIVLength,
         this.engine,
         undefined,
         undefined,
         {
-          expected: String(ECIES.IV_SIZE),
+          expected: String(this.cryptoCore.consts.IV_SIZE),
           actual: String(iv.length),
         },
       );
     }
 
-    if (authTag.length !== ECIES.AUTH_TAG_SIZE) {
+    if (authTag.length !== this.cryptoCore.consts.AUTH_TAG_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidAuthTagLength,
         this.engine,
         undefined,
         undefined,
         {
-          expected: String(ECIES.AUTH_TAG_SIZE),
+          expected: String(this.cryptoCore.consts.AUTH_TAG_SIZE),
           actual: String(authTag.length),
         },
       );
@@ -396,8 +396,8 @@ export class EciesSingleRecipientCore {
         authTag,
         dataLength,
         headerSize: includeLengthAndCrc
-          ? ECIES.SINGLE.FIXED_OVERHEAD_SIZE
-          : ECIES.SINGLE.FIXED_OVERHEAD_SIZE,
+          ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
+          : this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE,
       },
       data: encryptedData,
       remainder,
@@ -581,38 +581,38 @@ export class EciesSingleRecipientCore {
       }
 
       // Get the key from the shared secret (always use first 32 bytes)
-      const symKey = sharedSecret.subarray(0, ECIES.SYMMETRIC.KEY_SIZE);
+      const symKey = sharedSecret.subarray(0, this.cryptoCore.consts.SYMMETRIC.KEY_SIZE);
 
       // Create decipher with shared secret-derived key
       const decipher = createDecipheriv(
-        ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
+        this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
         symKey,
         iv,
       ) as unknown as AuthenticatedDecipher;
 
       // Validate the tag and IV
-      if (authTag.length !== ECIES.AUTH_TAG_SIZE) {
+      if (authTag.length !== this.cryptoCore.consts.AUTH_TAG_SIZE) {
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
           this.engine,
           undefined,
           undefined,
           {
-            expected: String(ECIES.AUTH_TAG_SIZE),
+            expected: String(this.cryptoCore.consts.AUTH_TAG_SIZE),
             actual: String(authTag.length),
             stage: 'auth_tag_validation',
           },
         );
       }
 
-      if (iv.length !== ECIES.IV_SIZE) {
+      if (iv.length !== this.cryptoCore.consts.IV_SIZE) {
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
           this.engine,
           undefined,
           undefined,
           {
-            expected: String(ECIES.IV_SIZE),
+            expected: String(this.cryptoCore.consts.IV_SIZE),
             actual: String(iv.length),
             stage: 'iv_validation',
           },

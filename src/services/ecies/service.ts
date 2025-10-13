@@ -6,6 +6,7 @@ import {
   ECIESErrorTypeEnum,
   HexString,
   IECIESConfig,
+  IECIESConstants,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
@@ -40,6 +41,7 @@ export class ECIESService {
   constructor(
     engineOrConfig?: PluginI18nEngine<CoreLanguage> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
+    eciesParams?: IECIESConstants,
   ) {
     // Determine if first parameter is engine or config
     let engine: PluginI18nEngine<CoreLanguage>;
@@ -55,19 +57,21 @@ export class ECIESService {
       actualConfig = (engineOrConfig as Partial<IECIESConfig>) || {};
     }
 
+    const eciesConsts = eciesParams ?? ECIES;
     this._config = {
-      curveName: ECIES.CURVE_NAME,
-      primaryKeyDerivationPath: ECIES.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: ECIES.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: ECIES.SYMMETRIC.ALGORITHM,
-      symmetricKeyBits: ECIES.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: ECIES.SYMMETRIC.MODE,
+      ...config,
+      curveName: eciesConsts.CURVE_NAME,
+      primaryKeyDerivationPath: eciesConsts.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: eciesConsts.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: eciesConsts.SYMMETRIC.ALGORITHM,
+      symmetricKeyBits: eciesConsts.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: eciesConsts.SYMMETRIC.MODE,
       ...actualConfig,
     };
 
     // Initialize all components
     this.engine = engine;
-    this.cryptoCore = new EciesCryptoCore(this._config);
+    this.cryptoCore = new EciesCryptoCore(this._config, eciesParams);
     this.signature = new EciesSignature(this.cryptoCore);
     this.singleRecipient = new EciesSingleRecipientCore(this._config, engine);
     this.multiRecipient = new EciesMultiRecipient(this.cryptoCore, engine);

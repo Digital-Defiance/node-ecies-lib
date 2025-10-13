@@ -1,10 +1,33 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
-import { Constants } from '../constants';
+import { CipherGCMTypes } from 'crypto';
+import { IConstants } from '../interfaces/constants';
 
-export abstract class AESGCMService {
-  public static readonly ALGORITHM_NAME = Constants.KEYRING.ALGORITHM;
-  public static readonly MODE = Constants.KEYRING.MODE;
-  public static readonly KEY_BITS = Constants.KEYRING.KEY_BITS;
+export class AESGCMService {
+  private readonly algorithmName: string;
+  private readonly mode: string;
+  private readonly keyBits: number;
+  private readonly ivSize: number;
+  private readonly keyringAlgorithmConfiguration: CipherGCMTypes;
+
+  constructor(constants: IConstants) {
+    this.algorithmName = constants.KEYRING.ALGORITHM;
+    this.mode = constants.KEYRING.MODE;
+    this.keyBits = constants.KEYRING.KEY_BITS;
+    this.ivSize = constants.WRAPPED_KEY.IV_SIZE;
+    this.keyringAlgorithmConfiguration = constants.KEYRING_ALGORITHM_CONFIGURATION;
+  }
+
+  public get ALGORITHM_NAME(): string {
+    return this.algorithmName;
+  }
+
+  public get MODE(): string {
+    return this.mode;
+  }
+
+  public get KEY_BITS(): number {
+    return this.keyBits;
+  }
 
   /**
    * Encrypt data using AES-GCM
@@ -13,13 +36,13 @@ export abstract class AESGCMService {
    * @param authTag Whether to return separate auth tag
    * @returns Encrypted data with IV and optional separate auth tag
    */
-  public static encrypt(
+  public encrypt(
     data: Buffer,
     key: Buffer,
     authTag: boolean = false,
   ): { encrypted: Buffer; iv: Buffer; tag?: Buffer } {
-    const iv = randomBytes(Constants.WRAPPED_KEY.IV_SIZE);
-    const cipher = createCipheriv(Constants.KEYRING_ALGORITHM_CONFIGURATION, key, iv);
+    const iv = randomBytes(this.ivSize);
+    const cipher = createCipheriv(this.keyringAlgorithmConfiguration, key, iv);
     
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
     const tag = cipher.getAuthTag();
@@ -42,7 +65,7 @@ export abstract class AESGCMService {
    * @param authTag The authentication tag
    * @returns The combined Buffer
    */
-  public static combineEncryptedDataAndTag(
+  public combineEncryptedDataAndTag(
     encryptedData: Buffer,
     authTag: Buffer,
   ): Buffer {
@@ -55,7 +78,7 @@ export abstract class AESGCMService {
    * @param encryptedDataWithTag The encrypted data with auth tag already appended (if applicable)
    * @returns The combined Buffer
    */
-  public static combineIvAndEncryptedData(
+  public combineIvAndEncryptedData(
     iv: Buffer,
     encryptedDataWithTag: Buffer,
   ): Buffer {
@@ -69,16 +92,16 @@ export abstract class AESGCMService {
    * @param authTag The authentication tag
    * @returns The combined Buffer
    */
-  public static combineIvTagAndEncryptedData(
+  public combineIvTagAndEncryptedData(
     iv: Buffer,
     encryptedData: Buffer,
     authTag: Buffer,
   ): Buffer {
-    const encryptedWithTag = AESGCMService.combineEncryptedDataAndTag(
+    const encryptedWithTag = this.combineEncryptedDataAndTag(
       encryptedData,
       authTag,
     );
-    return AESGCMService.combineIvAndEncryptedData(iv, encryptedWithTag);
+    return this.combineIvAndEncryptedData(iv, encryptedWithTag);
   }
 
   /**
@@ -87,11 +110,11 @@ export abstract class AESGCMService {
    * @param hasAuthTag Whether the combined data includes an authentication tag
    * @returns Object containing the split components
    */
-  public static splitEncryptedData(
+  public splitEncryptedData(
     combinedData: Buffer,
     hasAuthTag: boolean = true,
   ): { iv: Buffer; encryptedDataWithTag: Buffer } {
-    const ivLength = Constants.WRAPPED_KEY.IV_SIZE;
+    const ivLength = this.ivSize;
     const minLength = ivLength + (hasAuthTag ? 16 : 0);
 
     if (combinedData.length < minLength) {
@@ -114,13 +137,13 @@ export abstract class AESGCMService {
    * @param authTag Whether the encrypted data includes an authentication tag
    * @returns Decrypted data
    */
-  public static decrypt(
+  public decrypt(
     iv: Buffer,
     encryptedData: Buffer,
     key: Buffer,
     authTag: boolean = false,
   ): Buffer {
-    const decipher = createDecipheriv(Constants.KEYRING_ALGORITHM_CONFIGURATION, key, iv);
+    const decipher = createDecipheriv(this.keyringAlgorithmConfiguration, key, iv);
     
     const tagLength = 16;
     const tag = encryptedData.subarray(-tagLength);

@@ -9,13 +9,22 @@ interface ChunkedFileHeader {
 }
 
 export class EciesFileService {
-  private static readonly CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-  private static readonly HEADER_SIZE = 20;
+  protected readonly eciesService: ECIESService;
+  protected readonly userPrivateKey: Buffer;
+  protected readonly config: { chunkSize: number; headerSize: number };
 
   constructor(
-    private eciesService: ECIESService,
-    private userPrivateKey: Buffer,
-  ) {}
+    eciesService: ECIESService,
+    userPrivateKey: Buffer,
+    config: { chunkSize: number; headerSize: number } = {
+      chunkSize: 1024 * 1024, // 1MB chunks
+      headerSize: 20,
+    }
+  ) {
+    this.eciesService = eciesService;
+    this.userPrivateKey = userPrivateKey;
+    this.config = Object.freeze(config);
+  }
 
   decryptFile(encryptedData: Buffer): Buffer {
     const { header, chunks } = this.parseEncryptedFile(encryptedData);
@@ -42,10 +51,10 @@ export class EciesFileService {
 
   encryptFileFromPath(filePath: string, recipientPublicKey: Buffer): Buffer {
     const stats = fs.statSync(filePath);
-    const totalChunks = Math.ceil(stats.size / EciesFileService.CHUNK_SIZE);
+    const totalChunks = Math.ceil(stats.size / this.config.chunkSize);
     const header: ChunkedFileHeader = {
       version: 1,
-      chunkSize: EciesFileService.CHUNK_SIZE,
+      chunkSize: this.config.chunkSize,
       totalChunks,
       originalSize: stats.size,
     };
@@ -62,9 +71,9 @@ export class EciesFileService {
 
     try {
       for (let i = 0; i < totalChunks; i++) {
-        const offset = i * EciesFileService.CHUNK_SIZE;
+        const offset = i * this.config.chunkSize;
         const chunkSize = Math.min(
-          EciesFileService.CHUNK_SIZE,
+          this.config.chunkSize,
           stats.size - offset,
         );
         const chunkData = Buffer.alloc(chunkSize);
@@ -108,8 +117,8 @@ export class EciesFileService {
     }
   }
 
-  private serializeHeader(header: ChunkedFileHeader): Buffer {
-    const buffer = Buffer.alloc(EciesFileService.HEADER_SIZE);
+  protected serializeHeader(header: ChunkedFileHeader): Buffer {
+    const buffer = Buffer.alloc(this.config.headerSize);
     buffer.writeUInt32BE(header.version, 0);
     buffer.writeUInt32BE(header.chunkSize, 4);
     buffer.writeUInt32BE(header.totalChunks, 8);
@@ -117,7 +126,7 @@ export class EciesFileService {
     return buffer;
   }
 
-  private deserializeHeader(data: Buffer): ChunkedFileHeader {
+  protected deserializeHeader(data: Buffer): ChunkedFileHeader {
     return {
       version: data.readUInt32BE(0),
       chunkSize: data.readUInt32BE(4),
@@ -126,12 +135,12 @@ export class EciesFileService {
     };
   }
 
-  private parseEncryptedFile(encryptedData: Buffer): {
+  protected parseEncryptedFile(encryptedData: Buffer): {
     header: ChunkedFileHeader;
     chunks: Buffer[];
   } {
     const headerLength = this.eciesService.computeEncryptedLengthFromDataLength(
-      EciesFileService.HEADER_SIZE,
+      this.config.headerSize,
       'single',
     );
 
