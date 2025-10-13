@@ -232,7 +232,6 @@ const nodeEncrypted = nodeMember.encryptData('message');
 // Send nodeEncrypted to browser for decryption
 ```
 
-
 ## Security Features
 
 - **Secure Memory Management**: Uses `SecureBuffer` and `SecureString` for sensitive data
