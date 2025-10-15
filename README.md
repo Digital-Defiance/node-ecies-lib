@@ -359,7 +359,12 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
-### Version 1.0.9
+### Version 1.0.11
+
+- Wed Oct 15 2025 16:25:00 GMT-0700 (Pacific Daylight Time)
+  - Bump versions of i18n/ecies libs
+
+### Version 1.0.10
 
 - Tue Oct 14 2025 15:24:00 GMT-0700 (Pacific Daylight Time)
   - Bump versions of i18n/ecies libs
