@@ -6,7 +6,7 @@ import { EciesMultiRecipient as BackendMultiRecipient } from '../src/services/ec
 import { Member as BackendMember } from '../src/member';
 import {
   EciesEncryptionTypeEnum,
-  Member as FrontendBurnbagMember,
+  Member as FrontendMember,
   EciesCryptoCore as FrontendCryptoCore,
   ECIESService as FrontendECIESService,
   EciesMultiRecipient as FrontendMultiRecipient,
@@ -205,7 +205,7 @@ describe('Cross-Platform Compatibility', () => {
   describe('Member-Level Cross-Compatibility', () => {
     it('should handle member communication cross-platform', async () => {
       // Create frontend and backend members
-      const frontendMember = FrontendBurnbagMember.fromMnemonic(
+      const frontendMember = FrontendMember.fromMnemonic(
         testMnemonic,
         frontendECIES,
       );
@@ -238,7 +238,7 @@ describe('Cross-Platform Compatibility', () => {
     });
 
     it('should handle signed messages cross-platform', async () => {
-      const frontendMember = FrontendBurnbagMember.fromMnemonic(
+      const frontendMember = FrontendMember.fromMnemonic(
         testMnemonic,
         frontendECIES,
       );
