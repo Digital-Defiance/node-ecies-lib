@@ -5,7 +5,7 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
 } from '@digitaldefiance/ecies-lib';
-import { CoreLanguage, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
 import {
   createCipheriv,
   createDecipheriv,
@@ -29,11 +29,11 @@ import { EciesSingleRecipientCore } from './single-recipient';
 export class EciesMultiRecipient {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly singleRecipientCore: EciesSingleRecipientCore;
-  protected readonly engine: PluginI18nEngine<CoreLanguage>;
+  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
   constructor(
     cryptoCore: EciesCryptoCore,
-    engine?: PluginI18nEngine<CoreLanguage>,
+    engine?: PluginI18nEngine<CoreLanguageCode>,
   ) {
     this.cryptoCore = cryptoCore;
     this.engine = engine || getEciesPluginI18nEngine();

@@ -359,6 +359,11 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.0
+
+- Thu Oct 23 2025 14:38:00 GMT-0700 (Pacific Daylight Time)
+  - Update i18n and ecies lib versions
+
 ### Version 1.0.13
 
 - Mon Oct 20 2025 12:20:00 GMT-0700 (Pacific Daylight Time)

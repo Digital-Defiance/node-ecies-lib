@@ -12,7 +12,7 @@ import {
   UINT32_MAX,
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
-import { CoreLanguage, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
 import {
   createCipheriv,
   createDecipheriv,
@@ -28,9 +28,9 @@ import { EciesCryptoCore } from './crypto-core';
 export class EciesSingleRecipientCore {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly config: IECIESConfig;
-  protected readonly engine: PluginI18nEngine<CoreLanguage>;
+  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
-  constructor(config: IECIESConfig, engine?: PluginI18nEngine<CoreLanguage>) {
+  constructor(config: IECIESConfig, engine?: PluginI18nEngine<CoreLanguageCode>) {
     this.config = config;
     this.cryptoCore = new EciesCryptoCore(config);
     this.engine = engine || getEciesPluginI18nEngine();
