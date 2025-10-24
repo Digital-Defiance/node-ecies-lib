@@ -359,6 +359,11 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.1
+
+- Fri Oct 24 2025 13:35:00 GMT-0700 (Pacific Daylight Time)
+  - Fix pbkdf2 service engine typing
+
 ### Version 1.1.0
 
 - Thu Oct 23 2025 14:38:00 GMT-0700 (Pacific Daylight Time)

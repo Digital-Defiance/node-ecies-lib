@@ -1,4 +1,4 @@
-import { I18nEngine, Language } from '@digitaldefiance/i18n-lib';
+import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {
   IPbkdf2Config,
   IPBkdf2Consts,
@@ -32,13 +32,13 @@ export class NodePbkdf2Error extends Error {
  * - Both synchronous and asynchronous key derivation
  */
 export class Pbkdf2Service {
-  protected readonly engine: I18nEngine<NodeEciesStringKey, Language, any, any>;
+  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
   protected readonly pbkdf2Consts: IPBkdf2Consts;
   
   constructor(
-    engine: I18nEngine<NodeEciesStringKey, Language, any, any>,
+    engine: PluginI18nEngine<CoreLanguageCode>,
     profiles?: Record<string, IPbkdf2Config>,
     eciesParams?: IECIESConsts,
     pbkdf2Params?: IPBkdf2Consts,
@@ -83,12 +83,12 @@ export class Pbkdf2Service {
    * @returns A new Pbkdf2Service instance
    */
   public static fromConstants(constants: IConstants): Pbkdf2Service {
-    const engine = getEciesPluginI18nEngine() as any;
+    const engine = getEciesPluginI18nEngine();
     const runtimeDefaults = getNodeRuntimeConfiguration();
     return new Pbkdf2Service(
       engine,
       constants.PBKDF2_PROFILES,
-      runtimeDefaults.ECIES as any,
+      runtimeDefaults.ECIES,
       constants.PBKDF2,
     );
   }
