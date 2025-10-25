@@ -12,14 +12,15 @@ import {
   UINT32_MAX,
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
-import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { TranslationEngine } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   createCipheriv,
   createDecipheriv,
   createECDH,
   randomBytes,
 } from 'crypto';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -28,12 +29,12 @@ import { EciesCryptoCore } from './crypto-core';
 export class EciesSingleRecipientCore {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly config: IECIESConfig;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
+  protected readonly engine: TranslationEngine<EciesStringKey>;
 
-  constructor(config: IECIESConfig, engine?: PluginI18nEngine<CoreLanguageCode>) {
+  constructor(config: IECIESConfig, engine?: TranslationEngine<EciesStringKey>) {
     this.config = config;
     this.cryptoCore = new EciesCryptoCore(config);
-    this.engine = engine || getEciesPluginI18nEngine();
+    this.engine = engine || createEciesTranslationEngine();
   }
 
   /**

@@ -5,7 +5,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { SignatureBuffer, SignatureString } from '../../types';
 import { EciesCryptoCore } from './crypto-core';
 
@@ -49,7 +49,7 @@ export class EciesSignature {
     if (signature.length !== 64) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidSignature,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
       );
     }
 
@@ -59,7 +59,7 @@ export class EciesSignature {
     } catch {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidSenderPublicKey,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
       );
     }
 

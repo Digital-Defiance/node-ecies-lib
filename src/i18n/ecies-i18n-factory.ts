@@ -5,7 +5,9 @@ import {
   createCoreI18nEngine,
   PluginI18nEngine,
   LanguageCodes,
+  TranslationEngine,
 } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey, getCompatibleEciesEngine } from '@digitaldefiance/ecies-lib';
 
 /**
  * ECIES-specific string keys for the node ECIES library
@@ -302,6 +304,14 @@ export function getNodeEciesTranslation(
 ): string {
   const engine = getEciesPluginI18nEngine();
   return engine.translate('node-ecies', key, variables, language);
+}
+
+/**
+ * Create a TranslationEngine adapter for ECIES errors
+ * Uses the base ecies-lib's compatible engine which has all EciesStringKey translations
+ */
+export function createEciesTranslationEngine(): TranslationEngine<EciesStringKey> {
+  return getCompatibleEciesEngine() as TranslationEngine<EciesStringKey>;
 }
 
 export { NodeEciesStringKey };

@@ -1,4 +1,5 @@
-import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import { TranslationEngine } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   IPbkdf2Config,
   IPBkdf2Consts,
@@ -8,7 +9,7 @@ import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { IConstants } from '../interfaces/constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
-import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getNodeEciesTranslation, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 import { IECIESConsts } from '../interfaces/ecies-consts';
 import { getNodeRuntimeConfiguration } from '../constants';
@@ -32,13 +33,13 @@ export class NodePbkdf2Error extends Error {
  * - Both synchronous and asynchronous key derivation
  */
 export class Pbkdf2Service {
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
+  protected readonly engine: TranslationEngine<EciesStringKey>;
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
   protected readonly pbkdf2Consts: IPBkdf2Consts;
   
   constructor(
-    engine: PluginI18nEngine<CoreLanguageCode>,
+    engine: TranslationEngine<EciesStringKey>,
     profiles?: Record<string, IPbkdf2Config>,
     eciesParams?: IECIESConsts,
     pbkdf2Params?: IPBkdf2Consts,
@@ -83,7 +84,7 @@ export class Pbkdf2Service {
    * @returns A new Pbkdf2Service instance
    */
   public static fromConstants(constants: IConstants): Pbkdf2Service {
-    const engine = getEciesPluginI18nEngine();
+    const engine = createEciesTranslationEngine();
     const runtimeDefaults = getNodeRuntimeConfiguration();
     return new Pbkdf2Service(
       engine,

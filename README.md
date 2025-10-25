@@ -359,6 +359,42 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.3
+
+#### New Features:
+
+  - Added createTranslationAdapter utility in i18n-lib to bridge PluginI18nEngine and TranslationEngine interfaces
+
+    - Generic adapter pattern now standard across monorepo for translation engine compatibility
+
+  - Bug Fixes:
+
+    - Resolved 53 TypeScript compilation errors in node-ecies-lib caused by interface type mismatches
+
+    - Fixed type incompatibility between PluginI18nEngine<CoreLanguageCode> and TranslationEngine<EciesStringKey>
+
+  - Improvements:
+
+    - Updated all ecies service files to use correct TranslationEngine<EciesStringKey> type
+
+    - Enhanced type safety with CoreLanguageCode instead of any for language parameters
+
+    - Improved error handling with fallback to key string in translation adapter
+
+  - Testing:
+
+    - Added 89 comprehensive tests (19 in i18n-lib, 70 in node-ecies-lib) with 100% pass rate
+
+    - Implemented withConsoleMocks helper to suppress expected console warnings in tests
+
+    - Cleaned up test output by muting intentional error scenarios
+
+  - Internal:
+
+    - Refactored ecies-i18n-factory to leverage new adapter pattern
+
+    - Standardized translation engine creation across packages
+
 ### Version 1.1.1
 
 - Fri Oct 24 2025 13:35:00 GMT-0700 (Pacific Daylight Time)

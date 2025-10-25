@@ -10,11 +10,12 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { Member } from '../../member';
 
 // Import all the modular components
-import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { TranslationEngine } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import { IWalletSeed } from 'src/interfaces';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
@@ -36,24 +37,24 @@ export class ECIESService {
   protected readonly singleRecipient: EciesSingleRecipientCore;
   protected readonly multiRecipient: EciesMultiRecipient;
   protected readonly utilities: EciesUtilities;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
+  protected readonly engine: TranslationEngine<EciesStringKey>;
 
   constructor(
-    engineOrConfig?: PluginI18nEngine<CoreLanguageCode> | Partial<IECIESConfig>,
+    engineOrConfig?: TranslationEngine<EciesStringKey> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
     eciesParams?: IECIESConstants,
   ) {
     // Determine if first parameter is engine or config
-    let engine: PluginI18nEngine<CoreLanguageCode>;
+    let engine: TranslationEngine<EciesStringKey>;
     let actualConfig: Partial<IECIESConfig>;
 
     if (engineOrConfig && 'translate' in engineOrConfig) {
       // First parameter is an engine
-      engine = engineOrConfig as PluginI18nEngine<CoreLanguageCode>;
+      engine = engineOrConfig as TranslationEngine<EciesStringKey>;
       actualConfig = config || {};
     } else {
       // First parameter is config or undefined
-      engine = getEciesPluginI18nEngine();
+      engine = createEciesTranslationEngine();
       actualConfig = (engineOrConfig as Partial<IECIESConfig>) || {};
     }
 

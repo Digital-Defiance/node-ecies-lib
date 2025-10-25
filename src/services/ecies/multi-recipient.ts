@@ -5,7 +5,8 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
 } from '@digitaldefiance/ecies-lib';
-import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { TranslationEngine } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   createCipheriv,
   createDecipheriv,
@@ -15,7 +16,7 @@ import {
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
 import { Constants } from '../../constants';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
@@ -29,14 +30,14 @@ import { EciesSingleRecipientCore } from './single-recipient';
 export class EciesMultiRecipient {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly singleRecipientCore: EciesSingleRecipientCore;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
+  protected readonly engine: TranslationEngine<EciesStringKey>;
 
   constructor(
     cryptoCore: EciesCryptoCore,
-    engine?: PluginI18nEngine<CoreLanguageCode>,
+    engine?: TranslationEngine<EciesStringKey>,
   ) {
     this.cryptoCore = cryptoCore;
-    this.engine = engine || getEciesPluginI18nEngine();
+    this.engine = engine || createEciesTranslationEngine();
     this.singleRecipientCore = new EciesSingleRecipientCore(
       cryptoCore.config,
       this.engine,

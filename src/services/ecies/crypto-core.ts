@@ -10,7 +10,7 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
 
@@ -43,7 +43,7 @@ export class EciesCryptoCore {
     if (!publicKey) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
         undefined,
         undefined,
         {
@@ -70,7 +70,7 @@ export class EciesCryptoCore {
     // Invalid format
     throw new ECIESError(
       ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-      getEciesPluginI18nEngine(),
+      createEciesTranslationEngine(),
       undefined,
       undefined,
       {
@@ -113,7 +113,7 @@ export class EciesCryptoCore {
     if (!mnemonic.value || !validateMnemonic(mnemonic.value)) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
       );
     }
 

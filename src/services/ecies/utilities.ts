@@ -4,7 +4,7 @@ import {
   ECIESErrorTypeEnum,
   IECIESConfig,
 } from '@digitaldefiance/ecies-lib';
-import { getEciesPluginI18nEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { ECIESService } from './service';
 import { getNodeRuntimeConfiguration } from '../../constants';
 
@@ -27,7 +27,7 @@ export class EciesUtilities {
     if (dataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
       );
     }
     const runtimeDefaults = getNodeRuntimeConfiguration();
@@ -40,7 +40,7 @@ export class EciesUtilities {
       symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
       symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
-    const engine = getEciesPluginI18nEngine();
+    const engine = createEciesTranslationEngine();
     const eciesService: ECIESService = new ECIESService(
       engine,
       config,
@@ -64,7 +64,7 @@ export class EciesUtilities {
       default:
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptionType,
-          getEciesPluginI18nEngine(),
+          createEciesTranslationEngine(),
         );
     }
   }
@@ -82,7 +82,7 @@ export class EciesUtilities {
     if (encryptedDataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
       );
     }
 
@@ -94,7 +94,7 @@ export class EciesUtilities {
     if (decryptedLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        getEciesPluginI18nEngine(),
+        createEciesTranslationEngine(),
         undefined,
         undefined,
         {
