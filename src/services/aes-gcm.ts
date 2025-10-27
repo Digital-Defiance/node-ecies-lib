@@ -1,6 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import { CipherGCMTypes } from 'crypto';
 import { IConstants } from '../interfaces/constants';
+import { getEciesPluginI18nEngine, NodeEciesStringKey } from '../i18n';
 
 export class AESGCMService {
   private readonly algorithmName: string;
@@ -118,13 +119,15 @@ export class AESGCMService {
     const minLength = ivLength + (hasAuthTag ? 16 : 0);
 
     if (combinedData.length < minLength) {
+      const pluginEngine = getEciesPluginI18nEngine();
+
       throw new Error(
-        'Combined data is too short to contain required components',
+        pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_CombinedDataTooShort),
       );
     }
 
-    const iv = combinedData.slice(0, ivLength);
-    const encryptedDataWithTag = combinedData.slice(ivLength);
+    const iv = combinedData.subarray(0, ivLength);
+    const encryptedDataWithTag = combinedData.subarray(ivLength);
 
     return { iv, encryptedDataWithTag };
   }

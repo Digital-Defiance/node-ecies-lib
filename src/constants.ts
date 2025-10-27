@@ -14,6 +14,7 @@ import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
+import { getEciesPluginI18nEngine, NodeEciesStringKey } from './i18n';
 
 /**
  * Constants for checksum operations
@@ -175,7 +176,8 @@ if (
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8 ||
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8
 ) {
-  throw new Error('Invalid checksum constants');
+  const pluginEngine = getEciesPluginI18nEngine();
+  throw new Error(pluginEngine.translate('node-engine', NodeEciesStringKey.Error_InvalidChecksumConstants));
 }
 
 if (objectIdLength !== 12) {

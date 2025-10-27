@@ -359,6 +359,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.4
+
+  - Add more translation strings to errors and bump i18n/ecies libs
+
 ### Version 1.1.3
 
 #### New Features:

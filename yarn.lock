@@ -1316,28 +1316,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:1.1.4":
-  version: 1.1.4
-  resolution: "@digitaldefiance/ecies-lib@npm:1.1.4"
+"@digitaldefiance/ecies-lib@npm:1.1.5":
+  version: 1.1.5
+  resolution: "@digitaldefiance/ecies-lib@npm:1.1.5"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:1.2.5"
+    "@digitaldefiance/i18n-lib": "npm:1.3.0"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/33a5c4cd6c6b567ffed71d2ce612f055a2949816c0b46b7eaf3892d17b88edca9ca9a8814feacea03b1c293413c89dc5e5acc58fb80545c0c384e4f527e81cb1
+  checksum: 10c0/11dba49f5b88083fced45c5937850095e8e61976d00c34cbe58f84e4dc7ee0e7edf3f4fa7edaf00c752c63357fe7de7978760c48becdd275ab4e7aa10576f72c
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:1.2.5":
-  version: 1.2.5
-  resolution: "@digitaldefiance/i18n-lib@npm:1.2.5"
+"@digitaldefiance/i18n-lib@npm:1.3.0":
+  version: 1.3.0
+  resolution: "@digitaldefiance/i18n-lib@npm:1.3.0"
   dependencies:
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/42f7236aae13342d3ae6d4436be899328e64a663231bb192c2831ab61ba15b58c59c91b73e00db6d9f57461c5d1c2cf1752c83af8536a8b36ead0e16905f2e2b
+  checksum: 10c0/331f15617c82b38e14e52a4170317357e8bfd699f27de870eda158022824a12df48a961fa8e05afd4d2237f5245c17c9a5138a4d4866b8c508d726a790c15dfa
+  languageName: node
+  linkType: hard
+
+"@digitaldefiance/i18n-lib@npm:1.3.1":
+  version: 1.3.1
+  resolution: "@digitaldefiance/i18n-lib@npm:1.3.1"
+  dependencies:
+    moment: "npm:^2.30.1"
+    moment-timezone: "npm:^0.6.0"
+  checksum: 10c0/b4c6b8ecfc6c06c1f0ac29b420d23fca6b1c1eab9d5c3009eb38869b59fad342bf315caa99484fc9c82e0a2f49a435257b16bad9fb9d720d8f8a909b2882367b
   languageName: node
   linkType: hard
 
@@ -1348,8 +1358,8 @@ __metadata:
     "@babel/core": "npm:^7.28.4"
     "@babel/preset-env": "npm:^7.28.3"
     "@babel/preset-typescript": "npm:^7.27.1"
-    "@digitaldefiance/ecies-lib": "npm:1.1.4"
-    "@digitaldefiance/i18n-lib": "npm:1.2.5"
+    "@digitaldefiance/ecies-lib": "npm:1.1.5"
+    "@digitaldefiance/i18n-lib": "npm:1.3.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"

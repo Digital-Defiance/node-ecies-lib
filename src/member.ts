@@ -364,6 +364,9 @@ export class Member implements IMemberOperational<Types.ObjectId> {
   public static fromMnemonic(
     mnemonic: SecureString,
     eciesService: ECIESService,
+    memberType = MemberType.User,
+    name = 'Test User',
+    email = new EmailString('test@example.com'),
   ): Member {
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
@@ -374,9 +377,9 @@ export class Member implements IMemberOperational<Types.ObjectId> {
 
     return new Member(
       eciesService,
-      MemberType.User,
-      'Test User',
-      new EmailString('test@example.com'),
+      memberType,
+      name,
+      email,
       publicKeyWithPrefix,
       new SecureBuffer(privateKey),
       wallet,

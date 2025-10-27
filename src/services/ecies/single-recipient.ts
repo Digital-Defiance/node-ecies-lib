@@ -20,7 +20,7 @@ import {
   createECDH,
   randomBytes,
 } from 'crypto';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -82,13 +82,14 @@ export class EciesSingleRecipientCore {
       ] as number,
     );
     if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
+    const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
         this.engine,
         undefined,
         undefined,
         {
-          error: 'Message length exceeds maximum allowed size',
+          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize),
           maxLength: String(UINT32_MAX),
           messageLength: String(message.length),
         },
@@ -305,13 +306,14 @@ export class EciesSingleRecipientCore {
       options?.dataLength !== undefined &&
       dataLength !== options.dataLength
     ) {
+      const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
         this.engine,
         undefined,
         undefined,
         {
-          error: 'Encrypted data length mismatch',
+          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EncryptedDataLengthMismatch),
           expected: String(dataLength),
           actual: String(options.dataLength),
         },
@@ -349,6 +351,7 @@ export class EciesSingleRecipientCore {
 
     // Validate all header components have the correct lengths
     if (normalizedKey.length !== this.cryptoCore.consts.PUBLIC_KEY_LENGTH) {
+    const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
         this.engine,
@@ -356,7 +359,7 @@ export class EciesSingleRecipientCore {
         undefined,
         {
           error:
-            'Ephemeral public key has incorrect length after normalization',
+            pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch),
           expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
           actual: String(normalizedKey.length),
         },
@@ -626,8 +629,9 @@ export class EciesSingleRecipientCore {
       // Decrypt the data
       try {
         // Handle edge case where encrypted data might be empty or malformed
+        const pluginEngine = getEciesPluginI18nEngine();
         if (encrypted.length === 0) {
-          throw new Error('Encrypted data is empty');
+          throw new Error(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EncryptedDataIsEmpty));
         }
 
         const firstPart = decipher.update(encrypted);

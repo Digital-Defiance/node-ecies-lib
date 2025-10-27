@@ -10,7 +10,7 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
 
@@ -41,13 +41,15 @@ export class EciesCryptoCore {
    */
   public normalizePublicKey(publicKey: Buffer): Buffer {
     if (!publicKey) {
+      const engine = createEciesTranslationEngine();
+      const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-        createEciesTranslationEngine(),
+        engine,
         undefined,
         undefined,
         {
-          error: 'Received null or undefined public key',
+          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidPublicKey),
         },
       );
     }
@@ -67,14 +69,16 @@ export class EciesCryptoCore {
       return Buffer.concat([Buffer.from([this._consts.PUBLIC_KEY_MAGIC]), publicKey]);
     }
 
+    const engine = createEciesTranslationEngine();
+    const pluginEngine = getEciesPluginI18nEngine();
     // Invalid format
     throw new ECIESError(
       ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-      createEciesTranslationEngine(),
+      engine,
       undefined,
       undefined,
       {
-        error: 'Invalid public key format or length',
+        error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidPublicKeyFormat),
         keyLength: String(keyLength),
         expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
         expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),

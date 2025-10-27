@@ -10,7 +10,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { Member } from '../../member';
 
 // Import all the modular components
@@ -327,13 +327,15 @@ export class ECIESService {
       );
       return result.encryptedMessage;
     } else {
+      const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptionType,
         this.engine,
         undefined,
         undefined,
         {
-          error: 'Invalid encryption type or number of recipients',
+          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients),
+          encryptionType:
           encryptionType,
           recipients: String(recipients.length),
         },
