@@ -265,6 +265,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.6
+
+- Updated ecies lib
+
 ### Version 1.1.5
 
 - Updated readme and ecies lib dependency
