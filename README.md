@@ -265,6 +265,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.10
+
+- Update ecies lib
+
 ### Version 1.1.9
 
 - Updated ecies/i18n lib
