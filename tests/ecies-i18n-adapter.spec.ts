@@ -3,6 +3,7 @@ import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   createEciesTranslationEngine,
   getEciesPluginI18nEngine,
+  NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../src/i18n/ecies-i18n-factory';
 import { withConsoleMocks } from './support/console';
@@ -94,7 +95,7 @@ describe('ECIES Translation Adapter', () => {
     testKeys.forEach((key) => {
       it(`should translate ${key} in English`, () => {
         const pluginEngine = getEciesPluginI18nEngine();
-        const result = pluginEngine.translate('node-ecies', key, undefined, LanguageCodes.EN_US);
+        const result = pluginEngine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.EN_US);
         
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -104,7 +105,7 @@ describe('ECIES Translation Adapter', () => {
 
       it(`should translate ${key} in French`, () => {
         const pluginEngine = getEciesPluginI18nEngine();
-        const result = pluginEngine.translate('node-ecies', key, undefined, LanguageCodes.FR);
+        const result = pluginEngine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.FR);
         
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -153,7 +154,7 @@ describe('ECIES Translation Adapter', () => {
       it(`should provide translations for ${lang}`, () => {
         const pluginEngine = getEciesPluginI18nEngine();
         const result = pluginEngine.translate(
-          'node-ecies',
+          NodeEciesComponentId,
           NodeEciesStringKey.Error_Member_MissingMemberName,
           undefined,
           lang
@@ -172,7 +173,7 @@ describe('ECIES Translation Adapter', () => {
       
       // Test with a template string if available
       const result = pluginEngine.translate(
-        'node-ecies',
+        NodeEciesComponentId,
         NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
         { length: '100' },
         LanguageCodes.EN_US

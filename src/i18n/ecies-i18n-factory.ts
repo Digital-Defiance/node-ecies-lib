@@ -43,12 +43,13 @@ enum NodeEciesStringKey {
   Error_Pbkdf2_InvalidSaltLength = 'error_pbkdf2_invalid_salt_length',
   Error_Pbkdf2_InvalidHashLength = 'error_pbkdf2_invalid_hash_length',
 }
+export const NodeEciesComponentId = 'node-ecies';
 
 /**
  * Component definition for Node ECIES strings
  */
 const NodeEciesComponent: ComponentDefinition<NodeEciesStringKey> = {
-  id: 'node-ecies',
+  id: NodeEciesComponentId,
   name: 'Node ECIES Library Strings',
   stringKeys: Object.values(NodeEciesStringKey),
 };
@@ -380,7 +381,7 @@ let eciesI18nEngineInstance: PluginI18nEngine<string> | null = null;
 export function getEciesPluginI18nEngine(): PluginI18nEngine<string> {
   if (!eciesI18nEngineInstance) {
     // Create core engine with system strings
-    eciesI18nEngineInstance = createCoreI18nEngine('node-ecies');
+    eciesI18nEngineInstance = createCoreI18nEngine(NodeEciesComponentId);
 
     // Register the Node ECIES component
     const registration: ComponentRegistration<
@@ -419,7 +420,7 @@ export function getNodeEciesTranslation(
   language?: string,
 ): string {
   const engine = getEciesPluginI18nEngine();
-  return engine.translate('node-ecies', key, variables, language);
+  return engine.translate(NodeEciesComponentId, key, variables, language);
 }
 
 /**

@@ -12,7 +12,7 @@ import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
 import { createEciesTranslationEngine, getNodeEciesTranslation, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 import { IECIESConsts } from '../interfaces/ecies-consts';
-import { getNodeRuntimeConfiguration } from '../constants';
+import { Constants, getNodeRuntimeConfiguration } from '../constants';
 
 /**
  * Custom PBKDF2 error class that works with the plugin i18n system
@@ -41,8 +41,8 @@ export class Pbkdf2Service {
   constructor(
     engine: TranslationEngine<EciesStringKey>,
     profiles?: Record<string, IPbkdf2Config>,
-    eciesParams?: IECIESConsts,
-    pbkdf2Params?: IPBkdf2Consts,
+    eciesParams: IECIESConsts = Constants.ECIES,
+    pbkdf2Params: IPBkdf2Consts = Constants.PBKDF2,
   ) {
     this.engine = engine;
     this.profiles = profiles ? { ...profiles } : {};

@@ -7,6 +7,7 @@ import {
 import {
   getEciesPluginI18nEngine,
   getNodeEciesTranslation,
+  NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
 
@@ -56,7 +57,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
 } {
   const pluginEngine = getEciesPluginI18nEngine();
   if (buffer.length < 1) {
-    throw new RangeError(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_BufferIsTooShort));
+    throw new RangeError(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_BufferIsTooShort));
   }
   const lengthType: LengthEncodingType = getLengthEncodingTypeFromValue(
     buffer.readUint8(0),
@@ -64,7 +65,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
   const lengthTypeSize: number = getLengthForLengthType(lengthType);
 
   if (buffer.length < 1 + lengthTypeSize) {
-    throw new RangeError(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue));
+    throw new RangeError(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue));
   }
 
   let length: number | BigInt;
@@ -81,7 +82,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
     case LengthEncodingType.UInt64:
       length = buffer.readBigUInt64BE(1);
       if (Number(length) > Number.MAX_SAFE_INTEGER) {
-        throw new RangeError(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger));
+        throw new RangeError(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger));
       }
       break;
     default:
@@ -94,7 +95,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
 
   const totalLength = 1 + lengthTypeSize + Number(length);
   if (totalLength > buffer.length) {
-    throw new RangeError(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength));
+    throw new RangeError(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength));
   }
   return {
     data: buffer.subarray(1 + lengthTypeSize, totalLength),

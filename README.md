@@ -265,6 +265,11 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.11
+
+- Improve constants injection
+- Update ecies lib
+
 ### Version 1.1.10
 
 - Update ecies lib

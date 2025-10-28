@@ -1,7 +1,8 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import { CipherGCMTypes } from 'crypto';
 import { IConstants } from '../interfaces/constants';
-import { getEciesPluginI18nEngine, NodeEciesStringKey } from '../i18n';
+import { getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../i18n';
+import { Constants } from '../constants';
 
 export class AESGCMService {
   private readonly algorithmName: string;
@@ -10,7 +11,7 @@ export class AESGCMService {
   private readonly ivSize: number;
   private readonly keyringAlgorithmConfiguration: CipherGCMTypes;
 
-  constructor(constants: IConstants) {
+  constructor(constants: IConstants = Constants) {
     this.algorithmName = constants.KEYRING.ALGORITHM;
     this.mode = constants.KEYRING.MODE;
     this.keyBits = constants.KEYRING.KEY_BITS;
@@ -122,7 +123,7 @@ export class AESGCMService {
       const pluginEngine = getEciesPluginI18nEngine();
 
       throw new Error(
-        pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_CombinedDataTooShort),
+        pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_CombinedDataTooShort),
       );
     }
 

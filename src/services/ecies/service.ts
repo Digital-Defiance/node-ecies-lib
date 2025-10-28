@@ -1,5 +1,4 @@
 import {
-  ECIES,
   EciesEncryptionType,
   EciesEncryptionTypeEnum,
   ECIESError,
@@ -10,7 +9,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { Member } from '../../member';
 
 // Import all the modular components
@@ -26,6 +25,7 @@ import { EciesMultiRecipient } from './multi-recipient';
 import { EciesSignature } from './signature';
 import { EciesSingleRecipientCore } from './single-recipient';
 import { EciesUtilities } from './utilities';
+import { Constants } from '../../constants';
 
 /**
  * Unified ECIES service that integrates all the modular components
@@ -42,7 +42,7 @@ export class ECIESService {
   constructor(
     engineOrConfig?: TranslationEngine<EciesStringKey> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
-    eciesParams?: IECIESConstants,
+    eciesParams: IECIESConstants = Constants.ECIES,
   ) {
     // Determine if first parameter is engine or config
     let engine: TranslationEngine<EciesStringKey>;
@@ -58,7 +58,7 @@ export class ECIESService {
       actualConfig = (engineOrConfig as Partial<IECIESConfig>) || {};
     }
 
-    const eciesConsts = eciesParams ?? ECIES;
+    const eciesConsts = eciesParams;
     this._config = {
       ...config,
       curveName: eciesConsts.CURVE_NAME,
@@ -334,7 +334,7 @@ export class ECIESService {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients),
+          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients),
           encryptionType:
           encryptionType,
           recipients: String(recipients.length),

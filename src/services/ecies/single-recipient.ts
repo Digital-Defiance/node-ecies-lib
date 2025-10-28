@@ -20,7 +20,7 @@ import {
   createECDH,
   randomBytes,
 } from 'crypto';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -89,7 +89,7 @@ export class EciesSingleRecipientCore {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize),
+          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize),
           maxLength: String(UINT32_MAX),
           messageLength: String(message.length),
         },
@@ -313,7 +313,7 @@ export class EciesSingleRecipientCore {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EncryptedDataLengthMismatch),
+          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EncryptedDataLengthMismatch),
           expected: String(dataLength),
           actual: String(options.dataLength),
         },
@@ -359,7 +359,7 @@ export class EciesSingleRecipientCore {
         undefined,
         {
           error:
-            pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch),
+            pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch),
           expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
           actual: String(normalizedKey.length),
         },
@@ -631,7 +631,7 @@ export class EciesSingleRecipientCore {
         // Handle edge case where encrypted data might be empty or malformed
         const pluginEngine = getEciesPluginI18nEngine();
         if (encrypted.length === 0) {
-          throw new Error(pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_EncryptedDataIsEmpty));
+          throw new Error(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EncryptedDataIsEmpty));
         }
 
         const firstPart = decipher.update(encrypted);

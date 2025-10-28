@@ -1,5 +1,4 @@
 import {
-  ECIES,
   ECIESError,
   ECIESErrorTypeEnum,
   IECIESConfig,
@@ -10,9 +9,10 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
+import { Constants } from '../../constants';
 
 /**
  * Core encryption and decryption functions for ECIES
@@ -29,9 +29,9 @@ export class EciesCryptoCore {
     return this._consts;
   }
 
-  constructor(config: IECIESConfig, eciesParams?: IECIESConstants) {
+  constructor(config: IECIESConfig, eciesParams: IECIESConstants = Constants.ECIES) {
     this._config = config;
-    this._consts = eciesParams ?? ECIES;
+    this._consts = eciesParams;
   }
 
   /**
@@ -49,7 +49,7 @@ export class EciesCryptoCore {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidPublicKey),
+          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidPublicKey),
         },
       );
     }
@@ -78,7 +78,7 @@ export class EciesCryptoCore {
       undefined,
       undefined,
       {
-        error: pluginEngine.translate('node-ecies', NodeEciesStringKey.Error_InvalidPublicKeyFormat),
+        error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidPublicKeyFormat),
         keyLength: String(keyLength),
         expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
         expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),
