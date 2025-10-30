@@ -14,7 +14,7 @@ import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
-import { getEciesPluginI18nEngine, NodeEciesStringKey } from './i18n';
+import { getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from './i18n';
 
 /**
  * Constants for checksum operations
@@ -66,12 +66,6 @@ export const KEYRING: IKeyringConsts = Object.freeze({
 } as const);
 
 export const PBKDF2: IPBkdf2Consts = runtimeDefaults.PBKDF2;
-
-/**
- * Predefined PBKDF2 configuration profiles for different use cases
- * These profiles provide standardized, well-tested parameter combinations
- */
-const baseProfiles = runtimeDefaults.PBKDF2_PROFILES;
 
 export const PBKDF2_PROFILES: PbkdfProfiles = Object.freeze({
   // Align browser password profile with high security expectations (sha512, 64-byte salt/hash, 2M iterations)
@@ -177,7 +171,7 @@ if (
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8
 ) {
   const pluginEngine = getEciesPluginI18nEngine();
-  throw new Error(pluginEngine.translate('node-engine', NodeEciesStringKey.Error_InvalidChecksumConstants));
+  throw new Error(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidChecksumConstants));
 }
 
 if (objectIdLength !== 12) {
