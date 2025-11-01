@@ -1316,28 +1316,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:1.1.20":
-  version: 1.1.20
-  resolution: "@digitaldefiance/ecies-lib@npm:1.1.20"
+"@digitaldefiance/ecies-lib@npm:1.1.21":
+  version: 1.1.21
+  resolution: "@digitaldefiance/ecies-lib@npm:1.1.21"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:1.3.9"
+    "@digitaldefiance/i18n-lib": "npm:1.3.10"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/dbc96d8524278667dc1614aad05b47ae4938614547dc6fa4ae1f42be78d309c69c56c2f88154286209b707a24d8c40e75aca2d4e52907c366de560f1d1d84e13
+  checksum: 10c0/f47d315e5d7ddc6922aa7fb85cb8fd943f8b7ebe6d765d2c3190340ea20608f9f82672ccf62fc0be5bf26cd329872e45e281df906ccd77a956a3c04aa67c6086
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:1.3.9":
-  version: 1.3.9
-  resolution: "@digitaldefiance/i18n-lib@npm:1.3.9"
+"@digitaldefiance/i18n-lib@npm:1.3.10":
+  version: 1.3.10
+  resolution: "@digitaldefiance/i18n-lib@npm:1.3.10"
   dependencies:
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/8eeff50652b92091e94151844e23a36a9cdce656bcf80a217e2824a67ac9ee8741d54d6fec62b5c32a1c22a5b501dfee22f052e15bf4616efc5466ff35f97330
+  checksum: 10c0/30a9adffd8e5741b38b8d74162652b9776e00e2d5d60b5e3782e49b865a73f8825ddc0e8c04bdac2e9aece66c8081448b5d0671129bfff97b7365bb4cf752002
   languageName: node
   linkType: hard
 
@@ -1348,8 +1348,8 @@ __metadata:
     "@babel/core": "npm:^7.28.4"
     "@babel/preset-env": "npm:^7.28.3"
     "@babel/preset-typescript": "npm:^7.27.1"
-    "@digitaldefiance/ecies-lib": "npm:1.1.20"
-    "@digitaldefiance/i18n-lib": "npm:1.3.9"
+    "@digitaldefiance/ecies-lib": "npm:1.1.21"
+    "@digitaldefiance/i18n-lib": "npm:1.3.10"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
