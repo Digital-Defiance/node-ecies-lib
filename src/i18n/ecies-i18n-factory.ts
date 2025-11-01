@@ -4,9 +4,9 @@ import {
   createCoreI18nEngine,
   PluginI18nEngine,
   LanguageCodes,
-  TranslationEngine,
+  CoreLanguageCode,
 } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey, getCompatibleEciesEngine } from '@digitaldefiance/ecies-lib';
+import { EciesStringKey, getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
 /**
  * ECIES-specific string keys for the node ECIES library
@@ -372,24 +372,24 @@ const nodeEciesStrings = {
 /**
  * Singleton instance of the ECIES I18n engine
  */
-let eciesI18nEngineInstance: PluginI18nEngine<string> | null = null;
+let eciesI18nEngineInstance: PluginI18nEngine<CoreLanguageCode> | null = null;
 
 /**
  * Create or get the ECIES I18n engine with proper component registration
  * This replaces the legacy getEciesI18nEngine() function
  */
-export function getEciesPluginI18nEngine(): PluginI18nEngine<string> {
+export function getEciesPluginI18nEngine(): PluginI18nEngine<CoreLanguageCode> {
   if (!eciesI18nEngineInstance) {
     // Create core engine with system strings
-    eciesI18nEngineInstance = createCoreI18nEngine(NodeEciesComponentId);
+    eciesI18nEngineInstance = createCoreI18nEngine(NodeEciesComponentId) as PluginI18nEngine<CoreLanguageCode>;
 
     // Register the Node ECIES component
     const registration: ComponentRegistration<
       NodeEciesStringKey,
-      string
+      CoreLanguageCode
     > = {
       component: NodeEciesComponent,
-      strings: nodeEciesStrings,
+      strings: nodeEciesStrings as any,
     };
 
     const result = eciesI18nEngineInstance.registerComponent(registration);
@@ -401,7 +401,7 @@ export function getEciesPluginI18nEngine(): PluginI18nEngine<string> {
     }
   }
 
-  return eciesI18nEngineInstance;
+  return eciesI18nEngineInstance!;
 }
 
 /**
@@ -417,18 +417,19 @@ export function resetEciesPluginI18nEngine(): void {
 export function getNodeEciesTranslation(
   key: NodeEciesStringKey,
   variables?: Record<string, string | number>,
-  language?: string,
+  language?: CoreLanguageCode,
 ): string {
   const engine = getEciesPluginI18nEngine();
   return engine.translate(NodeEciesComponentId, key, variables, language);
 }
 
 /**
- * Create a TranslationEngine adapter for ECIES errors
- * Uses the base ecies-lib's compatible engine which has all EciesStringKey translations
+ * Get the ECIES PluginI18nEngine for use in node-ecies services
+ * Uses the base ecies-lib's engine which has all EciesStringKey translations
+ * Cast to any to handle cross-package type compatibility
  */
-export function createEciesTranslationEngine(): TranslationEngine<EciesStringKey> {
-  return getCompatibleEciesEngine() as TranslationEngine<EciesStringKey>;
+export function createEciesTranslationEngine(): any {
+  return getEciesI18nEngine();
 }
 
 export { NodeEciesStringKey };

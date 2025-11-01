@@ -13,7 +13,7 @@ import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesCompon
 import { Member } from '../../member';
 
 // Import all the modular components
-import { TranslationEngine } from '@digitaldefiance/i18n-lib';
+import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import { IWalletSeed } from 'src/interfaces';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
@@ -37,20 +37,20 @@ export class ECIESService {
   protected readonly singleRecipient: EciesSingleRecipientCore;
   protected readonly multiRecipient: EciesMultiRecipient;
   protected readonly utilities: EciesUtilities;
-  protected readonly engine: TranslationEngine<EciesStringKey>;
+  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
   constructor(
-    engineOrConfig?: TranslationEngine<EciesStringKey> | Partial<IECIESConfig>,
+    engineOrConfig?: PluginI18nEngine<CoreLanguageCode> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
     // Determine if first parameter is engine or config
-    let engine: TranslationEngine<EciesStringKey>;
+    let engine: PluginI18nEngine<CoreLanguageCode>;
     let actualConfig: Partial<IECIESConfig>;
 
     if (engineOrConfig && 'translate' in engineOrConfig) {
       // First parameter is an engine
-      engine = engineOrConfig as TranslationEngine<EciesStringKey>;
+      engine = engineOrConfig as PluginI18nEngine<CoreLanguageCode>;
       actualConfig = config || {};
     } else {
       // First parameter is config or undefined

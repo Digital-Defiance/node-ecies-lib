@@ -265,6 +265,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.21
+
+- Upgrade pbkdf2service to plugini18n
+
 ### Version 1.1.20
 
 - Update i18n/ecies

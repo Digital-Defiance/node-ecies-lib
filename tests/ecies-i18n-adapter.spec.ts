@@ -1,5 +1,5 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
+import { EciesStringKey, EciesComponentId } from '@digitaldefiance/ecies-lib';
 import {
   createEciesTranslationEngine,
   getEciesPluginI18nEngine,
@@ -21,9 +21,10 @@ describe('ECIES Translation Adapter', () => {
     it('should translate EciesStringKey values', () => {
       const engine = createEciesTranslationEngine();
       
-      // Test a key that exists in NodeEciesStringKey
+      // Test a key that exists in EciesStringKey
       const result = engine.translate(
-        EciesStringKey.Error_LengthError_LengthIsInvalidType as any
+        EciesComponentId,
+        EciesStringKey.Error_LengthError_LengthIsInvalidType
       );
       
       expect(result).toBeDefined();
@@ -37,7 +38,7 @@ describe('ECIES Translation Adapter', () => {
         
         // Test a key that doesn't exist
         const nonExistentKey = 'NonExistent_Key_12345' as EciesStringKey;
-        const result = engine.safeTranslate(nonExistentKey);
+        const result = engine.safeTranslate(EciesComponentId, nonExistentKey);
         
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -49,7 +50,8 @@ describe('ECIES Translation Adapter', () => {
       
       // Use a key that might have variables
       const result = engine.translate(
-        EciesStringKey.Error_LengthError_LengthIsInvalidType as any,
+        EciesComponentId,
+        EciesStringKey.Error_LengthError_LengthIsInvalidType,
         { length: '100', expected: '50' }
       );
       
@@ -61,13 +63,15 @@ describe('ECIES Translation Adapter', () => {
       const engine = createEciesTranslationEngine();
       
       const enResult = engine.translate(
-        EciesStringKey.Error_LengthError_LengthIsInvalidType as any,
+        EciesComponentId,
+        EciesStringKey.Error_LengthError_LengthIsInvalidType,
         undefined,
         LanguageCodes.EN_US
       );
       
       const frResult = engine.translate(
-        EciesStringKey.Error_LengthError_LengthIsInvalidType as any,
+        EciesComponentId,
+        EciesStringKey.Error_LengthError_LengthIsInvalidType,
         undefined,
         LanguageCodes.FR
       );
@@ -119,8 +123,8 @@ describe('ECIES Translation Adapter', () => {
       const engine = createEciesTranslationEngine();
       
       // Simulate what ECIESError does
-      const errorKey = EciesStringKey.Error_LengthError_LengthIsInvalidType as any;
-      const translation = engine.translate(errorKey);
+      const errorKey = EciesStringKey.Error_LengthError_LengthIsInvalidType;
+      const translation = engine.translate(EciesComponentId, errorKey);
       
       expect(translation).toBeDefined();
       expect(typeof translation).toBe('string');
@@ -131,7 +135,7 @@ describe('ECIES Translation Adapter', () => {
         const engine = createEciesTranslationEngine();
         
         expect(() => {
-          const result = engine.safeTranslate('invalid_key' as any);
+          const result = engine.safeTranslate(EciesComponentId, 'invalid_key' as any);
           expect(result).toBeDefined();
         }).not.toThrow();
       });
@@ -197,9 +201,9 @@ describe('ECIES Translation Adapter', () => {
         const engine1 = createEciesTranslationEngine();
         const engine2 = createEciesTranslationEngine();
         
-        const key = EciesStringKey.Error_Member_MissingMemberName as any;
-        const result1 = engine1.translate(key);
-        const result2 = engine2.translate(key);
+        const key = EciesStringKey.Error_MemberError_MissingMemberName;
+        const result1 = engine1.translate(EciesComponentId, key);
+        const result2 = engine2.translate(EciesComponentId, key);
         
         expect(result1).toBe(result2);
       });

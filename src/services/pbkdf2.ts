@@ -1,5 +1,5 @@
-import { TranslationEngine } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
+import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import { EciesStringKey, EciesComponentId } from '@digitaldefiance/ecies-lib';
 import {
   IPbkdf2Config,
   IPBkdf2Consts,
@@ -9,7 +9,7 @@ import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { IConstants } from '../interfaces/constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
-import { createEciesTranslationEngine, getNodeEciesTranslation, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
+import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey, NodeEciesComponentId } from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 import { IECIESConsts } from '../interfaces/ecies-consts';
 import { Constants, getNodeRuntimeConfiguration } from '../constants';
@@ -32,14 +32,14 @@ export class NodePbkdf2Error extends Error {
  * - Managing salt and iteration parameters
  * - Both synchronous and asynchronous key derivation
  */
-export class Pbkdf2Service {
-  protected readonly engine: TranslationEngine<EciesStringKey>;
+export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode> {
+  protected readonly engine: PluginI18nEngine<TLanguage>;
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
   protected readonly pbkdf2Consts: IPBkdf2Consts;
   
   constructor(
-    engine: TranslationEngine<EciesStringKey>,
+    engine: PluginI18nEngine<TLanguage>,
     profiles?: Record<string, IPbkdf2Config>,
     eciesParams: IECIESConsts = Constants.ECIES,
     pbkdf2Params: IPBkdf2Consts = Constants.PBKDF2,
@@ -84,7 +84,7 @@ export class Pbkdf2Service {
    * @returns A new Pbkdf2Service instance
    */
   public static fromConstants(constants: IConstants): Pbkdf2Service {
-    const engine = createEciesTranslationEngine();
+    const engine = getEciesPluginI18nEngine();
     const runtimeDefaults = getNodeRuntimeConfiguration();
     return new Pbkdf2Service(
       engine,
