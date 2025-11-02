@@ -265,6 +265,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.3.17
+
+- Update i18n/ecies packages
+
 ### Version 1.3.15
 
 - Homogenize versions
