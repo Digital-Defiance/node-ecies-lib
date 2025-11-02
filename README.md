@@ -265,6 +265,10 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.1.22
+
+- Upgrade to es2022/nx monorepo
+
 ### Version 1.1.21
 
 - Upgrade pbkdf2service to plugini18n

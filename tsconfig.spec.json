@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc/packages/digitaldefiance-node-ecies-lib/spec",
+    "types": [
+      "jest",
+      "node"
+    ],
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "tests/**/*.ts"
+  ]
+}

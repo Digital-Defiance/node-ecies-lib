@@ -1,0 +1,50 @@
+{
+  "name": "digitaldefiance-node-ecies-lib",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/digitaldefiance-node-ecies-lib/src",
+  "projectType": "library",
+  "tags": [],
+  "implicitDependencies": [
+    "digitaldefiance-i18n-lib",
+    "digitaldefiance-ecies-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{workspaceRoot}/dist/packages/digitaldefiance-node-ecies-lib"
+      ],
+      "options": {
+        "outputPath": "dist/packages/digitaldefiance-node-ecies-lib",
+        "tsConfig": "packages/digitaldefiance-node-ecies-lib/tsconfig.lib.json",
+        "packageJson": "packages/digitaldefiance-node-ecies-lib/package.json",
+        "main": "packages/digitaldefiance-node-ecies-lib/src/index.ts",
+        "assets": [
+          {
+            "input": "packages/digitaldefiance-node-ecies-lib",
+            "glob": "README.md",
+            "output": "."
+          }
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/packages/digitaldefiance-node-ecies-lib"
+      ],
+      "options": {
+        "jestConfig": "packages/digitaldefiance-node-ecies-lib/jest.config.cjs"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": [
+          "packages/digitaldefiance-node-ecies-lib/src/**/*.ts",
+          "packages/digitaldefiance-node-ecies-lib/tests/**/*.ts"
+        ]
+      }
+    }
+  }
+}

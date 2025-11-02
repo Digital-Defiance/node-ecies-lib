@@ -9,13 +9,18 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import {
+  createEciesTranslationEngine,
+  getEciesPluginI18nEngine,
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+} from '../../i18n/ecies-i18n-factory';
 import { Member } from '../../member';
 
 // Import all the modular components
-import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
-import { IWalletSeed } from 'src/interfaces';
+import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { Constants } from '../../constants';
+import { IWalletSeed } from '../../interfaces';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -25,7 +30,6 @@ import { EciesMultiRecipient } from './multi-recipient';
 import { EciesSignature } from './signature';
 import { EciesSingleRecipientCore } from './single-recipient';
 import { EciesUtilities } from './utilities';
-import { Constants } from '../../constants';
 
 /**
  * Unified ECIES service that integrates all the modular components
@@ -42,7 +46,7 @@ export class ECIESService {
   constructor(
     engineOrConfig?: PluginI18nEngine<CoreLanguageCode> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
-    eciesParams: IECIESConstants = Constants.ECIES,
+    eciesParams: IECIESConstants = Constants.ECIES
   ) {
     // Determine if first parameter is engine or config
     let engine: PluginI18nEngine<CoreLanguageCode>;
@@ -126,13 +130,13 @@ export class ECIESService {
     encryptSimple: boolean,
     receiverPublicKey: Buffer,
     message: Buffer,
-    preamble: Buffer = Buffer.alloc(0),
+    preamble: Buffer = Buffer.alloc(0)
   ): Buffer {
     return this.singleRecipient.encrypt(
       encryptSimple,
       receiverPublicKey,
       message,
-      preamble,
+      preamble
     );
   }
 
@@ -142,13 +146,13 @@ export class ECIESService {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    },
+    }
   ): ISingleEncryptedParsedHeader {
     const { header } = this.singleRecipient.parseEncryptedMessage(
       encryptionType,
       data,
       preambleSize,
-      options,
+      options
     );
     return header;
   }
@@ -160,7 +164,7 @@ export class ECIESService {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    },
+    }
   ): Buffer {
     return this.singleRecipient.decryptWithHeader(
       decryptSimple
@@ -169,7 +173,7 @@ export class ECIESService {
       privateKey,
       encryptedData,
       preambleSize,
-      options,
+      options
     );
   }
 
@@ -180,14 +184,14 @@ export class ECIESService {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    },
+    }
   ): { decrypted: Buffer; consumedBytes: number } {
     return this.singleRecipient.decryptWithHeaderEx(
       encryptionType,
       privateKey,
       encryptedData,
       preambleSize,
-      options,
+      options
     );
   }
 
@@ -196,14 +200,14 @@ export class ECIESService {
     ephemeralPublicKey: Buffer,
     iv: Buffer,
     authTag: Buffer,
-    encrypted: Buffer,
+    encrypted: Buffer
   ): { decrypted: Buffer; ciphertextLength?: number } {
     const decrypted = this.singleRecipient.decryptWithComponents(
       privateKey,
       ephemeralPublicKey,
       iv,
       authTag,
-      encrypted,
+      encrypted
     );
 
     // Return an object with a 'decrypted' property for compatibility with existing code
@@ -219,19 +223,19 @@ export class ECIESService {
   public verifyMessage(
     publicKey: Buffer,
     data: Buffer,
-    signature: SignatureBuffer,
+    signature: SignatureBuffer
   ): boolean {
     return this.signature.verifyMessage(publicKey, data, signature);
   }
 
   public signatureStringToSignatureBuffer(
-    signatureString: HexString,
+    signatureString: HexString
   ): SignatureBuffer {
     return this.signature.signatureStringToSignatureBuffer(signatureString);
   }
 
   public signatureBufferToSignatureString(
-    signatureBuffer: SignatureBuffer,
+    signatureBuffer: SignatureBuffer
   ): SignatureString {
     return this.signature.signatureBufferToSignatureString(signatureBuffer);
   }
@@ -240,33 +244,33 @@ export class ECIESService {
 
   public encryptMultiple(
     recipients: Member[],
-    message: Buffer,
+    message: Buffer
   ): IMultiEncryptedMessage {
     return this.multiRecipient.encryptMultiple(recipients, message);
   }
 
   public decryptMultipleECIEForRecipient(
     encryptedData: IMultiEncryptedMessage,
-    recipient: Member,
+    recipient: Member
   ): Buffer {
     return this.multiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,
-      recipient,
+      recipient
     );
   }
 
   public calculateECIESMultipleRecipientOverhead(
     recipientCount: number,
-    includeMessageOverhead: boolean,
+    includeMessageOverhead: boolean
   ): number {
     return this.multiRecipient.calculateECIESMultipleRecipientOverhead(
       recipientCount,
-      includeMessageOverhead,
+      includeMessageOverhead
     );
   }
 
   public buildECIESMultipleRecipientHeader(
-    data: IMultiEncryptedMessage,
+    data: IMultiEncryptedMessage
   ): Buffer {
     return this.multiRecipient.buildECIESMultipleRecipientHeader(data);
   }
@@ -284,22 +288,22 @@ export class ECIESService {
   public computeEncryptedLengthFromDataLength(
     dataLength: number,
     encryptionMode: EciesEncryptionType,
-    recipientCount?: number,
+    recipientCount?: number
   ): number {
     return this.utilities.computeEncryptedLengthFromDataLength(
       dataLength,
       encryptionMode,
-      recipientCount,
+      recipientCount
     );
   }
 
   public computeDecryptedLengthFromEncryptedDataLength(
     encryptedDataLength: number,
-    padding?: number,
+    padding?: number
   ): number {
     return this.utilities.computeDecryptedLengthFromEncryptedDataLength(
       encryptedDataLength,
-      padding,
+      padding
     );
   }
 
@@ -307,7 +311,7 @@ export class ECIESService {
     encryptionType: EciesEncryptionType,
     recipients: Member[],
     message: Buffer,
-    preamble?: Buffer,
+    preamble?: Buffer
   ): Buffer {
     if (
       (encryptionType === 'simple' || encryptionType === 'single') &&
@@ -317,13 +321,13 @@ export class ECIESService {
         encryptionType === 'simple',
         recipients[0].publicKey,
         message,
-        preamble,
+        preamble
       );
     } else if (encryptionType === 'multiple' && recipients.length > 1) {
       const result = this.multiRecipient.encryptMultiple(
         recipients,
         message,
-        preamble,
+        preamble
       );
       return result.encryptedMessage;
     } else {
@@ -334,11 +338,13 @@ export class ECIESService {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients),
-          encryptionType:
-          encryptionType,
+          error: pluginEngine.translate(
+            NodeEciesComponentId,
+            NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients
+          ),
+          encryptionType: encryptionType,
           recipients: String(recipients.length),
-        },
+        }
       );
     }
   }
