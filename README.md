@@ -75,6 +75,7 @@ The main service class providing encryption, decryption, key management, and mne
 - Integrates with plugin-based i18n for error messages and logs.
 
 Detailed API:
+
 - `constructor(engine?: PluginI18nEngine)`: Initializes the service; if no engine is provided, an internal plugin-based i18n engine is used.
 - `generateNewMnemonic(): SecureString`: Generates a new mnemonic phrase compliant with BIP39 for secure key generation.
 - `walletAndSeedFromMnemonic(mnemonic: SecureString): { wallet: Wallet; seed: Buffer }`: Derives an Ethereum wallet instance and raw seed buffer from a mnemonic.
@@ -97,6 +98,7 @@ Represents a cryptographic member with capabilities to:
 - Create new members from mnemonics or generate new ones.
 
 Core methods and behaviors:
+
 - `new Member(...)`: Constructs with injected `ECIESService`, type, name, email, public key, and optional private key, wallet, IDs, and timestamps.
 - `loadWallet(mnemonic: SecureString)`: Loads wallet and private key from mnemonic; verifies public key integrity.
 - `loadPrivateKey(privateKey: SecureBuffer)`: Imports a raw private key into the member instance.
@@ -124,6 +126,7 @@ Provides password-based key derivation with multiple predefined profiles optimiz
 | TEST_FAST     | 16 bytes  | 500        | SHA-256   | 32 bytes  | Testing/development |
 
 Detailed API:
+
 - `deriveKeyFromPassword(password: Buffer, salt: Buffer, iterations: number, saltBytes: number, hashBytes: number, algorithm: string): ChecksumBuffer`: Synchronously derives a key using PBKDF2 with specified parameters.
 - `deriveKeyFromPasswordAsync(password: Buffer, salt: Buffer, iterations: number, saltBytes: number, hashBytes: number, algorithm: string): Promise<ChecksumBuffer>`: Async implementation of PBKDF2 for non-blocking operation.
 - `deriveKeyFromPasswordWithProfile(password: Buffer, profile: Pbkdf2ProfileEnum): ChecksumBuffer`: Convenience method to derive a key using a predefined profile.
@@ -264,6 +267,11 @@ Please read the contributing guidelines in the main repository.
 - `@digitaldefiance/i18n-lib`: Internationalization support.
 
 ## ChangeLog
+
+### Version 1.3.27
+
+- Upgrade i18n/ecies
+- Version bump
 
 ### Version 1.3.20
 
