@@ -19,7 +19,7 @@ export class EciesFileService {
     config: { chunkSize: number; headerSize: number } = {
       chunkSize: 1024 * 1024, // 1MB chunks
       headerSize: 20,
-    }
+    },
   ) {
     this.eciesService = eciesService;
     this.userPrivateKey = userPrivateKey;
@@ -72,10 +72,7 @@ export class EciesFileService {
     try {
       for (let i = 0; i < totalChunks; i++) {
         const offset = i * this.config.chunkSize;
-        const chunkSize = Math.min(
-          this.config.chunkSize,
-          stats.size - offset,
-        );
+        const chunkSize = Math.min(this.config.chunkSize, stats.size - offset);
         const chunkData = Buffer.alloc(chunkSize);
         fs.readSync(fd, chunkData, 0, chunkSize, offset);
 

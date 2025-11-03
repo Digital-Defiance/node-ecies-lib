@@ -9,7 +9,12 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import {
+  createEciesTranslationEngine,
+  getEciesPluginI18nEngine,
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+} from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
 import { Constants } from '../../constants';
@@ -29,7 +34,10 @@ export class EciesCryptoCore {
     return this._consts;
   }
 
-  constructor(config: IECIESConfig, eciesParams: IECIESConstants = Constants.ECIES) {
+  constructor(
+    config: IECIESConfig,
+    eciesParams: IECIESConstants = Constants.ECIES,
+  ) {
     this._config = config;
     this._consts = eciesParams;
   }
@@ -49,7 +57,10 @@ export class EciesCryptoCore {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidPublicKey),
+          error: pluginEngine.translate(
+            NodeEciesComponentId,
+            NodeEciesStringKey.Error_InvalidPublicKey,
+          ),
         },
       );
     }
@@ -66,7 +77,10 @@ export class EciesCryptoCore {
 
     // Raw key without prefix (64 bytes) - add the 0x04 prefix
     if (keyLength === this._consts.RAW_PUBLIC_KEY_LENGTH) {
-      return Buffer.concat([Buffer.from([this._consts.PUBLIC_KEY_MAGIC]), publicKey]);
+      return Buffer.concat([
+        Buffer.from([this._consts.PUBLIC_KEY_MAGIC]),
+        publicKey,
+      ]);
     }
 
     const engine = createEciesTranslationEngine();
@@ -78,7 +92,10 @@ export class EciesCryptoCore {
       undefined,
       undefined,
       {
-        error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidPublicKeyFormat),
+        error: pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_InvalidPublicKeyFormat,
+        ),
         keyLength: String(keyLength),
         expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
         expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),

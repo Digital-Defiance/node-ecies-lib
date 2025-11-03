@@ -17,7 +17,10 @@ import {
  * Custom error classes that work with the plugin i18n system
  */
 export class NodeMemberError extends Error {
-  constructor(message: string, public readonly type: MemberErrorType) {
+  constructor(
+    message: string,
+    public readonly type: MemberErrorType,
+  ) {
     super(message);
     this.name = 'NodeMemberError';
   }

@@ -3,6 +3,8 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   IECIESConfig,
+  IECIESConstants,
+  IConstants as IBaseConstants,
 } from '@digitaldefiance/ecies-lib';
 import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { ECIESService } from './service';
@@ -23,6 +25,7 @@ export class EciesUtilities {
     dataLength: number,
     encryptionMode: EciesEncryptionType,
     recipientCount?: number,
+    constants: IBaseConstants = getNodeRuntimeConfiguration(),
   ): number {
     if (dataLength < 0) {
       throw new ECIESError(
@@ -30,8 +33,7 @@ export class EciesUtilities {
         createEciesTranslationEngine(),
       );
     }
-    const runtimeDefaults = getNodeRuntimeConfiguration();
-    const eciesDefaults = runtimeDefaults.ECIES;
+    const eciesDefaults: IECIESConstants = constants.ECIES;
     const config: IECIESConfig = {
       curveName: eciesDefaults.CURVE_NAME,
       primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
@@ -78,6 +80,7 @@ export class EciesUtilities {
   public computeDecryptedLengthFromEncryptedDataLength(
     encryptedDataLength: number,
     padding?: number,
+    constants: IBaseConstants = getNodeRuntimeConfiguration(),
   ): number {
     if (encryptedDataLength < 0) {
       throw new ECIESError(
@@ -86,7 +89,7 @@ export class EciesUtilities {
       );
     }
 
-    const { ECIES: eciesDefaults } = getNodeRuntimeConfiguration();
+    const { ECIES: eciesDefaults } = constants;
     const overhead = eciesDefaults.SINGLE.FIXED_OVERHEAD_SIZE;
     const actualPadding = padding !== undefined ? padding : 0;
 

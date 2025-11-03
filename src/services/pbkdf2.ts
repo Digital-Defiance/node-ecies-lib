@@ -1,5 +1,4 @@
 import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey, EciesComponentId } from '@digitaldefiance/ecies-lib';
 import {
   IPbkdf2Config,
   IPBkdf2Consts,
@@ -9,16 +8,24 @@ import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
 import { promisify } from 'util';
 import { IConstants } from '../interfaces/constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
-import { getEciesPluginI18nEngine, getNodeEciesTranslation, NodeEciesStringKey, NodeEciesComponentId } from '../i18n/ecies-i18n-factory';
+import {
+  getEciesPluginI18nEngine,
+  getNodeEciesTranslation,
+  NodeEciesStringKey,
+  NodeEciesComponentId,
+} from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 import { IECIESConsts } from '../interfaces/ecies-consts';
-import { Constants, getNodeRuntimeConfiguration } from '../constants';
+import { Constants } from '../constants';
 
 /**
  * Custom PBKDF2 error class that works with the plugin i18n system
  */
 export class NodePbkdf2Error extends Error {
-  constructor(message: string, public readonly type: Pbkdf2ErrorType) {
+  constructor(
+    message: string,
+    public readonly type: Pbkdf2ErrorType,
+  ) {
     super(message);
     this.name = 'NodePbkdf2Error';
   }
@@ -32,12 +39,14 @@ export class NodePbkdf2Error extends Error {
  * - Managing salt and iteration parameters
  * - Both synchronous and asynchronous key derivation
  */
-export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode> {
+export class Pbkdf2Service<
+  TLanguage extends CoreLanguageCode = CoreLanguageCode,
+> {
   protected readonly engine: PluginI18nEngine<TLanguage>;
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
   protected readonly pbkdf2Consts: IPBkdf2Consts;
-  
+
   constructor(
     engine: PluginI18nEngine<TLanguage>,
     profiles?: Record<string, IPbkdf2Config>,
@@ -46,10 +55,8 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
   ) {
     this.engine = engine;
     this.profiles = profiles ? { ...profiles } : {};
-    const runtimeDefaults = getNodeRuntimeConfiguration();
-    this.eciesConsts = eciesParams ?? runtimeDefaults.ECIES;
-    this.pbkdf2Consts =
-      pbkdf2Params ?? runtimeDefaults.PBKDF2;
+    this.eciesConsts = eciesParams;
+    this.pbkdf2Consts = pbkdf2Params;
   }
 
   /**
@@ -85,11 +92,10 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
    */
   public static fromConstants(constants: IConstants): Pbkdf2Service {
     const engine = getEciesPluginI18nEngine();
-    const runtimeDefaults = getNodeRuntimeConfiguration();
     return new Pbkdf2Service(
       engine,
       constants.PBKDF2_PROFILES,
-      runtimeDefaults.ECIES,
+      constants.ECIES,
       constants.PBKDF2,
     );
   }
@@ -98,13 +104,13 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
    * @param profile The name of the profile to use
    * @returns Configuration object for the specified profile
    */
-  public getProfileConfig(
-    profile: string,
-  ): IPbkdf2Config {
+  public getProfileConfig(profile: string): IPbkdf2Config {
     const profileConfig = this.profiles[profile];
     if (!profileConfig) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength),
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+        ),
         Pbkdf2ErrorType.InvalidProfile,
       );
     }
@@ -165,17 +171,14 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
     keySize?: number,
     algorithm?: string,
   ): IPbkdf2Result {
-    const config = this.getConfig(
-      iterations,
-      saltBytes,
-      keySize,
-      algorithm,
-    );
+    const config = this.getConfig(iterations, saltBytes, keySize, algorithm);
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength),
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+        ),
         Pbkdf2ErrorType.InvalidSaltLength,
       );
     }
@@ -190,7 +193,9 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength),
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
+        ),
         Pbkdf2ErrorType.InvalidHashLength,
       );
     }
@@ -221,17 +226,14 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
     keySize?: number,
     algorithm?: string,
   ): Promise<IPbkdf2Result> {
-    const config = this.getConfig(
-      iterations,
-      saltBytes,
-      keySize,
-      algorithm,
-    );
+    const config = this.getConfig(iterations, saltBytes, keySize, algorithm);
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
 
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength),
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+        ),
         Pbkdf2ErrorType.InvalidSaltLength,
       );
     }
@@ -247,7 +249,9 @@ export class Pbkdf2Service<TLanguage extends CoreLanguageCode = CoreLanguageCode
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength),
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
+        ),
         Pbkdf2ErrorType.InvalidHashLength,
       );
     }

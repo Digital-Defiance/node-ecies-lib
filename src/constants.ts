@@ -1,6 +1,7 @@
 import {
   Constants as BaseConstants,
   GUID_SIZE,
+  IConstants as IBaseConstants,
   IPBkdf2Consts,
   getRuntimeConfiguration,
   registerRuntimeConfiguration,
@@ -14,7 +15,11 @@ import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
-import { getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from './i18n';
+import {
+  getEciesPluginI18nEngine,
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+} from './i18n';
 
 /**
  * Constants for checksum operations
@@ -25,8 +30,15 @@ export const NODE_RUNTIME_CONFIGURATION_KEY = Symbol.for(
   'digitaldefiance.node.ecies.defaults',
 );
 
-type NodeRuntimeConfiguration = ReturnType<typeof getRuntimeConfiguration>;
-type NodeRuntimeOverrides = Parameters<
+/**
+ * Node runtime configuration type (extends base IConstants)
+ */
+export type NodeRuntimeConfiguration = IBaseConstants;
+
+/**
+ * Overrides for node runtime configuration
+ */
+export type NodeRuntimeOverrides = Parameters<
   typeof registerRuntimeConfiguration
 >[1];
 
@@ -171,7 +183,12 @@ if (
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8
 ) {
   const pluginEngine = getEciesPluginI18nEngine();
-  throw new Error(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_InvalidChecksumConstants));
+  throw new Error(
+    pluginEngine.translate(
+      NodeEciesComponentId,
+      NodeEciesStringKey.Error_InvalidChecksumConstants,
+    ),
+  );
 }
 
 if (objectIdLength !== 12) {

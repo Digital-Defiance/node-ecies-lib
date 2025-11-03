@@ -265,6 +265,11 @@ Please read the contributing guidelines in the main repository.
 
 ## ChangeLog
 
+### Version 1.3.20
+
+- Version bump
+- Some minor changes/fixes to a few services
+
 ### Version 1.3.18
 
 - Add missing exports

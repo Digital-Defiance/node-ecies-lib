@@ -20,7 +20,12 @@ import {
   createECDH,
   randomBytes,
 } from 'crypto';
-import { createEciesTranslationEngine, getEciesPluginI18nEngine, NodeEciesComponentId, NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
+import {
+  createEciesTranslationEngine,
+  getEciesPluginI18nEngine,
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+} from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -31,7 +36,10 @@ export class EciesSingleRecipientCore {
   protected readonly config: IECIESConfig;
   protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
-  constructor(config: IECIESConfig, engine?: PluginI18nEngine<CoreLanguageCode>) {
+  constructor(
+    config: IECIESConfig,
+    engine?: PluginI18nEngine<CoreLanguageCode>,
+  ) {
     this.config = config;
     this.cryptoCore = new EciesCryptoCore(config);
     this.engine = engine || createEciesTranslationEngine();
@@ -82,14 +90,17 @@ export class EciesSingleRecipientCore {
       ] as number,
     );
     if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
-    const pluginEngine = getEciesPluginI18nEngine();
+      const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
         this.engine,
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize),
+          error: pluginEngine.translate(
+            NodeEciesComponentId,
+            NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize,
+          ),
           maxLength: String(UINT32_MAX),
           messageLength: String(message.length),
         },
@@ -144,7 +155,9 @@ export class EciesSingleRecipientCore {
 
     // Get the ephemeral public key and ensure it has the 0x04 prefix
     let ephemeralPublicKey = ecdh.getPublicKey();
-    if (ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH) {
+    if (
+      ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH
+    ) {
       ephemeralPublicKey = Buffer.concat([
         Buffer.from([this.cryptoCore.consts.PUBLIC_KEY_MAGIC]),
         ephemeralPublicKey,
@@ -155,7 +168,10 @@ export class EciesSingleRecipientCore {
     const iv = randomBytes(this.cryptoCore.consts.IV_SIZE);
 
     // Get the key from the shared secret (always use first 32 bytes)
-    const symKey = sharedSecret.subarray(0, this.cryptoCore.consts.SYMMETRIC.KEY_SIZE);
+    const symKey = sharedSecret.subarray(
+      0,
+      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
+    );
 
     // Create cipher with the derived symmetric key
     const cipher = createCipheriv(
@@ -286,12 +302,18 @@ export class EciesSingleRecipientCore {
     const iv = data.subarray(offset, offset + this.cryptoCore.consts.IV_SIZE);
     offset += this.cryptoCore.consts.IV_SIZE;
 
-    const authTag = data.subarray(offset, offset + this.cryptoCore.consts.AUTH_TAG_SIZE);
+    const authTag = data.subarray(
+      offset,
+      offset + this.cryptoCore.consts.AUTH_TAG_SIZE,
+    );
     offset += this.cryptoCore.consts.AUTH_TAG_SIZE;
 
     // Extract the length prefix (4 bytes) after the header components
     const dataLengthBuffer = includeLengthAndCrc
-      ? data.subarray(offset, offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE)
+      ? data.subarray(
+          offset,
+          offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE,
+        )
       : Buffer.alloc(0);
     if (includeLengthAndCrc) {
       offset += this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE;
@@ -299,7 +321,7 @@ export class EciesSingleRecipientCore {
 
     const dataLength = includeLengthAndCrc
       ? Number(dataLengthBuffer.readBigUInt64BE(0))
-      : options?.dataLength ?? -1;
+      : (options?.dataLength ?? -1);
 
     if (
       includeLengthAndCrc &&
@@ -313,7 +335,10 @@ export class EciesSingleRecipientCore {
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EncryptedDataLengthMismatch),
+          error: pluginEngine.translate(
+            NodeEciesComponentId,
+            NodeEciesStringKey.Error_EncryptedDataLengthMismatch,
+          ),
           expected: String(dataLength),
           actual: String(options.dataLength),
         },
@@ -351,15 +376,17 @@ export class EciesSingleRecipientCore {
 
     // Validate all header components have the correct lengths
     if (normalizedKey.length !== this.cryptoCore.consts.PUBLIC_KEY_LENGTH) {
-    const pluginEngine = getEciesPluginI18nEngine();
+      const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
         this.engine,
         undefined,
         undefined,
         {
-          error:
-            pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch),
+          error: pluginEngine.translate(
+            NodeEciesComponentId,
+            NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch,
+          ),
           expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
           actual: String(normalizedKey.length),
         },
@@ -585,7 +612,10 @@ export class EciesSingleRecipientCore {
       }
 
       // Get the key from the shared secret (always use first 32 bytes)
-      const symKey = sharedSecret.subarray(0, this.cryptoCore.consts.SYMMETRIC.KEY_SIZE);
+      const symKey = sharedSecret.subarray(
+        0,
+        this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
+      );
 
       // Create decipher with shared secret-derived key
       const decipher = createDecipheriv(
@@ -631,7 +661,12 @@ export class EciesSingleRecipientCore {
         // Handle edge case where encrypted data might be empty or malformed
         const pluginEngine = getEciesPluginI18nEngine();
         if (encrypted.length === 0) {
-          throw new Error(pluginEngine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_EncryptedDataIsEmpty));
+          throw new Error(
+            pluginEngine.translate(
+              NodeEciesComponentId,
+              NodeEciesStringKey.Error_EncryptedDataIsEmpty,
+            ),
+          );
         }
 
         const firstPart = decipher.update(encrypted);
