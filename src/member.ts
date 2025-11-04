@@ -34,12 +34,7 @@ import { IMemberOperational } from './interfaces/member-operational';
 import { SignatureBuffer } from './types';
 
 /**
- * A member of Brightchain.
- * In the Owner Free Filesystem (OFF), members are used to:
- * 1. Sign and verify data
- * 2. Encrypt and decrypt data
- * 3. Participate in voting
- * 4. Establish ownership of data
+ * A member of an ECIES interchange
  */
 export class Member implements IMemberOperational<Types.ObjectId> {
   private readonly _eciesService: ECIESService;

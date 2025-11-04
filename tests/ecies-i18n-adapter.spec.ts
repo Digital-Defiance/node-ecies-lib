@@ -1,81 +1,62 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { EciesStringKey, EciesComponentId } from '@digitaldefiance/ecies-lib';
 import {
-  createEciesTranslationEngine,
   getEciesPluginI18nEngine,
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../src/i18n/ecies-i18n-factory';
+import { getNodeEciesI18nEngine } from '../src/i18n/node-ecies-i18n-setup';
 import { withConsoleMocks } from './support/console';
 
-describe('ECIES Translation Adapter', () => {
-  describe('createEciesTranslationEngine', () => {
-    it('should create a translation engine with correct interface', () => {
-      const engine = createEciesTranslationEngine();
-      
+describe('Node ECIES i18n Integration', () => {
+  beforeEach(() => {
+    // Initialize node-ecies engine with component registration
+    getNodeEciesI18nEngine();
+  });
+  describe('Plugin i18n engine', () => {
+    it('should have translate function', () => {
+      const engine = getNodeEciesI18nEngine();
       expect(engine).toBeDefined();
       expect(typeof engine.translate).toBe('function');
-      expect(typeof engine.safeTranslate).toBe('function');
     });
 
-    it('should translate EciesStringKey values', () => {
-      const engine = createEciesTranslationEngine();
-      
-      // Test a key that exists in EciesStringKey
+    it('should translate node-ecies keys', () => {
+      const engine = getNodeEciesI18nEngine();
       const result = engine.translate(
-        EciesComponentId,
-        EciesStringKey.Error_LengthError_LengthIsInvalidType
+        NodeEciesComponentId,
+        NodeEciesStringKey.Error_LengthError_LengthIsInvalidType
       );
-      
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should handle missing translations gracefully', async () => {
-      await withConsoleMocks({ mute: true }, async () => {
-        const engine = createEciesTranslationEngine();
-        
-        // Test a key that doesn't exist
-        const nonExistentKey = 'NonExistent_Key_12345' as EciesStringKey;
-        const result = engine.safeTranslate(EciesComponentId, nonExistentKey);
-        
-        expect(result).toBeDefined();
-        expect(typeof result).toBe('string');
-      });
-    });
-
     it('should support variable substitution', () => {
-      const engine = createEciesTranslationEngine();
-      
-      // Use a key that might have variables
+      const engine = getNodeEciesI18nEngine();
       const result = engine.translate(
-        EciesComponentId,
-        EciesStringKey.Error_LengthError_LengthIsInvalidType,
-        { length: '100', expected: '50' }
+        NodeEciesComponentId,
+        NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
+        { length: '100' },
+        LanguageCodes.EN_US
       );
-      
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
     });
 
-    it('should support language parameter', () => {
-      const engine = createEciesTranslationEngine();
-      
+    it('should support multiple languages', () => {
+      const engine = getNodeEciesI18nEngine();
       const enResult = engine.translate(
-        EciesComponentId,
-        EciesStringKey.Error_LengthError_LengthIsInvalidType,
+        NodeEciesComponentId,
+        NodeEciesStringKey.Error_Member_MissingMemberName,
         undefined,
         LanguageCodes.EN_US
       );
-      
       const frResult = engine.translate(
-        EciesComponentId,
-        EciesStringKey.Error_LengthError_LengthIsInvalidType,
+        NodeEciesComponentId,
+        NodeEciesStringKey.Error_Member_MissingMemberName,
         undefined,
         LanguageCodes.FR
       );
-      
       expect(enResult).toBeDefined();
       expect(frResult).toBeDefined();
       expect(typeof enResult).toBe('string');
@@ -98,9 +79,8 @@ describe('ECIES Translation Adapter', () => {
 
     testKeys.forEach((key) => {
       it(`should translate ${key} in English`, () => {
-        const pluginEngine = getEciesPluginI18nEngine();
-        const result = pluginEngine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.EN_US);
-        
+        const engine = getNodeEciesI18nEngine();
+        const result = engine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.EN_US);
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThan(0);
@@ -108,9 +88,8 @@ describe('ECIES Translation Adapter', () => {
       });
 
       it(`should translate ${key} in French`, () => {
-        const pluginEngine = getEciesPluginI18nEngine();
-        const result = pluginEngine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.FR);
-        
+        const engine = getNodeEciesI18nEngine();
+        const result = engine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.FR);
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThan(0);
@@ -118,29 +97,7 @@ describe('ECIES Translation Adapter', () => {
     });
   });
 
-  describe('Adapter compatibility with ECIESError', () => {
-    it('should work as TranslationEngine for error classes', () => {
-      const engine = createEciesTranslationEngine();
-      
-      // Simulate what ECIESError does
-      const errorKey = EciesStringKey.Error_LengthError_LengthIsInvalidType;
-      const translation = engine.translate(EciesComponentId, errorKey);
-      
-      expect(translation).toBeDefined();
-      expect(typeof translation).toBe('string');
-    });
 
-    it('should handle safeTranslate without throwing', async () => {
-      await withConsoleMocks({ mute: true }, async () => {
-        const engine = createEciesTranslationEngine();
-        
-        expect(() => {
-          const result = engine.safeTranslate(EciesComponentId, 'invalid_key' as any);
-          expect(result).toBeDefined();
-        }).not.toThrow();
-      });
-    });
-  });
 
   describe('Language support', () => {
     const supportedLanguages = [
@@ -156,14 +113,13 @@ describe('ECIES Translation Adapter', () => {
 
     supportedLanguages.forEach((lang) => {
       it(`should provide translations for ${lang}`, () => {
-        const pluginEngine = getEciesPluginI18nEngine();
-        const result = pluginEngine.translate(
+        const engine = getNodeEciesI18nEngine();
+        const result = engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_Member_MissingMemberName,
           undefined,
           lang
         );
-        
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThan(0);
@@ -173,16 +129,13 @@ describe('ECIES Translation Adapter', () => {
 
   describe('Variable substitution', () => {
     it('should substitute variables in translations', () => {
-      const pluginEngine = getEciesPluginI18nEngine();
-      
-      // Test with a template string if available
-      const result = pluginEngine.translate(
+      const engine = getNodeEciesI18nEngine();
+      const result = engine.translate(
         NodeEciesComponentId,
         NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
         { length: '100' },
         LanguageCodes.EN_US
       );
-      
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
     });
@@ -190,23 +143,9 @@ describe('ECIES Translation Adapter', () => {
 
   describe('Singleton behavior', () => {
     it('should return the same engine instance', () => {
-      const engine1 = getEciesPluginI18nEngine();
-      const engine2 = getEciesPluginI18nEngine();
-      
+      const engine1 = getNodeEciesI18nEngine();
+      const engine2 = getNodeEciesI18nEngine();
       expect(engine1).toBe(engine2);
-    });
-
-    it('should maintain consistent translations', async () => {
-      await withConsoleMocks({ mute: true }, async () => {
-        const engine1 = createEciesTranslationEngine();
-        const engine2 = createEciesTranslationEngine();
-        
-        const key = EciesStringKey.Error_MemberError_MissingMemberName;
-        const result1 = engine1.translate(EciesComponentId, key);
-        const result2 = engine2.translate(EciesComponentId, key);
-        
-        expect(result1).toBe(result2);
-      });
     });
   });
 });

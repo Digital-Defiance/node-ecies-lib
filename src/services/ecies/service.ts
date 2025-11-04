@@ -41,28 +41,14 @@ export class ECIESService {
   protected readonly singleRecipient: EciesSingleRecipientCore;
   protected readonly multiRecipient: EciesMultiRecipient;
   protected readonly utilities: EciesUtilities;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
   constructor(
-    engineOrConfig?: PluginI18nEngine<CoreLanguageCode> | Partial<IECIESConfig>,
     config?: Partial<IECIESConfig>,
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
-    // Determine if first parameter is engine or config
-    let engine: PluginI18nEngine<CoreLanguageCode>;
-    let actualConfig: Partial<IECIESConfig>;
-
-    if (engineOrConfig && 'translate' in engineOrConfig) {
-      // First parameter is an engine
-      engine = engineOrConfig as PluginI18nEngine<CoreLanguageCode>;
-      actualConfig = config || {};
-    } else {
-      // First parameter is config or undefined
-      engine = createEciesTranslationEngine();
-      actualConfig = (engineOrConfig as Partial<IECIESConfig>) || {};
-    }
-
-    const eciesConsts = eciesParams;
+    const actualConfig = config || {};
+    const eciesConsts = eciesParams || Constants.ECIES;
+    
     this._config = {
       ...config,
       curveName: eciesConsts.CURVE_NAME,
@@ -75,11 +61,10 @@ export class ECIESService {
     };
 
     // Initialize all components
-    this.engine = engine;
     this.cryptoCore = new EciesCryptoCore(this._config, eciesParams);
     this.signature = new EciesSignature(this.cryptoCore);
-    this.singleRecipient = new EciesSingleRecipientCore(this._config, engine);
-    this.multiRecipient = new EciesMultiRecipient(this.cryptoCore, engine);
+    this.singleRecipient = new EciesSingleRecipientCore(this._config);
+    this.multiRecipient = new EciesMultiRecipient(this.cryptoCore);
     this.utilities = new EciesUtilities();
   }
 
@@ -334,7 +319,6 @@ export class ECIESService {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptionType,
-        this.engine,
         undefined,
         undefined,
         {

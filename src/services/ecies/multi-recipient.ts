@@ -1,12 +1,9 @@
 import {
   Constants as AppConstants,
-  ECIES,
   EciesEncryptionTypeEnum,
   ECIESError,
   ECIESErrorTypeEnum,
 } from '@digitaldefiance/ecies-lib';
-import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   createCipheriv,
   createDecipheriv,
@@ -16,7 +13,6 @@ import {
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
 import { Constants } from '../../constants';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
@@ -30,17 +26,13 @@ import { EciesSingleRecipientCore } from './single-recipient';
 export class EciesMultiRecipient {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly singleRecipientCore: EciesSingleRecipientCore;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
   constructor(
     cryptoCore: EciesCryptoCore,
-    engine?: PluginI18nEngine<CoreLanguageCode>,
   ) {
     this.cryptoCore = cryptoCore;
-    this.engine = engine || createEciesTranslationEngine();
     this.singleRecipientCore = new EciesSingleRecipientCore(
       cryptoCore.config,
-      this.engine,
     );
   }
 
@@ -91,7 +83,6 @@ export class EciesMultiRecipient {
         ) {
           throw new ECIESError(
             ECIESErrorTypeEnum.InvalidRecipientPublicKey,
-            this.engine,
             undefined,
             undefined,
             {
@@ -101,7 +92,6 @@ export class EciesMultiRecipient {
         }
         throw new ECIESError(
           ECIESErrorTypeEnum.SecretComputationFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -111,7 +101,6 @@ export class EciesMultiRecipient {
       }
       throw new ECIESError(
         ECIESErrorTypeEnum.SecretComputationFailed,
-        this.engine,
       );
     }
 
@@ -167,7 +156,6 @@ export class EciesMultiRecipient {
     ) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedKeyLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -214,7 +202,6 @@ export class EciesMultiRecipient {
     if (decrypted.length !== this.cryptoCore.consts.SYMMETRIC.KEY_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -240,7 +227,7 @@ export class EciesMultiRecipient {
     preamble?: Buffer,
   ): IMultiEncryptedMessage {
     if (recipients.length > AppConstants.UINT16_MAX) {
-      throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients);
     }
 
     const messageTypeBuffer = Buffer.alloc(1);
@@ -284,7 +271,6 @@ export class EciesMultiRecipient {
     if (encryptedMessage.length !== message.length) {
       throw new ECIESError(
         ECIESErrorTypeEnum.MessageLengthMismatch,
-        this.engine,
       );
     }
 
@@ -315,7 +301,7 @@ export class EciesMultiRecipient {
     recipient: Member,
   ): Buffer {
     if (recipient.privateKey === undefined) {
-      throw new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded);
     }
 
     // Find this recipient's encrypted key
@@ -323,7 +309,7 @@ export class EciesMultiRecipient {
       (id: Types.ObjectId): boolean => id.equals(recipient.id),
     );
     if (recipientIndex === -1) {
-      throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
     }
 
     const encryptedKey = encryptedData.recipientKeys[recipientIndex];
@@ -365,7 +351,7 @@ export class EciesMultiRecipient {
 
     // The decrypted message should match the original data length
     if (decryptedMessage.length !== encryptedData.dataLength) {
-      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
     }
 
     return decryptedMessage;
@@ -386,7 +372,6 @@ export class EciesMultiRecipient {
     if (recipientCount < 2) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidRecipientCount,
-        this.engine,
       );
     }
 
@@ -427,17 +412,16 @@ export class EciesMultiRecipient {
     if (
       data.recipientIds.length > this.cryptoCore.consts.MULTIPLE.MAX_RECIPIENTS
     ) {
-      throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients);
     } else if (data.recipientIds.length !== data.recipientKeys.length) {
       throw new ECIESError(
         ECIESErrorTypeEnum.RecipientKeyCountMismatch,
-        this.engine,
       );
     } else if (
       data.dataLength < 0 ||
       data.dataLength > this.cryptoCore.consts.MAX_RAW_DATA_SIZE
     ) {
-      throw new ECIESError(ECIESErrorTypeEnum.FileSizeTooLarge, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.FileSizeTooLarge);
     }
 
     // Create data length buffer
@@ -468,7 +452,6 @@ export class EciesMultiRecipient {
       if (encryptedKey.length === 0) {
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptedKeyLength,
-          this.engine,
         );
       }
 
@@ -478,7 +461,6 @@ export class EciesMultiRecipient {
       ) {
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptedKeyLength,
-          this.engine,
           undefined,
           undefined,
           {
@@ -511,7 +493,7 @@ export class EciesMultiRecipient {
   public parseMultiEncryptedHeader(data: Buffer): IMultiEncryptedParsedHeader {
     // Ensure there's enough data to read headers
     if (data.length < this.cryptoCore.consts.MULTIPLE.FIXED_OVERHEAD_SIZE) {
-      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
     }
 
     let offset = 0;
@@ -522,7 +504,7 @@ export class EciesMultiRecipient {
       dataLength <= 0 ||
       dataLength > this.cryptoCore.consts.MAX_RAW_DATA_SIZE
     ) {
-      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
     }
     offset += this.cryptoCore.consts.MULTIPLE.DATA_LENGTH_SIZE; // 8 bytes
 
@@ -534,7 +516,6 @@ export class EciesMultiRecipient {
     ) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidRecipientCount,
-        this.engine,
       );
     }
     offset += this.cryptoCore.consts.MULTIPLE.RECIPIENT_COUNT_SIZE; // 2 bytes
@@ -545,7 +526,7 @@ export class EciesMultiRecipient {
       false,
     );
     if (data.length < requiredLength) {
-      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength, this.engine);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
     }
 
     // Read recipient IDs
@@ -565,7 +546,7 @@ export class EciesMultiRecipient {
     const recipientKeys: Buffer[] = [];
     for (let i = 0; i < recipientCount; i++) {
       if (offset >= data.length) {
-        throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength, this.engine);
+        throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
       }
 
       if (
@@ -574,7 +555,6 @@ export class EciesMultiRecipient {
       ) {
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidDataLength,
-          this.engine,
           undefined,
           undefined,
           {

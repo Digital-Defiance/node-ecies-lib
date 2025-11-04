@@ -14,7 +14,7 @@ describe('EciesFileService (Backend)', () => {
   let config: IECIESConfig;
   let tempDir: string;
 
-  beforeAll(() => {
+  beforeEach(() => {
     config = {
       curveName: 'secp256k1',
       primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
@@ -24,7 +24,7 @@ describe('EciesFileService (Backend)', () => {
       symmetricKeyMode: 'gcm',
     };
 
-    eciesService = new ECIESService(getEciesPluginI18nEngine(), config);
+    eciesService = new ECIESService(config);
 
     // Generate test keys
     const { wallet } = eciesService.walletAndSeedFromMnemonic(

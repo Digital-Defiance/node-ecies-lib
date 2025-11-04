@@ -1,4 +1,3 @@
-// digital-burnbag-api-lib/src/lib/services/ecies.spec.ts
 import { ECIES, ECIESError, ECIESErrorTypeEnum, EmailString, IECIESConfig, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import { getNodeRuntimeConfiguration, Constants as NodeConstants } from '../src/constants';
 import { randomBytes } from 'crypto';
@@ -13,7 +12,7 @@ describe('ECIESService', () => {
   let recipient1: BackendMember;
   let recipient2: BackendMember;
   let eciesService: ECIESService;
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     const config: IECIESConfig = {
       curveName: eciesDefaults.CURVE_NAME,

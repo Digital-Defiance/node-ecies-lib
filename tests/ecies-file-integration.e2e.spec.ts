@@ -20,7 +20,7 @@ describe('ECIES File Service Integration Tests', () => {
   let charliePrivateKey: Buffer;
   let charliePublicKey: Buffer;
 
-  beforeAll(() => {
+  beforeEach(() => {
     config = {
       curveName: 'secp256k1',
       primaryKeyDerivationPath: "m/44'/60'/0'/0/0",

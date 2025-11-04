@@ -48,17 +48,21 @@ export const NodeEciesComponentId = 'node-ecies';
 /**
  * Component definition for Node ECIES strings
  */
-const NodeEciesComponent: ComponentDefinition<NodeEciesStringKey> = {
-  id: NodeEciesComponentId,
-  name: 'Node ECIES Library Strings',
-  stringKeys: Object.values(NodeEciesStringKey),
+export function createNodeEciesComponentDefinition(): ComponentDefinition<NodeEciesStringKey> {
+  const NodeEciesComponent: ComponentDefinition<NodeEciesStringKey> = {
+    id: NodeEciesComponentId,
+    name: 'Node ECIES Library Strings',
+    stringKeys: Object.values(NodeEciesStringKey),
+  };
+  return NodeEciesComponent;
 };
 
-/**
- * Node ECIES string translations
- */
-const nodeEciesStrings = {
-  [LanguageCodes.EN_US]: {
+export function createNodeEciesComponentRegistration(): ComponentRegistration<NodeEciesStringKey, string> {
+  const component = createNodeEciesComponentDefinition();
+  /**
+   * Node ECIES string translations
+   */
+  const englishTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       'Length encoding type is invalid',
 
@@ -110,8 +114,8 @@ const nodeEciesStrings = {
     // PBKDF2 errors
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: 'Invalid salt length',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: 'Invalid hash length',
-  },
-  [LanguageCodes.EN_GB]: {
+  };
+  const britishEnglishTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       'Length encoding type is invalid',
 
@@ -163,8 +167,9 @@ const nodeEciesStrings = {
     // PBKDF2 errors
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: 'Invalid salt length',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: 'Invalid hash length',
-  },
-  [LanguageCodes.FR]: {
+  };
+
+  const frenchTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       "Le type d'encodage de longueur est invalide",
 
@@ -218,8 +223,8 @@ const nodeEciesStrings = {
       'Longueur de sel invalide',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]:
       'Longueur de hachage invalide',
-  },
-  [LanguageCodes.ES]: {
+  };
+  const spanishTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       'El tipo de codificación de longitud es inválido',
     [NodeEciesStringKey.Error_Member_MissingMemberName]:
@@ -271,8 +276,8 @@ const nodeEciesStrings = {
       'El búfer es demasiado corto para la longitud de datos declarada.',
     [NodeEciesStringKey.Error_InvalidChecksumConstants]:
       'Constantes de suma de comprobación no válidas.',
-  },
-  [LanguageCodes.DE]: {
+  };
+  const germanTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       'Längencodierungstyp ist ungültig',
     [NodeEciesStringKey.Error_Member_MissingMemberName]:
@@ -322,8 +327,8 @@ const nodeEciesStrings = {
       'Ungültige Prüfziffernkonstanten',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: 'Ungültige Salt-Länge',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: 'Ungültige Hash-Länge',
-  },
-  [LanguageCodes.ZH_CN]: {
+  };
+  const mandarinTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       '长度编码类型无效',
     [NodeEciesStringKey.Error_Member_MissingMemberName]: '需要成员名称',
@@ -362,8 +367,8 @@ const nodeEciesStrings = {
     [NodeEciesStringKey.Error_InvalidChecksumConstants]: '无效的校验和常量',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: '无效的盐长度',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: '无效的哈希长度',
-  },
-  [LanguageCodes.JA]: {
+  };
+  const japaneseTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       '長さエンコーディングタイプが無効です',
     [NodeEciesStringKey.Error_Member_MissingMemberName]: 'メンバー名は必須です',
@@ -410,8 +415,8 @@ const nodeEciesStrings = {
       '無効なチェックサム定数',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: '無効なソルト長',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: '無効なハッシュ長',
-  },
-  [LanguageCodes.UK]: {
+  };
+  const ukrainianTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
       'Тип кодування довжини недійсний',
     [NodeEciesStringKey.Error_Member_MissingMemberName]:
@@ -462,8 +467,22 @@ const nodeEciesStrings = {
       'Недійсна довжина солі',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]:
       'Недійсна довжина хешу',
-  },
-};
+  };
+
+  return {
+    component,
+    strings: {
+      [LanguageCodes.EN_US]: englishTranslations,
+      [LanguageCodes.EN_GB]: englishTranslations,
+      [LanguageCodes.FR]: frenchTranslations,
+      [LanguageCodes.ES]: spanishTranslations,
+      [LanguageCodes.DE]: germanTranslations,
+      [LanguageCodes.ZH_CN]: mandarinTranslations,
+      [LanguageCodes.JA]: japaneseTranslations,
+      [LanguageCodes.UK]: ukrainianTranslations,
+    },
+  };
+}
 
 /**
  * Singleton instance of the ECIES I18n engine
@@ -481,16 +500,7 @@ export function getEciesPluginI18nEngine(): PluginI18nEngine<CoreLanguageCode> {
       NodeEciesComponentId,
     ) as PluginI18nEngine<CoreLanguageCode>;
 
-    // Register the Node ECIES component
-    const registration: ComponentRegistration<
-      NodeEciesStringKey,
-      CoreLanguageCode
-    > = {
-      component: NodeEciesComponent,
-      strings: nodeEciesStrings as any,
-    };
-
-    const result = eciesI18nEngineInstance.registerComponent(registration);
+    const result = eciesI18nEngineInstance.registerComponent(createNodeEciesComponentRegistration());
     if (!result.isValid) {
       console.warn(
         'Node ECIES component registration incomplete:',
@@ -517,7 +527,8 @@ export function getNodeEciesTranslation(
   variables?: Record<string, string | number>,
   language?: CoreLanguageCode,
 ): string {
-  const engine = getEciesPluginI18nEngine();
+  // Use the unified engine from node-ecies-i18n-setup
+  const engine = getEciesI18nEngine();
   return engine.translate(NodeEciesComponentId, key, variables, language);
 }
 

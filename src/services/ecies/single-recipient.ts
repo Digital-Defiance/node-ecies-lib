@@ -21,7 +21,6 @@ import {
   randomBytes,
 } from 'crypto';
 import {
-  createEciesTranslationEngine,
   getEciesPluginI18nEngine,
   NodeEciesComponentId,
   NodeEciesStringKey,
@@ -34,15 +33,12 @@ import { EciesCryptoCore } from './crypto-core';
 export class EciesSingleRecipientCore {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly config: IECIESConfig;
-  protected readonly engine: PluginI18nEngine<CoreLanguageCode>;
 
   constructor(
     config: IECIESConfig,
-    engine?: PluginI18nEngine<CoreLanguageCode>,
   ) {
     this.config = config;
     this.cryptoCore = new EciesCryptoCore(config);
-    this.engine = engine || createEciesTranslationEngine();
   }
 
   /**
@@ -59,7 +55,6 @@ export class EciesSingleRecipientCore {
       default:
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptionType,
-          this.engine,
         );
     }
   }
@@ -93,7 +88,6 @@ export class EciesSingleRecipientCore {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -129,7 +123,6 @@ export class EciesSingleRecipientCore {
         ) {
           throw new ECIESError(
             ECIESErrorTypeEnum.InvalidRecipientPublicKey,
-            this.engine,
             undefined,
             undefined,
             {
@@ -139,7 +132,6 @@ export class EciesSingleRecipientCore {
         }
         throw new ECIESError(
           ECIESErrorTypeEnum.SecretComputationFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -149,7 +141,6 @@ export class EciesSingleRecipientCore {
       }
       throw new ECIESError(
         ECIESErrorTypeEnum.SecretComputationFailed,
-        this.engine,
       );
     }
 
@@ -237,7 +228,6 @@ export class EciesSingleRecipientCore {
     ) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptionType,
-        this.engine,
         undefined,
         undefined,
         {
@@ -250,7 +240,6 @@ export class EciesSingleRecipientCore {
     if (actualEncryptionTypeEnum === EciesEncryptionTypeEnum.Multiple) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptionType,
-        this.engine,
         undefined,
         undefined,
         {
@@ -271,7 +260,6 @@ export class EciesSingleRecipientCore {
     ) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -331,7 +319,6 @@ export class EciesSingleRecipientCore {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -358,7 +345,6 @@ export class EciesSingleRecipientCore {
     if (includeLengthAndCrc && encryptedData.length !== dataLength) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -379,7 +365,6 @@ export class EciesSingleRecipientCore {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-        this.engine,
         undefined,
         undefined,
         {
@@ -396,7 +381,6 @@ export class EciesSingleRecipientCore {
     if (iv.length !== this.cryptoCore.consts.IV_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidIVLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -409,7 +393,6 @@ export class EciesSingleRecipientCore {
     if (authTag.length !== this.cryptoCore.consts.AUTH_TAG_SIZE) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidAuthTagLength,
-        this.engine,
         undefined,
         undefined,
         {
@@ -471,7 +454,6 @@ export class EciesSingleRecipientCore {
       );
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptionType,
-        this.engine,
         undefined,
         undefined,
         {
@@ -496,7 +478,6 @@ export class EciesSingleRecipientCore {
       }
       throw new ECIESError(
         ECIESErrorTypeEnum.DecryptionFailed,
-        this.engine,
         undefined,
         undefined,
         {
@@ -557,7 +538,6 @@ export class EciesSingleRecipientCore {
       }
       throw new ECIESError(
         ECIESErrorTypeEnum.DecryptionFailed,
-        this.engine,
         undefined,
         undefined,
         {
@@ -601,7 +581,6 @@ export class EciesSingleRecipientCore {
         console.error('[ERROR][decrypt] Failed to compute shared secret:', err);
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -628,7 +607,6 @@ export class EciesSingleRecipientCore {
       if (authTag.length !== this.cryptoCore.consts.AUTH_TAG_SIZE) {
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -642,7 +620,6 @@ export class EciesSingleRecipientCore {
       if (iv.length !== this.cryptoCore.consts.IV_SIZE) {
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -677,7 +654,6 @@ export class EciesSingleRecipientCore {
       } catch (err) {
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
-          this.engine,
           undefined,
           undefined,
           {
@@ -694,7 +670,6 @@ export class EciesSingleRecipientCore {
       // Wrap non-EciesError in an EciesError
       throw new ECIESError(
         ECIESErrorTypeEnum.DecryptionFailed,
-        this.engine,
         undefined,
         undefined,
         {

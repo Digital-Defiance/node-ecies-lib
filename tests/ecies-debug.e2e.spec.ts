@@ -7,7 +7,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
   let config: IECIESConfig;
   let testMnemonic: SecureString;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,

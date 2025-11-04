@@ -46,7 +46,7 @@ export interface IMemberOperational<I extends string | Types.ObjectId> {
 /**
  * Extended operational interface for test members
  */
-export interface ITestBrightChainMemberOperational
+export interface ITestNodeEciesMemberOperational
   extends IMemberOperational<Types.ObjectId> {
   get mnemonic(): SecureString | undefined;
 }

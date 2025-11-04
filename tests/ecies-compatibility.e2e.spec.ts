@@ -29,7 +29,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
   let receiverWallet: Wallet;
   let receiverKeyPair: ISimpleKeyPairBuffer;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,
@@ -132,7 +132,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
     let backendSingle: BackendEciesSingleRecipient;
     let receiverKeyPair: { privateKey: Buffer; publicKey: Buffer };
 
-    beforeAll(() => {
+    beforeEach(() => {
       frontendSingle = new FrontendEciesSingleRecipient(config);
       backendSingle = new BackendEciesSingleRecipient(config);
 
@@ -274,11 +274,11 @@ describe('ECIES Cross-Platform Compatibility', () => {
     });
   });
 
-  describe('BurnbagMember Compatibility', () => {
+  describe('ECIES Member Compatibility', () => {
     let frontendMember: FrontendMember;
     let backendMember: BackendMember;
 
-    beforeAll(() => {
+    beforeEach(() => {
       const email = new EmailString('test@example.com');
 
       // Create frontend member

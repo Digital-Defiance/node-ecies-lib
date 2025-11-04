@@ -6,7 +6,6 @@ import {
   IECIESConstants,
   IConstants as IBaseConstants,
 } from '@digitaldefiance/ecies-lib';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
 import { ECIESService } from './service';
 import { getNodeRuntimeConfiguration } from '../../constants';
 
@@ -30,7 +29,6 @@ export class EciesUtilities {
     if (dataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        createEciesTranslationEngine(),
       );
     }
     const eciesDefaults: IECIESConstants = constants.ECIES;
@@ -42,9 +40,7 @@ export class EciesUtilities {
       symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
       symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
-    const engine = createEciesTranslationEngine();
     const eciesService: ECIESService = new ECIESService(
-      engine,
       config,
       eciesDefaults,
     );
@@ -66,7 +62,6 @@ export class EciesUtilities {
       default:
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidEncryptionType,
-          createEciesTranslationEngine(),
         );
     }
   }
@@ -85,7 +80,6 @@ export class EciesUtilities {
     if (encryptedDataLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        createEciesTranslationEngine(),
       );
     }
 
@@ -97,7 +91,6 @@ export class EciesUtilities {
     if (decryptedLength < 0) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        createEciesTranslationEngine(),
         undefined,
         undefined,
         {

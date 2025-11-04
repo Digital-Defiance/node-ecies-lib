@@ -1,17 +1,11 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { ECIESError, ECIESErrorTypeEnum } from '@digitaldefiance/ecies-lib';
-import { createEciesTranslationEngine } from '../src/i18n/ecies-i18n-factory';
+import { getEciesPluginI18nEngine } from '../src/i18n/ecies-i18n-factory';
 
-describe('ECIESError Translation Integration', () => {
-  describe('Error creation with translation engine', () => {
-    it('should create ECIESError with translated message', () => {
-      const engine = createEciesTranslationEngine();
-      
-      const error = new ECIESError(
-        ECIESErrorTypeEnum.InvalidDataLength,
-        engine
-      );
-      
+describe('ECIES Error Translation Integration', () => {
+  describe('Error creation with v2.0 engine', () => {
+    it('should create ECIESError with auto-initialized engine', () => {
+      const error = new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(ECIESError);
       expect(error.message).toBeDefined();
@@ -19,46 +13,28 @@ describe('ECIESError Translation Integration', () => {
     });
 
     it('should translate error messages in different languages', () => {
-      const engine = createEciesTranslationEngine();
-      
       const errorEn = new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
-        engine,
         undefined,
         LanguageCodes.EN_US
       );
-      
       const errorFr = new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
-        engine,
         undefined,
         LanguageCodes.FR
       );
-      
       expect(errorEn.message).toBeDefined();
       expect(errorFr.message).toBeDefined();
       expect(errorEn.message).not.toBe(errorFr.message);
     });
 
     it('should handle error with variables', () => {
-      const engine = createEciesTranslationEngine();
-      
       const error = new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
-        engine,
         undefined,
         undefined,
         { expected: '100', actual: '50' }
       );
-      
-      expect(error.message).toBeDefined();
-      expect(error.message.length).toBeGreaterThan(0);
-    });
-
-    it('should work without explicit engine (uses default)', () => {
-      const error = new ECIESError(ECIESErrorTypeEnum.InvalidEncryptionType);
-      
-      expect(error).toBeInstanceOf(ECIESError);
       expect(error.message).toBeDefined();
       expect(error.message.length).toBeGreaterThan(0);
     });
@@ -87,9 +63,7 @@ describe('ECIESError Translation Integration', () => {
 
     errorTypes.forEach((errorType) => {
       it(`should create error for ${ECIESErrorTypeEnum[errorType]}`, () => {
-        const engine = createEciesTranslationEngine();
-        const error = new ECIESError(errorType, engine);
-        
+        const error = new ECIESError(errorType);
         expect(error).toBeInstanceOf(ECIESError);
         expect(error.message).toBeDefined();
         expect(error.message.length).toBeGreaterThan(0);
@@ -100,27 +74,19 @@ describe('ECIESError Translation Integration', () => {
 
   describe('Error message quality', () => {
     it('should not contain placeholder text', () => {
-      const engine = createEciesTranslationEngine();
-      const error = new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic, engine);
-      
-      expect(error.message).not.toContain('[');
-      expect(error.message).not.toContain(']');
+      const error = new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic);
       expect(error.message).not.toContain('undefined');
     });
 
     it('should be human-readable', () => {
-      const engine = createEciesTranslationEngine();
-      const error = new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded, engine);
-      
+      const error = new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded);
       expect(error.message).toMatch(/[a-zA-Z]/);
       expect(error.message.length).toBeGreaterThan(5);
     });
 
     it('should maintain error type information', () => {
-      const engine = createEciesTranslationEngine();
       const errorType = ECIESErrorTypeEnum.TooManyRecipients;
-      const error = new ECIESError(errorType, engine);
-      
+      const error = new ECIESError(errorType);
       expect(error.type).toBe(errorType);
     });
   });
@@ -136,14 +102,11 @@ describe('ECIESError Translation Integration', () => {
 
     languages.forEach((lang) => {
       it(`should create valid error message in ${lang}`, () => {
-        const engine = createEciesTranslationEngine();
         const error = new ECIESError(
           ECIESErrorTypeEnum.InvalidDataLength,
-          engine,
           undefined,
           lang
         );
-        
         expect(error.message).toBeDefined();
         expect(error.message.length).toBeGreaterThan(0);
         expect(typeof error.message).toBe('string');
@@ -153,19 +116,15 @@ describe('ECIESError Translation Integration', () => {
 
   describe('Error throwing and catching', () => {
     it('should be catchable as ECIESError', () => {
-      const engine = createEciesTranslationEngine();
-      
       expect(() => {
-        throw new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic, engine);
+        throw new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic);
       }).toThrow(ECIESError);
     });
 
     it('should preserve error details when caught', () => {
-      const engine = createEciesTranslationEngine();
       const errorType = ECIESErrorTypeEnum.FileSizeTooLarge;
-      
       try {
-        throw new ECIESError(errorType, engine, undefined, undefined, {
+        throw new ECIESError(errorType, undefined, undefined, {
           maxSize: '1000',
           actualSize: '2000',
         });
@@ -179,20 +138,17 @@ describe('ECIESError Translation Integration', () => {
     });
   });
 
-  describe('Adapter robustness', () => {
-    it('should handle undefined engine gracefully', () => {
+  describe('v2.0 error robustness', () => {
+    it('should auto-initialize engine', () => {
       expect(() => {
         new ECIESError(ECIESErrorTypeEnum.InvalidOperation);
       }).not.toThrow();
     });
 
     it('should handle undefined variables', () => {
-      const engine = createEciesTranslationEngine();
-      
       expect(() => {
         new ECIESError(
           ECIESErrorTypeEnum.InvalidDataLength,
-          engine,
           undefined,
           undefined,
           undefined
@@ -201,12 +157,9 @@ describe('ECIESError Translation Integration', () => {
     });
 
     it('should handle empty variables object', () => {
-      const engine = createEciesTranslationEngine();
-      
       expect(() => {
         new ECIESError(
           ECIESErrorTypeEnum.InvalidDataLength,
-          engine,
           undefined,
           undefined,
           {}

@@ -14,7 +14,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
   let backendService: BackendECIESService;
   let testMnemonic: SecureString;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,

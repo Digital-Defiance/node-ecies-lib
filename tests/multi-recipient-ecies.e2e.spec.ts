@@ -19,7 +19,7 @@ describe('ECIES Multi-Recipient E2E', () => {
   );
   let eciesService: ECIESService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     const config: IECIESConfig = {
       curveName: eciesDefaults.CURVE_NAME,

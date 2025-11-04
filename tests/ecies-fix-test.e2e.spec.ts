@@ -10,7 +10,7 @@ describe('ECIES Fix Verification', () => {
   let backendService: ECIESService;
   let testMnemonic: SecureString;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,

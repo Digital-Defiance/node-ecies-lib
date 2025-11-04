@@ -21,7 +21,7 @@ describe('ECIES Bidirectional Compatibility', () => {
   let backendMember: BackendMember;
   let testMnemonic: SecureString;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,
@@ -33,13 +33,13 @@ describe('ECIES Bidirectional Compatibility', () => {
     };
 
     frontendService = new FrontendECIESService(config);
-    backendService = new BackendECIESService(getEciesI18nEngine(), config);
+    backendService = new BackendECIESService(config);
     testMnemonic = new SecureString(
       'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
     );
   });
 
-  beforeAll(() => {
+  beforeEach(() => {
     const email = new EmailString('test@example.com');
 
     // Create frontend member

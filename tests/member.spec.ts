@@ -22,13 +22,13 @@ import { spyContains, withConsoleMocks } from './support/console';
 // Extend Jest with custom matchers
 expect.extend({ toThrowType });
 
-describe('brightchain', () => {
+describe('DigitalDefiance ECIES Member', () => {
   let alice: IBackendMemberWithMnemonic,
     bob: IBackendMemberWithMnemonic,
     noKeyCharlie: IBackendMemberWithMnemonic;
   let eciesService: ECIESService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     const config: IECIESConfig = {
       curveName: eciesDefaults.CURVE_NAME,
@@ -38,8 +38,7 @@ describe('brightchain', () => {
       symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
       symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
     };
-    const engine = getEciesI18nEngine();
-    eciesService = new ECIESService(engine, config);
+    eciesService = new ECIESService(config);
     alice = Member.newMember(
       eciesService,
       MemberType.User,
@@ -189,7 +188,7 @@ describe('brightchain', () => {
     let mnemonic: SecureString;
     let wallet: Wallet;
     let member: IBackendMemberWithMnemonic;
-    beforeAll(() => {
+    beforeEach(() => {
       mnemonic = eciesService.generateNewMnemonic();
       const { wallet: w } = eciesService.walletAndSeedFromMnemonic(mnemonic);
       wallet = w;

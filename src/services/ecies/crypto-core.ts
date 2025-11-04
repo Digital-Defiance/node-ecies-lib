@@ -49,11 +49,9 @@ export class EciesCryptoCore {
    */
   public normalizePublicKey(publicKey: Buffer): Buffer {
     if (!publicKey) {
-      const engine = createEciesTranslationEngine();
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-        engine,
         undefined,
         undefined,
         {
@@ -83,12 +81,10 @@ export class EciesCryptoCore {
       ]);
     }
 
-    const engine = createEciesTranslationEngine();
     const pluginEngine = getEciesPluginI18nEngine();
     // Invalid format
     throw new ECIESError(
       ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
-      engine,
       undefined,
       undefined,
       {

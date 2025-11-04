@@ -43,7 +43,7 @@ describe('ECIES File Service E2E Tests', () => {
   let receiverPrivateKey: Buffer;
   let receiverPublicKey: Buffer;
 
-  beforeAll(() => {
+  beforeEach(() => {
     config = {
       curveName: 'secp256k1',
       primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
@@ -73,7 +73,7 @@ describe('ECIES File Service E2E Tests', () => {
       backendService,
       MemberType.User,
       'Sender',
-      new EmailString('sender@digitalburnbag.com'),
+      new EmailString('sender@digitaldefiance.org'),
       senderPublicKey,
       new SecureBuffer(senderPrivateKey),
       senderWallet,
@@ -89,7 +89,7 @@ describe('ECIES File Service E2E Tests', () => {
       frontendService,
       MemberType.User,
       'Sender',
-      new EmailString('sender@digitalburnbag.com'),
+      new EmailString('sender@digitaldefiance.org'),
       new Uint8Array(senderPublicKey),
       new SecureBuffer(senderPrivateKey),
       senderWallet,
@@ -120,7 +120,7 @@ describe('ECIES File Service E2E Tests', () => {
       backendService,
       MemberType.User,
       'Receiver',
-      new EmailString('receiver@digitalburnbag.com'),
+      new EmailString('receiver@digitaldefiance.org'),
       receiverPublicKey,
       new SecureBuffer(receiverPrivateKey),
       receiverWallet,
@@ -133,7 +133,7 @@ describe('ECIES File Service E2E Tests', () => {
       frontendService,
       MemberType.User,
       'Receiver',
-      new EmailString('receiver@digitalburnbag.com'),
+      new EmailString('receiver@digitaldefiance.org'),
       new Uint8Array(receiverPublicKey),
       new SecureBuffer(receiverPrivateKey),
       receiverWallet,

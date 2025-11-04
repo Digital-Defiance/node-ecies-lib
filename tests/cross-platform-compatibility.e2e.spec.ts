@@ -47,17 +47,17 @@ describe('Cross-Platform Compatibility', () => {
   let frontendECIES: FrontendECIESService;
   let backendECIES: BackendECIESService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     frontendCore = new FrontendCryptoCore(config);
     backendCore = new BackendCryptoCore(config);
     frontendSig = new FrontendSignature(frontendCore);
     backendSig = new BackendSignature(backendCore);
     frontendSingle = new FrontendSingleRecipient(config);
-    backendSingle = new BackendSingleRecipient(config, getEciesI18nEngine());
+    backendSingle = new BackendSingleRecipient(config);
     frontendMulti = new FrontendMultiRecipient(config);
-    backendMulti = new BackendMultiRecipient(backendCore, getEciesI18nEngine());
+    backendMulti = new BackendMultiRecipient(backendCore);
     frontendECIES = new FrontendECIESService(config);
-    backendECIES = new BackendECIESService(getEciesI18nEngine(), config);
+    backendECIES = new BackendECIESService(config);
   });
 
   describe('Signature Cross-Compatibility', () => {

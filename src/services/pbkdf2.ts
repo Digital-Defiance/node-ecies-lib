@@ -42,19 +42,16 @@ export class NodePbkdf2Error extends Error {
 export class Pbkdf2Service<
   TLanguage extends CoreLanguageCode = CoreLanguageCode,
 > {
-  protected readonly engine: PluginI18nEngine<TLanguage>;
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
   protected readonly pbkdf2Consts: IPBkdf2Consts;
 
   constructor(
-    engine: PluginI18nEngine<TLanguage>,
-    profiles?: Record<string, IPbkdf2Config>,
+    profiles: Record<string, IPbkdf2Config> = Constants.PBKDF2_PROFILES,
     eciesParams: IECIESConsts = Constants.ECIES,
     pbkdf2Params: IPBkdf2Consts = Constants.PBKDF2,
   ) {
-    this.engine = engine;
-    this.profiles = profiles ? { ...profiles } : {};
+    this.profiles = profiles;
     this.eciesConsts = eciesParams;
     this.pbkdf2Consts = pbkdf2Params;
   }
@@ -91,9 +88,7 @@ export class Pbkdf2Service<
    * @returns A new Pbkdf2Service instance
    */
   public static fromConstants(constants: IConstants): Pbkdf2Service {
-    const engine = getEciesPluginI18nEngine();
     return new Pbkdf2Service(
-      engine,
       constants.PBKDF2_PROFILES,
       constants.ECIES,
       constants.PBKDF2,

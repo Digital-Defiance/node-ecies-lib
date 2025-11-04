@@ -19,7 +19,7 @@ describe('EciesMultiRecipient', () => {
   const message = Buffer.from('This is a secret message');
   let eciesService: ECIESService;
 
-  beforeAll(() => {
+  beforeEach(() => {
     // This is a mock configuration. In a real scenario, this would be properly configured.
     const config: IECIESConfig = {
       curveName: 'secp256k1',
@@ -29,10 +29,9 @@ describe('EciesMultiRecipient', () => {
       symmetricKeyBits: 256,
       symmetricKeyMode: 'gcm',
     };
-    const engine = getEciesI18nEngine();
     cryptoCore = new EciesCryptoCore(config);
-    eciesService = new ECIESService(engine, config);
-    eciesMultiRecipient = new EciesMultiRecipient(cryptoCore, engine);
+    eciesService = new ECIESService(config);
+    eciesMultiRecipient = new EciesMultiRecipient(cryptoCore);
 
     // Create some mock recipients
     const wallet1 = Wallet.generate();
