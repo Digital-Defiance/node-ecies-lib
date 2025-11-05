@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+## Version 2.1.13
+
+- Upgrade i18n
+
 ## Version 2.1.12
 
 - export createNodeEciesComponentConfig()
