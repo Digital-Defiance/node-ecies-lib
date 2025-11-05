@@ -33,7 +33,7 @@ export function resetNodeEciesI18nEngine(): void {
   _componentRegistered = false;
 }
 
-function createNodeEciesComponentConfig(): ComponentConfig {
+export function createNodeEciesComponentConfig(): ComponentConfig {
   return {
     id: NodeEciesComponentId,
     strings: createNodeEciesStrings(),

@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "2.1.10",
+  "version": "2.1.12",
   "description": "Digital Defiance Node ECIES Library",
   "main": "src/index.js",
   "types": "src/index.d.ts",
