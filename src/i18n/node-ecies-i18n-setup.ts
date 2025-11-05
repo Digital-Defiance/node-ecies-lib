@@ -12,16 +12,8 @@ export function getNodeEciesI18nEngine(): I18nEngine {
   
   // Register node-ecies component if not already registered
   if (!_componentRegistered) {
-    try {
-      baseEngine.register(createNodeEciesComponentConfig());
-      _componentRegistered = true;
-    } catch (error) {
-      // Component already registered, that's fine
-      if (error instanceof Error && !error.message.includes('already registered')) {
-        throw error;
-      }
-      _componentRegistered = true;
-    }
+    baseEngine.registerIfNotExists(createNodeEciesComponentConfig());
+    _componentRegistered = true;
   }
   
   _nodeEciesI18nEngine = baseEngine;
