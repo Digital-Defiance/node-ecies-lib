@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+### Version 2.1.4
+
+- Minor version bump from i18n
+
 ### Version 2.1.1
 
 - Minor upgrade to i18n/errors classes, deprecating PluginI18nEngine
