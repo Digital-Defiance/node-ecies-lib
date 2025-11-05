@@ -1,5 +1,5 @@
 import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
-import { I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
+import { ComponentConfig, I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { NodeEciesComponentId } from './ecies-i18n-factory';
 import { NodeEciesStringKey } from './ecies-i18n-factory';
 
@@ -33,10 +33,11 @@ export function resetNodeEciesI18nEngine(): void {
   _componentRegistered = false;
 }
 
-function createNodeEciesComponentConfig() {
+function createNodeEciesComponentConfig(): ComponentConfig {
   return {
     id: NodeEciesComponentId,
     strings: createNodeEciesStrings(),
+    aliases: [ 'node-ecies', 'NodeEciesStringKey' ],
   };
 }
 
