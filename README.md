@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+### Version 2.1.6
+
+- Minor version bump from i18n/ecies
+
 ### Version 2.1.5
 
 - Minor version bump from i18n/ecies
