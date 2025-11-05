@@ -347,6 +347,78 @@ describe('Cross-Platform Compatibility', () => {
     });
   });
 
+  describe('Member ID Cross-Compatibility (CRITICAL)', () => {
+    it('should use same 12-byte ObjectID format on both frontend and backend', async () => {
+      // Create members on both sides
+      const backendMember = BackendMember.newMember(
+        backendECIES,
+        MemberType.User,
+        'Backend User',
+        'backend@test.com' as any,
+      ).member;
+      
+      const frontendMember = FrontendMember.newMember(
+        frontendECIES,
+        MemberType.User,
+        'Frontend User',
+        'frontend@test.com' as any,
+      ).member;
+      
+      // CRITICAL: Both must use 12-byte ObjectID for cross-platform compatibility
+      console.log('Backend member ID length:', backendMember.id.id.length);
+      console.log('Frontend member ID length:', frontendMember.id.id.length);
+      expect(backendMember.id.id.length).toBe(12);
+      expect(frontendMember.id.id.length).toBe(12);
+    });
+
+    it('should encrypt/decrypt multi-recipient with actual cross-platform member IDs', async () => {
+      const testMessage = Buffer.from('Cross-platform multi-recipient test message');
+      
+      // Create TWO backend members (multi-recipient requires at least 2)
+      const backendMember1 = BackendMember.newMember(
+        backendECIES,
+        MemberType.User,
+        'Backend User 1',
+        'backend1@test.com' as any,
+      ).member;
+      
+      const backendMember2 = BackendMember.newMember(
+        backendECIES,
+        MemberType.User,
+        'Backend User 2',
+        'backend2@test.com' as any,
+      ).member;
+      
+      // Backend encrypts for both members
+      const recipients = [backendMember1, backendMember2];
+      const backendEncrypted = backendMulti.encryptMultiple(
+        recipients,
+        testMessage,
+      );
+      
+      // Both backend members decrypt
+      const backendDecrypted1 = backendMulti.decryptMultipleECIEForRecipient(
+        backendEncrypted as any,
+        backendMember1,
+      );
+      expect(backendDecrypted1).toEqual(testMessage);
+      
+      const backendDecrypted2 = backendMulti.decryptMultipleECIEForRecipient(
+        backendEncrypted as any,
+        backendMember2,
+      );
+      expect(backendDecrypted2).toEqual(testMessage);
+      
+      // Verify header has 12-byte ObjectIDs for both recipients
+      const header = backendMulti.parseMultiEncryptedHeader(
+        backendMulti.buildECIESMultipleRecipientHeader(backendEncrypted),
+      );
+      expect(header.recipientCount).toBe(2);
+      expect(header.recipientIds[0].id.length).toBe(12);
+      expect(header.recipientIds[1].id.length).toBe(12);
+    });
+  });
+
   describe('Multi-Recipient Cross-Compatibility', () => {
     it('should encrypt/decrypt multi-recipient messages: frontend→backend', async () => {
       const testMessage = Buffer.from('Frontend to backend test');
@@ -444,7 +516,7 @@ describe('Cross-Platform Compatibility', () => {
           wallet.getPublicKey(),
         ]);
         recipients.push({
-          id: crypto.getRandomValues(new Uint8Array(16)),
+          id: crypto.getRandomValues(new Uint8Array(12)),
           publicKey: new Uint8Array(publicKey),
         });
       }
@@ -502,4 +574,5 @@ describe('Cross-Platform Compatibility', () => {
       expect(frontendParsed.recipientCount).toBe(recipients.length);
     });
   });
+
 });

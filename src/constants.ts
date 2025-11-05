@@ -1,13 +1,11 @@
 import {
   Constants as BaseConstants,
-  GUID_SIZE,
   IConstants as IBaseConstants,
   IPBkdf2Consts,
-  getRuntimeConfiguration,
+  OBJECT_ID_LENGTH,
   registerRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
-import { ObjectId } from 'mongodb';
 import { IChecksumConsts } from './interfaces/checksum-consts';
 import { IConstants } from './interfaces/constants';
 import { IEncryptionConsts } from './interfaces/encryption-consts';
@@ -136,16 +134,15 @@ export const KEYRING_ALGORITHM_CONFIGURATION =
  */
 export const ENCRYPTION: IEncryptionConsts = Object.freeze({
   ENCRYPTION_TYPE_SIZE: 1 as const,
-  RECIPIENT_ID_SIZE: GUID_SIZE,
+  RECIPIENT_ID_SIZE: OBJECT_ID_LENGTH,
 } as const);
 
-const objectIdLength = Buffer.from(new ObjectId().toHexString(), 'hex').length;
 export const Constants: IConstants = Object.freeze({
   ...BaseConstants,
   /**
    * The length of a raw object ID (not the hex string representation)
    */
-  OBJECT_ID_LENGTH: objectIdLength,
+  OBJECT_ID_LENGTH: OBJECT_ID_LENGTH,
   /**
    * PBKDF2 constants
    */
@@ -191,9 +188,9 @@ if (
   );
 }
 
-if (objectIdLength !== 12) {
+if (OBJECT_ID_LENGTH !== 12) {
   console.warn(
     'ObjectID length may have changed, breaking encryption',
-    objectIdLength,
+    OBJECT_ID_LENGTH,
   );
 }

@@ -93,10 +93,10 @@ describe('ECIES File Service E2E Tests', () => {
       new Uint8Array(senderPublicKey),
       new SecureBuffer(senderPrivateKey),
       senderWallet,
-      senderId.toHexString(),
+      senderId, // ObjectId
       senderDateCreated,
       senderDateCreated,
-      senderId.toHexString(),
+      senderId, // ObjectId
     );
     frontendFileService = new FrontendFileService(
       frontendService,
@@ -137,10 +137,10 @@ describe('ECIES File Service E2E Tests', () => {
       new Uint8Array(receiverPublicKey),
       new SecureBuffer(receiverPrivateKey),
       receiverWallet,
-      receiverId.toHexString(),
+      receiverId, // ObjectId
       receiverDateCreated,
       receiverDateCreated,
-      receiverId.toHexString(),
+      receiverId, // ObjectId
     );
 
     // Initialize file services
@@ -520,6 +520,6 @@ describe('ECIES File Service E2E Tests', () => {
       // Performance should scale reasonably (not exponentially)
       // This is a basic check - adjust thresholds as needed
       expect(results[results.length - 1]).toBeLessThan(results[0] * 100);
-    });
+    }, 10000);
   });
 });

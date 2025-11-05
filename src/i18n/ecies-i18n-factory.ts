@@ -527,8 +527,9 @@ export function getNodeEciesTranslation(
   variables?: Record<string, string | number>,
   language?: CoreLanguageCode,
 ): string {
-  // Use the unified engine from node-ecies-i18n-setup
-  const engine = getEciesI18nEngine();
+  // Import here to avoid circular dependency
+  const { getNodeEciesI18nEngine } = require('../i18n/node-ecies-i18n-setup');
+  const engine = getNodeEciesI18nEngine();
   return engine.translate(NodeEciesComponentId, key, variables, language);
 }
 

@@ -5,28 +5,28 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@digitaldefiance/ecies-lib@npm:2.0.3":
-  version: 2.0.3
-  resolution: "@digitaldefiance/ecies-lib@npm:2.0.3"
+"@digitaldefiance/ecies-lib@npm:2.1.3":
+  version: 2.1.3
+  resolution: "@digitaldefiance/ecies-lib@npm:2.1.3"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:2.0.3"
+    "@digitaldefiance/i18n-lib": "npm:2.1.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/57c6aae8d6bb36fcf6ffb0f92ae21167d1da2fc1e242c134f5d2900c22052b91b5215d2df5926eff8cfa4920de42b4782ac9b148ef9ef7ef721a4cff75bfb4b8
+  checksum: 10c0/df7d03a635cd95435fb552b54731af4c1842eb2fa5332939657ec2e1cc21f14db7b94c14ffc5f5b971953579921a88ebf285fed6c31ea661e3c34e3606222c6b
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:2.0.3":
-  version: 2.0.3
-  resolution: "@digitaldefiance/i18n-lib@npm:2.0.3"
+"@digitaldefiance/i18n-lib@npm:2.1.1":
+  version: 2.1.1
+  resolution: "@digitaldefiance/i18n-lib@npm:2.1.1"
   dependencies:
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/cdf86a5fc67828a3e62f5925c53d1504d79bcb28f8a7024a8117cf05d040910a3ea6cb50d1d58d7657524f30f066e593f0d9d175fb3b4ae0c9927ee711e44973
+  checksum: 10c0/31917dbd3bf071b1ee60989adc2019ee686341fb64c10411988d2ecf41fc19df97926482adeddd83dad7475cba563f9370fc7d3bb70ea7674518a54791ed40f4
   languageName: node
   linkType: hard
 
@@ -34,8 +34,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:2.0.3"
-    "@digitaldefiance/i18n-lib": "npm:2.0.3"
+    "@digitaldefiance/ecies-lib": "npm:2.1.3"
+    "@digitaldefiance/i18n-lib": "npm:2.1.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"

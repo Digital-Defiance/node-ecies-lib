@@ -1,8 +1,13 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { ECIESError, ECIESErrorTypeEnum } from '@digitaldefiance/ecies-lib';
+import { ECIESError, ECIESErrorTypeEnum, getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import { getEciesPluginI18nEngine } from '../src/i18n/ecies-i18n-factory';
 
 describe('ECIES Error Translation Integration', () => {
+  beforeEach(() => {
+    // Ensure the ecies i18n engine is initialized after test-setup resets
+    getEciesI18nEngine();
+  });
+  
   describe('Error creation with v2.0 engine', () => {
     it('should create ECIESError with auto-initialized engine', () => {
       const error = new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
@@ -23,8 +28,17 @@ describe('ECIES Error Translation Integration', () => {
         undefined,
         LanguageCodes.FR
       );
+      
       expect(errorEn.message).toBeDefined();
       expect(errorFr.message).toBeDefined();
+      
+      // Verify English translation
+      expect(errorEn.message).toBe('Invalid mnemonic');
+      
+      // Verify French translation
+      expect(errorFr.message).toBe('Mnémonique invalide');
+      
+      // Messages should be different (proving translation works)
       expect(errorEn.message).not.toBe(errorFr.message);
     });
 
