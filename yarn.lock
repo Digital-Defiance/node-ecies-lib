@@ -5,9 +5,9 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@digitaldefiance/ecies-lib@npm:2.1.16":
-  version: 2.1.16
-  resolution: "@digitaldefiance/ecies-lib@npm:2.1.16"
+"@digitaldefiance/ecies-lib@npm:2.1.17":
+  version: 2.1.17
+  resolution: "@digitaldefiance/ecies-lib@npm:2.1.17"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:2.1.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
@@ -16,7 +16,7 @@ __metadata:
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/650e4ee3e30d88d6d57bd2f4ba3f7483d1eee3ae069be9379b5fb2b253967191d7187923c5a1777336b9ddba18921c16029fe646f0c297c4b1db789d0959ce73
+  checksum: 10c0/911a6299f566f665e89486ab62b02d901b27264b5bb7d01f305be74afc8b3f08c7456153bb8ed98419719c455e58e1f0d6dff6fa04a56b6d5a811cdcd5c2f137
   languageName: node
   linkType: hard
 
@@ -34,7 +34,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:2.1.16"
+    "@digitaldefiance/ecies-lib": "npm:2.1.17"
     "@digitaldefiance/i18n-lib": "npm:2.1.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
