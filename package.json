@@ -11,6 +11,7 @@
     "test": "npx nx test digitaldefiance-node-ecies-lib",
     "test:stream": "npx nx test --outputStyle=stream digitaldefiance-node-ecies-lib",
     "test:logged": "npx nx test --outputStyle=stream digitaldefiance-node-ecies-lib 2>&1 | ansifilter -o test.log",
+    "test:coverage": "npx jest --coverage --testPathPattern=digitaldefiance-node-ecies-lib --coverageReporters=text",
     "lint": "npx nx lint digitaldefiance-node-ecies-lib",
     "lint:fix": "npx nx lint digitaldefiance-node-ecies-lib --fix",
     "prettier:check": "prettier --check 'src/**/*.{ts,tsx}'",
