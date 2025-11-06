@@ -72,6 +72,26 @@ describe('AESGCMService', () => {
       expect(combined).toEqual(Buffer.from([1, 2, 3, 4, 5, 6]));
     });
 
+    it('should combine IV and encrypted data', () => {
+      const iv = randomBytes(Constants.WRAPPED_KEY.IV_SIZE);
+      const encryptedData = Buffer.from([1, 2, 3]);
+      
+      const combined = aesGcmService.combineIvAndEncryptedData(iv, encryptedData);
+      
+      expect(combined.subarray(0, iv.length)).toEqual(iv);
+      expect(combined.subarray(iv.length)).toEqual(encryptedData);
+    });
+
+    it('should combine IV, tag and encrypted data', () => {
+      const iv = randomBytes(Constants.WRAPPED_KEY.IV_SIZE);
+      const encrypted = Buffer.from([1, 2, 3]);
+      const tag = Buffer.from([4, 5, 6]);
+      
+      const combined = aesGcmService.combineIvTagAndEncryptedData(iv, encrypted, tag);
+      
+      expect(combined.subarray(0, iv.length)).toEqual(iv);
+    });
+
     it('should split encrypted data', () => {
       const iv = randomBytes(Constants.WRAPPED_KEY.IV_SIZE);
       const encryptedWithTag = randomBytes(32);
@@ -81,6 +101,12 @@ describe('AESGCMService', () => {
       
       expect(splitIv).toEqual(iv);
       expect(encryptedDataWithTag).toEqual(encryptedWithTag);
+    });
+
+    it('should throw on combined data too short', () => {
+      const tooShort = Buffer.from([1, 2]);
+      
+      expect(() => aesGcmService.splitEncryptedData(tooShort, true)).toThrow();
     });
   });
 });

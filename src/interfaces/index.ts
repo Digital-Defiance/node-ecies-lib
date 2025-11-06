@@ -7,7 +7,7 @@ export * from './ecies-consts';
 export * from './encryption-consts';
 export * from './keypair-buffer-with-un-encrypted-private-key';
 export * from './keyring-consts';
-export * from './member-operational';
+export * from './backend-member-operational';
 export * from './member-with-mnemonic';
 export * from './multi-encrypted-message';
 export * from './multi-encrypted-parsed-header';

@@ -11,7 +11,7 @@ import { SignatureBuffer } from '../types';
 /**
  * Operational interface for member - defines getters and methods
  */
-export interface IMemberOperational<I extends string | Types.ObjectId> {
+export interface IBackendMemberOperational<I extends string | Types.ObjectId> {
   // Required getters
   get id(): I;
   get type(): MemberType;
@@ -35,6 +35,7 @@ export interface IMemberOperational<I extends string | Types.ObjectId> {
   encryptData(data: string | Buffer): Uint8Array;
   decryptData(encryptedData: Buffer): Uint8Array;
   toJson(): string;
+  dispose(): void;
 
   // Private key management
   loadWallet(mnemonic: SecureString): void;
@@ -47,6 +48,6 @@ export interface IMemberOperational<I extends string | Types.ObjectId> {
  * Extended operational interface for test members
  */
 export interface ITestNodeEciesMemberOperational
-  extends IMemberOperational<Types.ObjectId> {
+  extends IBackendMemberOperational<Types.ObjectId> {
   get mnemonic(): SecureString | undefined;
 }

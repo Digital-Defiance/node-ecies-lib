@@ -414,6 +414,11 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+## Version 2.1.25
+
+- Improve test coverage
+- Fix i18n aliasing
+
 ## Version 2.1.17
 
 - Add backend member mock

@@ -9,7 +9,7 @@ import { faker } from '@faker-js/faker';
 
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
-import { IMemberOperational } from '../interfaces';
+import { IBackendMemberOperational } from '../interfaces';
 import { SignatureBuffer } from '../types';
 
 const createMockWallet = (): Wallet =>
@@ -21,7 +21,7 @@ const createMockWallet = (): Wallet =>
   } as any);
 
 export class MockBackendMember
-  implements IMemberOperational<Types.ObjectId>
+  implements IBackendMemberOperational<Types.ObjectId>
 {
   private _id: Types.ObjectId;
   private _type: MemberType;

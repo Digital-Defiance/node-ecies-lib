@@ -29,7 +29,7 @@ export function createNodeEciesComponentConfig(): ComponentConfig {
   return {
     id: NodeEciesComponentId,
     strings: createNodeEciesStrings(),
-    aliases: [ 'node-ecies', 'NodeEciesStringKey' ],
+    aliases: [ 'NodeEciesStringKey' ],
   };
 }
 

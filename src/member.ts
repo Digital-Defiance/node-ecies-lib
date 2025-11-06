@@ -30,13 +30,13 @@ import { ECIESService } from './services/ecies/service';
 // Removed: import { ServiceProvider } from './services/service.provider';
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
-import { IMemberOperational } from './interfaces/member-operational';
+import { IBackendMemberOperational } from './interfaces/backend-member-operational';
 import { SignatureBuffer } from './types';
 
 /**
  * A member of an ECIES interchange
  */
-export class Member implements IMemberOperational<Types.ObjectId> {
+export class Member implements IBackendMemberOperational<Types.ObjectId> {
   private readonly _eciesService: ECIESService;
   private readonly _id: Types.ObjectId;
   private readonly _type: MemberType;
