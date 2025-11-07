@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { ECIESService } from '../src/services/ecies';
 import { EciesFileService } from '../src/services/ecies/file';
-import { withConsoleMocks } from './support/console';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 describe('ECIES File Service Integration Tests', () => {
   let eciesService: ECIESService;

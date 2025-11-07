@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "2.1.25",
+  "version": "2.1.26",
   "description": "Digital Defiance Node ECIES Library",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -44,5 +44,8 @@
     "bson": "^6.10.4",
     "ethereum-cryptography": "^3.2.0",
     "ts-brand": "^0.2.0"
+  },
+  "devDependencies": {
+    "@digitaldefiance/express-suite-test-utils": "1.0.3"
   }
 }

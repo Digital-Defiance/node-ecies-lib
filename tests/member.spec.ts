@@ -16,8 +16,8 @@ import { faker } from '@faker-js/faker';
 import { IBackendMemberWithMnemonic } from '../src/interfaces/member-with-mnemonic';
 import { Member, NodeMemberError } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
-import { toThrowType } from './matchers/error-matchers';
-import { spyContains, withConsoleMocks } from './support/console';
+import { toThrowType } from '@digitaldefiance/express-suite-test-utils';
+import { spyContains, withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 // Extend Jest with custom matchers
 expect.extend({ toThrowType });

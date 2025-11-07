@@ -2,7 +2,7 @@ import { ECIESError, ECIESErrorTypeEnum, EciesEncryptionTypeEnum, IECIESConfig }
 import { EciesSingleRecipientCore } from '../src/services/ecies/single-recipient';
 import { getNodeRuntimeConfiguration } from '../src/constants';
 import { randomBytes } from 'crypto';
-import { withConsoleMocks } from './support/console';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 describe('EciesSingleRecipientCore - Coverage Tests', () => {
   let singleRecipient: EciesSingleRecipientCore;

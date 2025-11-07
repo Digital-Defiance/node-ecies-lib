@@ -1,5 +1,5 @@
 import { webcrypto } from 'crypto';
-import { toThrowType } from './matchers/error-matchers';
+import { toThrowType } from '@digitaldefiance/express-suite-test-utils';
 import { I18nEngine, resetCoreI18nEngine } from '@digitaldefiance/i18n-lib';
 import { resetEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import { resetNodeEciesI18nEngine } from '../src/i18n/node-ecies-i18n-setup';

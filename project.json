@@ -6,7 +6,8 @@
   "tags": [],
   "implicitDependencies": [
     "digitaldefiance-i18n-lib",
-    "digitaldefiance-ecies-lib"
+    "digitaldefiance-ecies-lib",
+    "digitaldefiance-express-suite-test-utils"
   ],
   "targets": {
     "build": {

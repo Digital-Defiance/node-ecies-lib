@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto';
 import { Member as BackendMember } from '../src/member';
 
 import { ECIESService } from '../src/services/ecies/service';
-import { withConsoleMocks } from './support/console';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 describe('ECIESService', () => {
   let service: ECIESService;
