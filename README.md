@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+## Version 2.1.27
+
+- Bump ecies lib version
+
 ## Version 2.1.26
 
 - Use new express-suite-test-utils

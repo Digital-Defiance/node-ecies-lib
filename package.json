@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "2.1.26",
+  "version": "2.1.27",
   "description": "Digital Defiance Node ECIES Library",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -35,7 +35,7 @@
   "license": "MIT",
   "packageManager": "yarn@4.10.3",
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "2.1.25",
+    "@digitaldefiance/ecies-lib": "2.1.26",
     "@digitaldefiance/i18n-lib": "2.1.25",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "^2.0.1",
