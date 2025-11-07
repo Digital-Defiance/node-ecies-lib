@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+## Version 2.1.33
+
+- Expose config on one more endpoint
+
 ## Version 2.1.32
 
 - Add config for i18n

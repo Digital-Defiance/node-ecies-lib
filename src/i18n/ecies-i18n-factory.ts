@@ -6,6 +6,7 @@ import {
   LanguageCodes,
   CoreLanguageCode,
   RegistryConfig,
+  EngineConfig,
 } from '@digitaldefiance/i18n-lib';
 import { EciesStringKey, getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
@@ -540,8 +541,8 @@ export function getNodeEciesTranslation(
  * Uses the base ecies-lib's engine which has all EciesStringKey translations
  * Cast to any to handle cross-package type compatibility
  */
-export function createEciesTranslationEngine(): any {
-  return getEciesI18nEngine();
+export function createEciesTranslationEngine(config?: EngineConfig): any {
+  return getEciesI18nEngine(config);
 }
 
 export { NodeEciesStringKey };
