@@ -1,14 +1,14 @@
 import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
-import { ComponentConfig, I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
+import { ComponentConfig, EngineConfig, I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { NodeEciesComponentId } from './ecies-i18n-factory';
 import { NodeEciesStringKey } from './ecies-i18n-factory';
 
 let _nodeEciesI18nEngine: I18nEngine | null = null;
 let _componentRegistered = false;
 
-export function getNodeEciesI18nEngine(): I18nEngine {
+export function getNodeEciesI18nEngine(config?: EngineConfig): I18nEngine {
   // Get base ecies engine (uses 'default' key)
-  const baseEngine = getEciesI18nEngine();
+  const baseEngine = getEciesI18nEngine(config);
   
   // Register node-ecies component if not already registered
   if (!_componentRegistered) {

@@ -414,6 +414,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+## Version 2.1.32
+
+- Add config for i18n
+
 ## Version 2.1.30
 
 - Alignment bump

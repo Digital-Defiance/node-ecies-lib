@@ -5,6 +5,7 @@ import {
   PluginI18nEngine,
   LanguageCodes,
   CoreLanguageCode,
+  RegistryConfig,
 } from '@digitaldefiance/i18n-lib';
 import { EciesStringKey, getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
@@ -493,11 +494,12 @@ let eciesI18nEngineInstance: PluginI18nEngine<CoreLanguageCode> | null = null;
  * Create or get the ECIES I18n engine with proper component registration
  * This replaces the legacy getEciesI18nEngine() function
  */
-export function getEciesPluginI18nEngine(): PluginI18nEngine<CoreLanguageCode> {
+export function getEciesPluginI18nEngine(config?: Partial<RegistryConfig<string>>): PluginI18nEngine<CoreLanguageCode> {
   if (!eciesI18nEngineInstance) {
     // Create core engine with system strings
     eciesI18nEngineInstance = createCoreI18nEngine(
       NodeEciesComponentId,
+      config,
     ) as PluginI18nEngine<CoreLanguageCode>;
 
     const result = eciesI18nEngineInstance.registerComponent(createNodeEciesComponentRegistration());
