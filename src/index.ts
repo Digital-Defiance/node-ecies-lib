@@ -11,6 +11,3 @@ export * from './interfaces';
 export * from './member';
 export * from './services';
 export * from './types';
-
-// test helpers for consumers
-export * from './test-mocks';

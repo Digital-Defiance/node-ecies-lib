@@ -1,9 +1,19 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "2.1.33",
+  "version": "2.1.40",
   "description": "Digital Defiance Node ECIES Library",
   "main": "src/index.js",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./testing": {
+      "types": "./src/testing.d.ts",
+      "default": "./src/testing.js"
+    }
+  },
   "scripts": {
     "build": "npx nx build digitaldefiance-node-ecies-lib",
     "build:stream": "npx nx build --outputStyle=stream digitaldefiance-node-ecies-lib",
@@ -35,8 +45,8 @@
   "license": "MIT",
   "packageManager": "yarn@4.10.3",
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "2.1.32",
-    "@digitaldefiance/i18n-lib": "2.1.32",
+    "@digitaldefiance/ecies-lib": "2.1.40",
+    "@digitaldefiance/i18n-lib": "2.1.40",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "^2.0.1",
     "@noble/hashes": "^2.0.1",
@@ -46,6 +56,6 @@
     "ts-brand": "^0.2.0"
   },
   "devDependencies": {
-    "@digitaldefiance/express-suite-test-utils": "1.0.6"
+    "@digitaldefiance/express-suite-test-utils": "1.0.7"
   }
 }

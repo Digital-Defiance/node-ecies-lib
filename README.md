@@ -248,6 +248,25 @@ Test categories:
 - Unit tests for individual components.
 - Integration tests for cross-component functionality.
 - End-to-end tests for complete workflows.
+
+### Test Utilities
+
+Test mocks are available via a separate entry point:
+
+```typescript
+import { mockBackendMember } from '@digitaldefiance/node-ecies-lib/testing';
+
+// Use in your tests
+const member = mockBackendMember();
+```
+
+**Note:** Test utilities require `@faker-js/faker` as a peer dependency:
+
+```bash
+npm install -D @faker-js/faker
+# or
+yarn add -D @faker-js/faker
+```
 - Cross-platform compatibility tests.
 
 ## Error Handling
