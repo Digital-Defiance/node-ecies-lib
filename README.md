@@ -435,6 +435,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+### Version 2.1.42
+
+- Upgrde ecies
+
 ### Version 2.1.40
 
 - Alignment with Express Suite packages
