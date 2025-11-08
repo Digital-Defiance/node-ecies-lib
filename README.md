@@ -251,7 +251,7 @@ Test categories:
 
 ### Test Utilities
 
-Test mocks are available via a separate entry point:
+Test mocks are available via the `/testing` entry point:
 
 ```typescript
 import { mockBackendMember } from '@digitaldefiance/node-ecies-lib/testing';
@@ -260,7 +260,7 @@ import { mockBackendMember } from '@digitaldefiance/node-ecies-lib/testing';
 const member = mockBackendMember();
 ```
 
-**Note:** Test utilities require `@faker-js/faker` as a peer dependency:
+**Note:** The `/testing` entry point requires `@faker-js/faker` as a peer dependency:
 
 ```bash
 npm install -D @faker-js/faker
@@ -435,7 +435,15 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
-## Version 2.1.33
+### Version 2.1.40
+
+- Alignment with Express Suite packages
+- All packages updated to v2.1.40 (i18n, ecies-lib, node-ecies-lib, suite-core-lib, node-express-suite, express-suite-react-components)
+- Test utilities remain at v1.0.7
+- `/testing` entry point exports test mocks (mockBackendMember)
+- Requires `@faker-js/faker` as dev dependency for test utilities
+
+### Version 2.1.33
 
 - Expose config on one more endpoint
 
