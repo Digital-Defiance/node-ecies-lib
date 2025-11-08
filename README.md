@@ -2,6 +2,8 @@
 
 A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve Integrated Encryption Scheme) library, providing secure encryption, decryption, and key management capabilities using Node.js crypto primitives. This package is designed to be binary compatible with the browser-based `@digitaldefiance/ecies-lib`, enabling seamless cross-platform cryptographic operations.
 
+Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
+
 ## Features
 
 - **ECIES Encryption/Decryption**: Secure elliptic curve integrated encryption scheme using Node.js crypto primitives.
