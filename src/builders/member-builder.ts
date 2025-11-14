@@ -1,16 +1,26 @@
 import { Member } from '../member';
-import { MemberType, EmailString } from '@digitaldefiance/ecies-lib';
+import { MemberType, EmailString, SecureString } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../services/ecies';
 import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
+import { ObjectId } from 'bson';
+import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
+import { NodeEciesComponentId, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 
 export class MemberBuilder {
+  private eciesService?: ECIESService;
   private type?: MemberType;
   private name?: string;
   private email?: EmailString;
-  private ecies?: ECIESService;
+  private mnemonic?: SecureString;
+  private createdBy?: ObjectId;
 
   static create(): MemberBuilder {
     return new MemberBuilder();
+  }
+
+  withEciesService(service: ECIESService): this {
+    this.eciesService = service;
+    return this;
   }
 
   withType(type: MemberType): this {
@@ -28,20 +38,41 @@ export class MemberBuilder {
     return this;
   }
 
-  withECIES(ecies: ECIESService): this {
-    this.ecies = ecies;
+  withMnemonic(mnemonic: SecureString): this {
+    this.mnemonic = mnemonic;
+    return this;
+  }
+
+  withCreatedBy(creatorId: ObjectId): this {
+    this.createdBy = creatorId;
+    return this;
+  }
+
+  generateMnemonic(): this {
+    if (!this.eciesService) {
+      const engine = getNodeEciesI18nEngine();
+      throw new Error(engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic));
+    }
+    this.mnemonic = this.eciesService.generateNewMnemonic();
     return this;
   }
 
   build(): IBackendMemberWithMnemonic {
-    if (!this.type || !this.name || !this.email) {
-      throw new Error('Member requires type, name, and email');
+    const engine = getNodeEciesI18nEngine();
+    if (!this.eciesService) {
+      throw new Error(engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired));
     }
+    if (!this.type || !this.name || !this.email) {
+      throw new Error(engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired));
+    }
+    
     return Member.newMember(
-      this.ecies || new ECIESService(),
+      this.eciesService,
       this.type,
       this.name,
-      this.email
+      this.email,
+      this.mnemonic,
+      this.createdBy
     );
   }
 }

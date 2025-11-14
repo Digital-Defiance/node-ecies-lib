@@ -2,6 +2,14 @@ import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import { ComponentConfig, EngineConfig, I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { NodeEciesComponentId } from './ecies-i18n-factory';
 import { NodeEciesStringKey } from './ecies-i18n-factory';
+import {
+  frenchTranslations,
+  spanishTranslations,
+  germanTranslations,
+  mandarinTranslations,
+  japaneseTranslations,
+  ukrainianTranslations,
+} from './translations';
 
 let _nodeEciesI18nEngine: I18nEngine | null = null;
 let _componentRegistered = false;
@@ -59,19 +67,37 @@ function createNodeEciesStrings(): Record<string, Record<string, string>> {
     [NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger]: 'Length exceeds maximum safe integer value',
     [NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength]: 'Buffer is too short for declared data length',
     [NodeEciesStringKey.Error_InvalidChecksumConstants]: 'Invalid checksum constants',
+    [NodeEciesStringKey.Error_InvalidAESKeyLength]: 'AES key must be 16, 24, or 32 bytes',
+    [NodeEciesStringKey.Error_CannotEncryptEmptyData]: 'Cannot encrypt null or undefined data',
+    [NodeEciesStringKey.Error_CannotDecryptEmptyData]: 'Cannot decrypt null or undefined data',
+    [NodeEciesStringKey.Error_InvalidIVLength]: 'IV must be 16 bytes',
+    [NodeEciesStringKey.Error_MessageTooLarge]: 'Message exceeds maximum size of 2GB',
+    [NodeEciesStringKey.Error_EncryptedSizeExceedsExpected]: 'Encrypted data size exceeds expected maximum',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: 'Invalid salt length',
     [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: 'Invalid hash length',
+    [NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic]: 'ECIESService must be set before generating mnemonic',
+    [NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired]: 'ECIESService is required',
+    [NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired]: 'Type, name, and email are required',
+    [NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength]: 'Invalid public key: must be 33 (compressed) or 65 (uncompressed) bytes',
+    [NodeEciesStringKey.Error_Stream_EncryptionCancelled]: 'Encryption cancelled',
+    [NodeEciesStringKey.Error_Stream_BufferOverflow]: 'Buffer overflow: source chunk exceeds maximum size',
+    [NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired]: 'At least one recipient required',
+    [NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded]: 'Maximum 65535 recipients supported',
+    [NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength]: 'Invalid recipient public key: must be 33 (compressed) or 65 (uncompressed) bytes',
+    [NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength]: 'Invalid recipient ID: must be 32 bytes',
+    [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]: 'Invalid private key: must be 32 bytes',
+    [NodeEciesStringKey.Error_Stream_DecryptionCancelled]: 'Decryption cancelled',
+    [NodeEciesStringKey.Error_Stream_ChunkSequenceError]: 'Chunk sequence error',
   };
 
-  // For now, use English for all languages - translations can be added later
   return {
     [LanguageCodes.EN_US]: englishTranslations,
     [LanguageCodes.EN_GB]: englishTranslations,
-    [LanguageCodes.FR]: englishTranslations,
-    [LanguageCodes.ES]: englishTranslations,
-    [LanguageCodes.DE]: englishTranslations,
-    [LanguageCodes.ZH_CN]: englishTranslations,
-    [LanguageCodes.JA]: englishTranslations,
-    [LanguageCodes.UK]: englishTranslations,
+    [LanguageCodes.FR]: frenchTranslations,
+    [LanguageCodes.ES]: spanishTranslations,
+    [LanguageCodes.DE]: germanTranslations,
+    [LanguageCodes.ZH_CN]: mandarinTranslations,
+    [LanguageCodes.JA]: japaneseTranslations,
+    [LanguageCodes.UK]: ukrainianTranslations,
   };
 }

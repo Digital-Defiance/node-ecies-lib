@@ -9,10 +9,8 @@ import { promisify } from 'util';
 import { IConstants } from '../interfaces/constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
 import {
-  getEciesPluginI18nEngine,
   getNodeEciesTranslation,
   NodeEciesStringKey,
-  NodeEciesComponentId,
 } from '../i18n/ecies-i18n-factory';
 import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 import { IECIESConsts } from '../interfaces/ecies-consts';

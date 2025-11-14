@@ -9,5 +9,13 @@ export * from './enumerations';
 export * from './i18n';
 export * from './interfaces';
 export * from './member';
-export * from './services';
 export * from './types';
+
+// Services - explicit exports to avoid conflicts
+export { AESGCMService } from './services/aes-gcm';
+export { ChunkProcessor } from './services/chunk-processor';
+export { EncryptionStream } from './services/encryption-stream';
+export { MultiRecipientProcessor } from './services/multi-recipient-processor';
+export { Pbkdf2Service } from './services/pbkdf2';
+export { ProgressTracker } from './services/progress-tracker';
+export * from './services/ecies';

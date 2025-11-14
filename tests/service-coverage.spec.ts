@@ -14,41 +14,21 @@ describe('ECIESService - Coverage Tests', () => {
   });
 
   describe('encrypt method', () => {
-    it('should throw error for simple encryption with multiple recipients', () => {
+    it('should throw error for multiple encryption type', () => {
       const message = Buffer.from('test');
-      expect(() => service.encrypt('simple', [member1, member2], message)).toThrow(ECIESError);
-      expect(() => service.encrypt('simple', [member1, member2], message)).toThrow(
-        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidEncryptionType })
-      );
-    });
-
-    it('should throw error for single encryption with multiple recipients', () => {
-      const message = Buffer.from('test');
-      expect(() => service.encrypt('single', [member1, member2], message)).toThrow(ECIESError);
-    });
-
-    it('should throw error for multiple encryption with single recipient', () => {
-      const message = Buffer.from('test');
-      expect(() => service.encrypt('multiple', [member1], message)).toThrow(ECIESError);
+      expect(() => service.encrypt('multiple', member1, message)).toThrow(Error);
     });
 
     it('should encrypt with simple mode and single recipient', () => {
       const message = Buffer.from('test');
-      const encrypted = service.encrypt('simple', [member1], message);
+      const encrypted = service.encrypt('simple', member1, message);
       expect(encrypted).toBeInstanceOf(Buffer);
       expect(encrypted.length).toBeGreaterThan(message.length);
     });
 
     it('should encrypt with single mode and single recipient', () => {
       const message = Buffer.from('test');
-      const encrypted = service.encrypt('single', [member1], message);
-      expect(encrypted).toBeInstanceOf(Buffer);
-      expect(encrypted.length).toBeGreaterThan(message.length);
-    });
-
-    it('should encrypt with multiple mode and multiple recipients', () => {
-      const message = Buffer.from('test');
-      const encrypted = service.encrypt('multiple', [member1, member2], message);
+      const encrypted = service.encrypt('single', member1, message);
       expect(encrypted).toBeInstanceOf(Buffer);
       expect(encrypted.length).toBeGreaterThan(message.length);
     });
@@ -56,7 +36,7 @@ describe('ECIESService - Coverage Tests', () => {
     it('should handle preamble in simple encryption', () => {
       const message = Buffer.from('test');
       const preamble = Buffer.from('preamble');
-      const encrypted = service.encrypt('simple', [member1], message, preamble);
+      const encrypted = service.encrypt('simple', member1, message, preamble);
       expect(encrypted).toBeInstanceOf(Buffer);
     });
   });

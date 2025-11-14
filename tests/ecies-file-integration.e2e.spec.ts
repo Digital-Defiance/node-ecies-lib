@@ -381,7 +381,8 @@ describe('ECIES File Service Integration Tests', () => {
   });
 
   describe('Performance Benchmarks', () => {
-    it('should maintain reasonable performance across different file sizes', () => {
+    it('should maintain reasonable performance across different file sizes', async () => {
+      await withConsoleMocks({ mute: true }, async () => {
       const fileService = new EciesFileService(eciesService, alicePrivateKey);
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
 
@@ -427,13 +428,14 @@ describe('ECIES File Service Integration Tests', () => {
         expect(decrypted).toEqual(data);
       });
 
-      // Log performance results for analysis - this is expected output for performance tests
-      console.log('Performance Results:', results);
+        // Log performance results for analysis - this is expected output for performance tests
+        console.log('Performance Results:', results);
 
-      // Basic performance assertions
-      results.forEach((result) => {
-        expect(result.encryptTime).toBeLessThan(10000); // 10 seconds max
-        expect(result.decryptTime).toBeLessThan(10000); // 10 seconds max
+        // Basic performance assertions
+        results.forEach((result) => {
+          expect(result.encryptTime).toBeLessThan(10000); // 10 seconds max
+          expect(result.decryptTime).toBeLessThan(10000); // 10 seconds max
+        });
       });
     });
 

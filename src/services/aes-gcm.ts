@@ -48,6 +48,40 @@ export class AESGCMService {
     key: Buffer,
     authTag: boolean = false,
   ): { encrypted: Buffer; iv: Buffer; tag?: Buffer } {
+    // Security fix 9: Key length validation - must match algorithm requirements
+    const requiredKeyLength = this.keyBits / 8;
+    if (key.length !== requiredKeyLength) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_InvalidAESKeyLength,
+        ),
+      );
+    }
+
+    // Security fix 11: Data null/undefined check
+    if (data === null || data === undefined) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_CannotEncryptEmptyData,
+        ),
+      );
+    }
+
+    // Security fix 12: Data size validation (max 2GB)
+    if (data.length > 0x7FFFFFFF) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_MessageTooLarge,
+        ),
+      );
+    }
+
     const iv = randomBytes(this.ivSize);
     const cipher = createCipheriv(this.keyringAlgorithmConfiguration, key, iv);
 
@@ -155,6 +189,50 @@ export class AESGCMService {
     key: Buffer,
     authTag: boolean = false,
   ): Buffer {
+    // Security fix 9: Key length validation - must match algorithm requirements
+    const requiredKeyLength = this.keyBits / 8;
+    if (key.length !== requiredKeyLength) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_InvalidAESKeyLength,
+        ),
+      );
+    }
+
+    // Security fix 10: IV length validation
+    if (iv.length !== 16) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_InvalidIVLength,
+        ),
+      );
+    }
+
+    // Security fix 13: Decrypt input validation
+    if (encryptedData === null || encryptedData === undefined) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_CannotDecryptEmptyData,
+        ),
+      );
+    }
+
+    if (encryptedData.length > 0x7FFFFFFF) {
+      const pluginEngine = getEciesPluginI18nEngine();
+      throw new Error(
+        pluginEngine.translate(
+          NodeEciesComponentId,
+          NodeEciesStringKey.Error_MessageTooLarge,
+        ),
+      );
+    }
+
     const decipher = createDecipheriv(
       this.keyringAlgorithmConfiguration,
       key,

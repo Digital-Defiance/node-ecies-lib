@@ -75,6 +75,18 @@ export class EciesSingleRecipientCore {
     message: Buffer,
     preamble: Buffer = Buffer.alloc(0),
   ): Buffer {
+    // Security fix 4: Message size validation
+    if (message.length === 0) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.CannotEncryptEmptyData,
+      );
+    }
+    if (message.length > 0x7FFFFFFF) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.MessageTooLarge,
+      );
+    }
+
     const encryptionType: EciesEncryptionType = encryptSimple
       ? 'simple'
       : 'single';
@@ -115,7 +127,9 @@ export class EciesSingleRecipientCore {
       // Our debugging shows only the full format with prefix works correctly
       sharedSecret = ecdh.computeSecret(normalizedReceiverPublicKey);
     } catch (error: unknown) {
-      console.error('[ERROR][encrypt] Failed to compute shared secret:', error);
+      if (process.env.NODE_ENV !== 'test') {
+        console.error('[ERROR][encrypt] Failed to compute shared secret:', error);
+      }
       if (error instanceof Error) {
         if (
           'code' in error &&
@@ -188,6 +202,14 @@ export class EciesSingleRecipientCore {
       lengthBuffer.writeBigUInt64BE(BigInt(encrypted.length));
     }
 
+    // Security fix 5: Encrypted size validation
+    const maxExpectedSize = message.length + 1024;
+    if (encrypted.length > maxExpectedSize) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.EncryptedSizeExceedsExpected,
+      );
+    }
+
     // Format: [optional preamble] | type (1) | ephemeralPublicKey (65) | iv (16) | authTag (16) | length (8) | encryptedData
     return Buffer.concat([
       preamble,
@@ -251,21 +273,13 @@ export class EciesSingleRecipientCore {
     const includeLengthAndCrc =
       actualEncryptionTypeEnum === EciesEncryptionTypeEnum.Single;
 
-    // check for impossible message
-    if (
-      data.length <
-      (includeLengthAndCrc
-        ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
-        : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE)
-    ) {
+    // Security fix 6: Minimum encrypted data size
+    const minSize = includeLengthAndCrc
+      ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
+      : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE;
+    if (data.length < minSize) {
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        undefined,
-        undefined,
-        {
-          required: String(this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE),
-          actual: String(data.length),
-        },
       );
     }
 
@@ -360,7 +374,7 @@ export class EciesSingleRecipientCore {
 
     // No CRC validation needed (AES-GCM provides authentication)
 
-    // Validate all header components have the correct lengths
+    // Security fix 7: Component extraction validation
     if (normalizedKey.length !== this.cryptoCore.consts.PUBLIC_KEY_LENGTH) {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
@@ -578,7 +592,9 @@ export class EciesSingleRecipientCore {
       try {
         sharedSecret = ecdh.computeSecret(normalizedEphemeralKey);
       } catch (err) {
-        console.error('[ERROR][decrypt] Failed to compute shared secret:', err);
+        if (process.env.NODE_ENV !== 'test') {
+          console.error('[ERROR][decrypt] Failed to compute shared secret:', err);
+        }
         throw new ECIESError(
           ECIESErrorTypeEnum.DecryptionFailed,
           undefined,
@@ -649,6 +665,13 @@ export class EciesSingleRecipientCore {
         const firstPart = decipher.update(encrypted);
         const finalPart = decipher.final();
         const result = Buffer.concat([firstPart, finalPart]);
+
+        // Security fix 8: Decrypted data validation
+        if (result.length === 0) {
+          throw new ECIESError(
+            ECIESErrorTypeEnum.DecryptionFailed,
+          );
+        }
 
         return result;
       } catch (err) {

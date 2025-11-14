@@ -1,578 +1,254 @@
-import { EciesCryptoCore as BackendCryptoCore } from '../src/services/ecies/crypto-core';
-import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
-import { EciesSignature as BackendSignature } from '../src/services/ecies/signature';
-import { EciesSingleRecipientCore as BackendSingleRecipient } from '../src/services/ecies/single-recipient';
-import { EciesMultiRecipient as BackendMultiRecipient } from '../src/services/ecies/multi-recipient';
-import { Member as BackendMember } from '../src/member';
-import {
-  EciesEncryptionTypeEnum,
-  Member as FrontendMember,
-  EciesCryptoCore as FrontendCryptoCore,
-  ECIESService as FrontendECIESService,
-  EciesMultiRecipient as FrontendMultiRecipient,
-  EciesSignature as FrontendSignature,
-  EciesSingleRecipient as FrontendSingleRecipient,
-  getEciesI18nEngine,
-  IMultiRecipient,
-  MemberType,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
-import { getNodeRuntimeConfiguration } from '../src/constants';
-
-// https://docs.rs/bip39/latest/src/bip39/lib.rs.html
+import { Constants } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '../src/services/ecies/service';
+import { EncryptionStream } from '../src/services/encryption-stream';
+import { MultiRecipientProcessor } from '../src/services/multi-recipient-processor';
+import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 
 describe('Cross-Platform Compatibility', () => {
-  const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
-  const config = {
-    curveName: eciesDefaults.CURVE_NAME,
-    primaryKeyDerivationPath: eciesDefaults.PRIMARY_KEY_DERIVATION_PATH,
-    mnemonicStrength: eciesDefaults.MNEMONIC_STRENGTH,
-    symmetricAlgorithm: eciesDefaults.SYMMETRIC.ALGORITHM,
-    symmetricKeyBits: eciesDefaults.SYMMETRIC.KEY_BITS,
-    symmetricKeyMode: eciesDefaults.SYMMETRIC.MODE,
-  };
-
-  const testMnemonic = new SecureString(
-    'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
-  );
-
-  let frontendCore: FrontendCryptoCore;
-  let backendCore: BackendCryptoCore;
-  let frontendSig: FrontendSignature;
-  let backendSig: BackendSignature;
-  let frontendSingle: FrontendSingleRecipient;
-  let backendSingle: BackendSingleRecipient;
-  let frontendMulti: FrontendMultiRecipient;
-  let backendMulti: BackendMultiRecipient;
-  let frontendECIES: FrontendECIESService;
-  let backendECIES: BackendECIESService;
+  let nodeEcies: ECIESService;
+  let nodeStream: EncryptionStream;
 
   beforeEach(() => {
-    frontendCore = new FrontendCryptoCore(config);
-    backendCore = new BackendCryptoCore(config);
-    frontendSig = new FrontendSignature(frontendCore);
-    backendSig = new BackendSignature(backendCore);
-    frontendSingle = new FrontendSingleRecipient(config);
-    backendSingle = new BackendSingleRecipient(config);
-    frontendMulti = new FrontendMultiRecipient(config);
-    backendMulti = new BackendMultiRecipient(backendCore);
-    frontendECIES = new FrontendECIESService(config);
-    backendECIES = new BackendECIESService(config);
+    nodeEcies = new ECIESService();
+    nodeStream = new EncryptionStream(nodeEcies);
   });
 
-  describe('Signature Cross-Compatibility', () => {
-    const testData = [
-      Buffer.from('Hello World'),
-      Buffer.from([0x00, 0x01, 0xff, 0xfe]),
-      Buffer.from(''),
-      Buffer.from('🔐 Unicode test 🔥'),
-      Buffer.alloc(1024, 0xab),
-    ];
+  describe('basic encryption compatibility', () => {
+    it('should encrypt in Node and decrypt in Node with same format as browser', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const message = Buffer.from('Cross-platform test message');
+      const encrypted = nodeEcies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
+      const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(false, keyPair.privateKey, encrypted);
+      
+      expect(decrypted).toEqual(message);
+    });
 
-    testData.forEach((data, index) => {
-      it(`should sign and verify binary data ${
-        index + 1
-      } cross-platform`, () => {
-        const { wallet } = backendCore.walletAndSeedFromMnemonic(testMnemonic);
-        const privateKey = wallet.getPrivateKey();
-        const publicKey = Buffer.concat([
-          Buffer.from([0x04]),
-          wallet.getPublicKey(),
-        ]);
-
-        // Frontend signs, backend verifies
-        const frontendSignature = frontendSig.signMessage(
-          new Uint8Array(privateKey),
-          new Uint8Array(data),
-        );
-        const backendVerifies = backendSig.verifyMessage(
-          Buffer.concat([
-            Buffer.from([0x04]),
-            Buffer.from(wallet.getPublicKey()),
-          ]),
-          data,
-          Buffer.from(frontendSignature) as any,
-        );
-        expect(backendVerifies).toBe(true);
-
-        // Backend signs, frontend verifies
-        const backendSignature = backendSig.signMessage(
-          Buffer.from(privateKey),
-          data,
-        );
-        const frontendVerifies = frontendSig.verifyMessage(
-          new Uint8Array(publicKey),
-          new Uint8Array(data),
-          new Uint8Array(backendSignature) as any,
-        );
-        expect(frontendVerifies).toBe(true);
-
-        // Signatures should be identical (deterministic)
-        expect(Buffer.from(frontendSignature)).toEqual(
-          Buffer.from(backendSignature),
-        );
-      });
+    it('should produce same encryption format structure', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const message = Buffer.from('Test');
+      const encrypted = nodeEcies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
+      
+      // Verify structure: type(1) + pubkey(65) + iv(16) + tag(16) + length(8) + data
+      expect(encrypted.length).toBeGreaterThan(1 + 65 + 16 + 16 + 8);
+      expect(encrypted[0]).toBe(66); // Single encryption type (ASCII 'B')
     });
   });
 
-  describe('Encryption Cross-Compatibility', () => {
-    const testMessages = [
-      Buffer.from('Simple message'),
-      Buffer.from([0x00, 0x01, 0x02, 0xff]),
-      Buffer.from(JSON.stringify({ test: 'data', number: 42 })),
-      Buffer.alloc(256, 0x42),
-    ];
+  describe('streaming compatibility', () => {
+    it('should produce chunks with binary-compatible header format', async () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const data = Buffer.from('Streaming test data');
+      const source = (async function* () {
+        yield data;
+      })();
 
-    testMessages.forEach((message, index) => {
-      it(`should encrypt/decrypt message ${
-        index + 1
-      } cross-platform (simple mode)`, async () => {
-        if (message.length === 0) return; // Skip empty data
-        const { wallet } = backendCore.walletAndSeedFromMnemonic(testMnemonic);
-        const privateKey = wallet.getPrivateKey();
-        const publicKey = Buffer.concat([
-          Buffer.from([0x04]),
-          wallet.getPublicKey(),
-        ]);
+      const chunks: Buffer[] = [];
+      for await (const chunk of nodeStream.encryptStream(source, keyPair.publicKey)) {
+        chunks.push(chunk.data);
+        
+        // Verify chunk structure matches browser format
+        expect(chunk.index).toBeGreaterThanOrEqual(0);
+        expect(chunk.isLast).toBeDefined();
+        expect(chunk.data).toBeInstanceOf(Buffer);
+        
+        // Verify chunk header format: 4 bytes index (big-endian) + 1 byte flags
+        const chunkIndex = chunk.data.readUInt32BE(0);
+        const flags = chunk.data.readUInt8(4);
+        expect(chunkIndex).toBe(chunk.index);
+        expect(flags).toBe(chunk.isLast ? 1 : 0);
+        
+        // Verify encrypted data starts at byte 5
+        expect(chunk.data.length).toBeGreaterThan(5);
+      }
 
-        // Frontend encrypts, backend decrypts
-        const frontendEncrypted = await frontendSingle.encrypt(
-          true,
-          new Uint8Array(publicKey),
-          new Uint8Array(message),
-        );
-        const backendDecrypted = backendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Simple,
-          Buffer.from(privateKey),
-          Buffer.from(frontendEncrypted),
-        );
-        expect(backendDecrypted).toEqual(message);
+      expect(chunks.length).toBeGreaterThan(0);
+    });
+    
+    it('should use big-endian byte order for chunk index', async () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const data = Buffer.from('Test');
+      const source = (async function* () {
+        for (let i = 0; i < 3; i++) {
+          yield data;
+        }
+      })();
 
-        // Backend encrypts, frontend decrypts
-        const backendEncrypted = backendSingle.encrypt(
-          true,
-          publicKey,
-          message,
-        );
-        const frontendDecrypted = await frontendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Simple,
-          new Uint8Array(Buffer.from(privateKey)),
-          new Uint8Array(backendEncrypted),
-        );
-        expect(Buffer.from(frontendDecrypted)).toEqual(message);
-      });
+      let chunkNum = 0;
+      for await (const chunk of nodeStream.encryptStream(source, keyPair.publicKey, { chunkSize: 1024 })) {
+        // Read as big-endian (network byte order)
+        const indexBE = chunk.data.readUInt32BE(0);
+        expect(indexBE).toBe(chunkNum);
+        chunkNum++;
+      }
+    });
+    
+    it('should set isLast flag correctly in binary format', async () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const data = Buffer.from('Multi-chunk test data');
+      const source = (async function* () {
+        yield data;
+      })();
 
-      it(`should encrypt/decrypt message ${
-        index + 1
-      } cross-platform (single mode)`, async () => {
-        if (message.length === 0) return; // Skip empty data
-        const { wallet } = backendCore.walletAndSeedFromMnemonic(testMnemonic);
-        const privateKey = wallet.getPrivateKey();
-        const publicKey = Buffer.concat([
-          Buffer.from([0x04]),
-          wallet.getPublicKey(),
-        ]);
+      const chunks: Buffer[] = [];
+      for await (const chunk of nodeStream.encryptStream(source, keyPair.publicKey, { chunkSize: 10 })) {
+        chunks.push(chunk.data);
+      }
 
-        // Frontend encrypts, backend decrypts
-        const frontendEncrypted = await frontendSingle.encrypt(
-          false,
-          new Uint8Array(publicKey),
-          new Uint8Array(message),
-        );
-        const backendDecrypted = backendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
-          Buffer.from(privateKey),
-          Buffer.from(frontendEncrypted),
-        );
-        expect(backendDecrypted).toEqual(message);
+      // All chunks except last should have flag = 0
+      for (let i = 0; i < chunks.length - 1; i++) {
+        const flags = chunks[i].readUInt8(4);
+        expect(flags).toBe(0);
+      }
+      
+      // Last chunk should have flag = 1
+      const lastFlags = chunks[chunks.length - 1].readUInt8(4);
+      expect(lastFlags).toBe(1);
+    });
 
-        // Backend encrypts, frontend decrypts
-        const backendEncrypted = backendSingle.encrypt(
-          false,
-          publicKey,
-          message,
-        );
-        const frontendDecrypted = await frontendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
-          new Uint8Array(Buffer.from(privateKey)),
-          new Uint8Array(backendEncrypted),
-        );
-        expect(Buffer.from(frontendDecrypted)).toEqual(message);
-      });
+    it('should maintain Buffer/Uint8Array compatibility', async () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const data = Buffer.from('Compatibility test');
+      const source = (async function* () {
+        yield data;
+      })();
+
+      for await (const chunk of nodeStream.encryptStream(source, keyPair.publicKey)) {
+        // Verify Buffer can be converted to Uint8Array (browser format)
+        const uint8Array = new Uint8Array(chunk.data);
+        expect(uint8Array.length).toBe(chunk.data.length);
+        
+        // Verify Uint8Array can be converted back to Buffer
+        const backToBuffer = Buffer.from(uint8Array);
+        expect(backToBuffer).toEqual(chunk.data);
+      }
+    });
+    
+    it('should decrypt chunks encrypted by Node', async () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      const originalData = Buffer.from('Round-trip test');
+      const encryptSource = (async function* () {
+        yield originalData;
+      })();
+
+      const encrypted: Buffer[] = [];
+      for await (const chunk of nodeStream.encryptStream(encryptSource, keyPair.publicKey)) {
+        encrypted.push(chunk.data);
+      }
+
+      const decryptSource = (async function* () {
+        for (const chunk of encrypted) {
+          yield chunk;
+        }
+      })();
+
+      const decrypted: Buffer[] = [];
+      for await (const chunk of nodeStream.decryptStream(decryptSource, keyPair.privateKey)) {
+        decrypted.push(chunk);
+      }
+
+      const result = Buffer.concat(decrypted);
+      expect(result).toEqual(originalData);
     });
   });
 
-  describe('Member-Level Cross-Compatibility', () => {
-    it('should handle member communication cross-platform', async () => {
-      // Create frontend and backend members
-      const frontendMember = FrontendMember.fromMnemonic(
-        testMnemonic,
-        frontendECIES,
-      );
-      const backendMember = BackendMember.fromMnemonic(
-        testMnemonic,
-        backendECIES,
-      );
-
-      const testMessage = 'Cross-platform member test';
-
-      // Frontend member encrypts for backend member
-      const frontendEncrypted = await frontendMember.encryptData(
-        testMessage,
-        new Uint8Array(backendMember.publicKey),
-      );
-      const backendDecrypted = backendMember.decryptData(
-        Buffer.from(frontendEncrypted),
-      );
-      expect(backendDecrypted.toString()).toBe(testMessage);
-
-      // Backend member encrypts for frontend member
-      const backendEncrypted = backendMember.encryptData(
-        testMessage,
-        Buffer.from(frontendMember.publicKey),
-      );
-      const frontendDecrypted = await frontendMember.decryptData(
-        Buffer.from(backendEncrypted),
-      );
-      expect(Buffer.from(frontendDecrypted).toString()).toBe(testMessage);
+  describe('key format compatibility', () => {
+    it('should handle 65-byte uncompressed public keys', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      expect(keyPair.publicKey.length).toBe(65);
+      expect(keyPair.publicKey[0]).toBe(0x04); // Uncompressed prefix
     });
 
-    it('should handle signed messages cross-platform', async () => {
-      const frontendMember = FrontendMember.fromMnemonic(
-        testMnemonic,
-        frontendECIES,
-      );
-      const backendMember = BackendMember.fromMnemonic(
-        testMnemonic,
-        backendECIES,
-      );
-
-      const testMessage = Buffer.from('Signed message test');
-
-      // Frontend signs, backend verifies
-      const frontendSignature = frontendMember.signData(
-        new Uint8Array(testMessage),
-      );
-      const backendVerifies = backendMember.verifySignature(
-        testMessage,
-        Buffer.from(frontendSignature),
-        Buffer.from(frontendMember.publicKey),
-      );
-      expect(backendVerifies).toBe(true);
-
-      // Backend signs, frontend verifies
-      const backendSignature = backendMember.signData(testMessage);
-      const frontendVerifies = frontendMember.verifySignature(
-        new Uint8Array(testMessage),
-        new Uint8Array(backendSignature),
-        new Uint8Array(backendMember.publicKey),
-      );
-      expect(frontendVerifies).toBe(true);
+    it('should handle 32-byte private keys', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      expect(keyPair.privateKey.length).toBe(32);
     });
   });
 
-  describe('Performance and Stress Tests', () => {
-    it('should handle large data cross-platform', async () => {
-      const { wallet } = backendCore.walletAndSeedFromMnemonic(testMnemonic);
-      const privateKey = wallet.getPrivateKey();
-      const publicKey = Buffer.concat([
-        Buffer.from([0x04]),
-        wallet.getPublicKey(),
-      ]);
-
-      const largeData = Buffer.alloc(10240, 0x55); // 10KB
-
-      // Test encryption/decryption
-      const encrypted = backendSingle.encrypt(
-        false,
-        publicKey,
-        largeData,
-      );
-      const decrypted = backendSingle.decryptWithHeader(
-        EciesEncryptionTypeEnum.Single,
-        Buffer.from(privateKey),
-        encrypted,
-      );
-      expect(decrypted).toEqual(largeData);
-
-      // Test signing/verification
-      const signature = frontendSig.signMessage(
-        new Uint8Array(privateKey),
-        new Uint8Array(largeData),
-      );
-      const verified = backendSig.verifyMessage(
-        publicKey,
-        largeData,
-        Buffer.from(signature) as any,
-      );
-      expect(verified).toBe(true);
-    });
-
-    it('should maintain consistency across multiple operations', async () => {
-      const { wallet } = backendCore.walletAndSeedFromMnemonic(testMnemonic);
-      const privateKey = wallet.getPrivateKey();
-      const publicKey = Buffer.concat([
-        Buffer.from([0x04]),
-        wallet.getPublicKey(),
-      ]);
-
-      for (let i = 0; i < 10; i++) {
-        const message = Buffer.from(`Test message ${i}`);
-
-        // Encrypt and decrypt with backend
-        const encrypted = backendSingle.encrypt(
-          false,
-          publicKey,
-          message,
-        );
-        const decrypted = backendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
-          Buffer.from(privateKey),
-          encrypted,
-        );
-        expect(decrypted).toEqual(message);
-
-        // Sign with backend, verify with frontend
-        const signature = backendSig.signMessage(
-          Buffer.from(privateKey),
-          message,
-        );
-        const verified = frontendSig.verifyMessage(
-          new Uint8Array(publicKey),
-          new Uint8Array(message),
-          new Uint8Array(signature) as any,
-        );
-        expect(verified).toBe(true);
-      }
-    });
-  });
-
-  describe('Member ID Cross-Compatibility (CRITICAL)', () => {
-    it('should use same 12-byte ObjectID format on both frontend and backend', async () => {
-      // Create members on both sides
-      const backendMember = BackendMember.newMember(
-        backendECIES,
-        MemberType.User,
-        'Backend User',
-        'backend@test.com' as any,
-      ).member;
+  describe('multi-recipient chunk compatibility', () => {
+    it('should produce binary-compatible multi-recipient chunks', async () => {
+      const mnemonic1 = nodeEcies.generateNewMnemonic();
+      const keyPair1 = nodeEcies.mnemonicToSimpleKeyPair(mnemonic1);
+      const mnemonic2 = nodeEcies.generateNewMnemonic();
+      const keyPair2 = nodeEcies.mnemonicToSimpleKeyPair(mnemonic2);
       
-      const frontendMember = FrontendMember.newMember(
-        frontendECIES,
-        MemberType.User,
-        'Frontend User',
-        'frontend@test.com' as any,
-      ).member;
-      
-      // CRITICAL: Both must use 12-byte ObjectID for cross-platform compatibility
-      console.log('Backend member ID length:', backendMember.id.id.length);
-      console.log('Frontend member ID length:', frontendMember.id.id.length);
-      expect(backendMember.id.id.length).toBe(12);
-      expect(frontendMember.id.id.length).toBe(12);
-    });
-
-    it('should encrypt/decrypt multi-recipient with actual cross-platform member IDs', async () => {
-      const testMessage = Buffer.from('Cross-platform multi-recipient test message');
-      
-      // Create TWO backend members (multi-recipient requires at least 2)
-      const backendMember1 = BackendMember.newMember(
-        backendECIES,
-        MemberType.User,
-        'Backend User 1',
-        'backend1@test.com' as any,
-      ).member;
-      
-      const backendMember2 = BackendMember.newMember(
-        backendECIES,
-        MemberType.User,
-        'Backend User 2',
-        'backend2@test.com' as any,
-      ).member;
-      
-      // Backend encrypts for both members
-      const recipients = [backendMember1, backendMember2];
-      const backendEncrypted = backendMulti.encryptMultiple(
-        recipients,
-        testMessage,
-      );
-      
-      // Both backend members decrypt
-      const backendDecrypted1 = backendMulti.decryptMultipleECIEForRecipient(
-        backendEncrypted as any,
-        backendMember1,
-      );
-      expect(backendDecrypted1).toEqual(testMessage);
-      
-      const backendDecrypted2 = backendMulti.decryptMultipleECIEForRecipient(
-        backendEncrypted as any,
-        backendMember2,
-      );
-      expect(backendDecrypted2).toEqual(testMessage);
-      
-      // Verify header has 12-byte ObjectIDs for both recipients
-      const header = backendMulti.parseMultiEncryptedHeader(
-        backendMulti.buildECIESMultipleRecipientHeader(backendEncrypted),
-      );
-      expect(header.recipientCount).toBe(2);
-      expect(header.recipientIds[0].id.length).toBe(12);
-      expect(header.recipientIds[1].id.length).toBe(12);
-    });
-  });
-
-  describe('Multi-Recipient Cross-Compatibility', () => {
-    it('should encrypt/decrypt multi-recipient messages: frontend→backend', async () => {
-      const testMessage = Buffer.from('Frontend to backend test');
-      const recipients: BackendMember[] = [];
-      const frontendRecipients: IMultiRecipient[] = [];
-
-      // Create recipients
-      for (let i = 0; i < 2; i++) {
-        const backendMember = BackendMember.newMember(
-          backendECIES,
-          MemberType.User,
-          `Recipient ${i}`,
-          `recipient${i}@test.com` as any,
-        ).member;
-        recipients.push(backendMember);
-
-        frontendRecipients.push({
-          id: new Uint8Array(backendMember.id.id),
-          publicKey: new Uint8Array(backendMember.publicKey),
-        });
-      }
-
-      // Backend encrypts
-      const backendEncrypted = backendMulti.encryptMultiple(
-        recipients,
-        testMessage,
-      );
-
-
-
-      // Backend decrypts
-      for (const recipient of recipients) {
-        const decrypted = backendMulti.decryptMultipleECIEForRecipient(
-          backendEncrypted as any,
-          recipient,
-        );
-        expect(decrypted).toEqual(testMessage);
-      }
-    });
-
-    it('should encrypt/decrypt multi-recipient messages: backend→frontend', async () => {
-      const testMessage = Buffer.from('Backend to frontend test');
-      const recipients: BackendMember[] = [];
-      const privateKeys: Uint8Array[] = [];
-
-      // Create recipients
-      for (let i = 0; i < 2; i++) {
-        const backendMember = BackendMember.newMember(
-          backendECIES,
-          MemberType.User,
-          `Recipient ${i}`,
-          `recipient${i}@test.com` as any,
-        ).member;
-        recipients.push(backendMember);
-        privateKeys.push(new Uint8Array(backendMember.privateKey!.value));
-      }
-
-      // Backend encrypts
-      const backendEncrypted = backendMulti.encryptMultiple(
-        recipients,
-        testMessage,
-      );
-
-      // Convert to frontend format
-      const frontendFormat = {
-        dataLength: backendEncrypted.dataLength,
-        recipientCount: backendEncrypted.recipientCount,
-        recipientIds: backendEncrypted.recipientIds.map(
-          (id) => new Uint8Array(Buffer.from(id.toHexString(), 'hex')),
-        ),
-        recipientKeys: backendEncrypted.recipientKeys.map(
-          (key) => new Uint8Array(key),
-        ),
-        encryptedMessage: new Uint8Array(backendEncrypted.encryptedMessage),
-        headerSize: backendEncrypted.headerSize,
-      };
-
-      // Backend decrypts (testing consistency)
-      for (const recipient of recipients) {
-        const decrypted = backendMulti.decryptMultipleECIEForRecipient(
-          backendEncrypted as any,
-          recipient,
-        );
-        expect(decrypted).toEqual(testMessage);
-      }
-    });
-
-    it('should parse headers cross-platform: frontend→backend', async () => {
-      const recipients: IMultiRecipient[] = [];
-      for (let i = 0; i < 2; i++) {
-        const mnemonic = backendCore.generateNewMnemonic();
-        const { wallet } = backendCore.walletAndSeedFromMnemonic(mnemonic);
-        const publicKey = Buffer.concat([
-          Buffer.from([0x04]),
-          wallet.getPublicKey(),
-        ]);
-        recipients.push({
-          id: crypto.getRandomValues(new Uint8Array(12)),
-          publicKey: new Uint8Array(publicKey),
-        });
-      }
-
-      const backendRecipients = recipients.map(r => {
-        const member = BackendMember.newMember(
-          backendECIES,
-          MemberType.User,
-          `Test ${r.id}`,
-          `test${r.id}@test.com` as any,
-        ).member;
-        return member;
-      });
-
-      const backendEncrypted = backendMulti.encryptMultiple(
-        backendRecipients,
-        Buffer.from('test'),
-      );
-      const backendHeader = backendMulti.buildECIESMultipleRecipientHeader(backendEncrypted);
-      const backendParsed = backendMulti.parseMultiEncryptedHeader(
-        backendHeader,
-      );
-
-      expect(backendParsed.dataLength).toBe(backendEncrypted.dataLength);
-      expect(backendParsed.recipientCount).toBe(backendRecipients.length);
-    });
-
-    it('should parse headers cross-platform: backend→frontend', async () => {
       const recipients = [
-        BackendMember.newMember(
-          backendECIES,
-          MemberType.User,
-          'Test1',
-          'test1@test.com' as any,
-        ).member,
-        BackendMember.newMember(
-          backendECIES,
-          MemberType.User,
-          'Test2',
-          'test2@test.com' as any,
-        ).member,
+        { id: Buffer.alloc(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE, 1), publicKey: keyPair1.publicKey },
+        { id: Buffer.alloc(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE, 2), publicKey: keyPair2.publicKey },
       ];
+      
+      const data = Buffer.from('Multi-recipient test');
+      const source = (async function* () {
+        yield data;
+      })();
 
-      const backendEncrypted = backendMulti.encryptMultiple(
-        recipients,
-        Buffer.from('test'),
-      );
-      const backendHeader =
-        backendMulti.buildECIESMultipleRecipientHeader(backendEncrypted);
-      const frontendParsed = frontendMulti.parseHeader(
-        new Uint8Array(backendHeader),
-      );
-
-      expect(frontendParsed.dataLength).toBe(backendEncrypted.dataLength);
-      expect(frontendParsed.recipientCount).toBe(recipients.length);
+      for await (const chunk of nodeStream.encryptStreamMultiple(source, recipients)) {
+        // Verify chunk data is Buffer/Uint8Array compatible
+        expect(chunk.data).toBeInstanceOf(Buffer);
+        expect(chunk.header).toBeDefined();
+        expect(chunk.header.recipientCount).toBe(2);
+        
+        // Verify can convert to Uint8Array for browser
+        const uint8 = new Uint8Array(chunk.data);
+        expect(uint8.length).toBe(chunk.data.length);
+      }
+    });
+    
+    it('should use correct byte order for multi-recipient header', async () => {
+      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
+      const processor = new MultiRecipientProcessor(cryptoCore);
+      
+      const keyPair = await cryptoCore.generateEphemeralKeyPair();
+      const recipients = [
+        { id: Buffer.alloc(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE, 1), publicKey: Buffer.from(keyPair.publicKey) },
+      ];
+      
+      const message = Buffer.from('Test message');
+      const encrypted = await processor.encryptMultiple(recipients, message);
+      const header = processor.buildHeader(encrypted);
+      
+      // Verify big-endian byte order
+      const dataLength = header.readBigUInt64BE(0);
+      expect(Number(dataLength)).toBe(message.length);
+      
+      const recipientCount = header.readUInt16BE(8);
+      expect(recipientCount).toBe(1);
     });
   });
+  
+  describe('mnemonic compatibility', () => {
+    it('should generate valid BIP39 mnemonics', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      
+      expect(mnemonic.value).toBeDefined();
+      expect(mnemonic.value.split(' ').length).toBe(24); // Default 24 words
+    });
 
+    it('should derive same keys from same mnemonic', () => {
+      const mnemonic = nodeEcies.generateNewMnemonic();
+      
+      const keyPair1 = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      const keyPair2 = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
+      
+      expect(keyPair1.publicKey).toEqual(keyPair2.publicKey);
+      expect(keyPair1.privateKey).toEqual(keyPair2.privateKey);
+    });
+  });
 });

@@ -21,3 +21,7 @@ export * from './simple-public-key-only';
 export * from './single-encrypted-parsed-header';
 export * from './wallet-seed';
 export * from './wrapped-key-consts';
+export * from './encrypted-chunk';
+export * from './stream-progress';
+export * from './stream-config';
+export * from './multi-recipient-chunk';

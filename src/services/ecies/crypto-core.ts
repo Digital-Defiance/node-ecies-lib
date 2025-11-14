@@ -196,6 +196,13 @@ export class EciesCryptoCore {
    * @returns {Buffer} The public key
    */
   public getPublicKey(privateKey: Buffer): Buffer {
+    // Security fix 2: Private key validation
+    if (privateKey.every(byte => byte === 0)) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.PrivateKeyNotLoaded,
+        createEciesTranslationEngine(),
+      );
+    }
     const publicKey = secp256k1.getPublicKey(privateKey, false);
     return Buffer.from(publicKey);
   }
@@ -220,7 +227,27 @@ export class EciesCryptoCore {
    * @returns {Buffer} The shared secret
    */
   public computeSharedSecret(privateKey: Buffer, publicKey: Buffer): Buffer {
-    const sharedSecret = secp256k1.getSharedSecret(privateKey, publicKey, true);
-    return Buffer.from(sharedSecret.slice(1)); // Remove the 0x02/0x03 prefix
+    // Security fix 1: Public key validation (check normalized key)
+    const normalizedKey = this.normalizePublicKey(publicKey);
+    const isAllZeros = normalizedKey.slice(1).every(byte => byte === 0);
+    if (isAllZeros) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.InvalidRecipientPublicKey,
+        createEciesTranslationEngine(),
+      );
+    }
+
+    const sharedSecret = secp256k1.getSharedSecret(privateKey, normalizedKey, true);
+    const secret = Buffer.from(sharedSecret.slice(1)); // Remove the 0x02/0x03 prefix
+    
+    // Security fix 3: Shared secret validation
+    if (secret.every(byte => byte === 0)) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.SecretComputationFailed,
+        createEciesTranslationEngine(),
+      );
+    }
+    
+    return secret;
   }
 }

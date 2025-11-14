@@ -132,6 +132,14 @@ export class MockBackendMember
     return Buffer.from(faker.lorem.paragraph());
   }
 
+  async *encryptDataStream(): AsyncGenerator<any, void, unknown> {
+    yield { data: Buffer.from('mock'), header: {} };
+  }
+
+  async *decryptDataStream(): AsyncGenerator<Buffer, void, unknown> {
+    yield Buffer.from('mock');
+  }
+
   toJson(): string {
     return JSON.stringify({
       id: this._id.toString(),

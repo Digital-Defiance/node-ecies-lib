@@ -128,14 +128,14 @@ describe('ECIESService', () => {
       });
     });
 
-    it('should correctly serialize, parse, and decrypt a multi-recipient message', () => {
+    it('should correctly serialize, parse, and decrypt a multi-recipient message', async () => {
       const message = Buffer.from(
         'This is a test of the full multi-recipient lifecycle',
       );
       const recipients = [recipient1, recipient2];
 
       // 1. Encrypt the message for multiple recipients to get the object representation
-      const encryptedObject = service.encryptMultiple(recipients, message);
+      const encryptedObject = await service.encryptMultiple(recipients, message);
       expect(encryptedObject.recipientKeys[0].length).toBe(
         ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );

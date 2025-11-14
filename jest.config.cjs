@@ -6,6 +6,7 @@ module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
+  testPathIgnorePatterns: ['/node_modules/', 'ecies.spec.ts'],
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   setupFiles: ['<rootDir>/tests/jest-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],

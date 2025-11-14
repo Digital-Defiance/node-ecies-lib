@@ -1,184 +1,346 @@
-import {
-  ECIESError,
-  EmailString,
-  getEciesI18nEngine,
-  IECIESConfig,
-  MemberType,
-  SecureBuffer,
-} from '@digitaldefiance/ecies-lib';
-import { Wallet } from '@ethereumjs/wallet';
-import { Member } from '../src/member';
-import { ECIESService } from '../src/services/ecies/service';
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { randomBytes } from 'crypto';
+import { Constants } from '@digitaldefiance/ecies-lib';
+import { MultiRecipientProcessor, IMultiRecipient } from '../src/services/multi-recipient-processor';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
-import { EciesMultiRecipient } from '../src/services/ecies/multi-recipient';
 
-describe('EciesMultiRecipient', () => {
+describe('MultiRecipientProcessor', () => {
+  let processor: MultiRecipientProcessor;
   let cryptoCore: EciesCryptoCore;
-  let eciesMultiRecipient: EciesMultiRecipient;
-  let recipients: Member[];
-  const message = Buffer.from('This is a secret message');
-  let eciesService: ECIESService;
+  let recipient1: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
+  let recipient2: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
+  let recipient3: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
 
-  beforeEach(() => {
-    // This is a mock configuration. In a real scenario, this would be properly configured.
-    const config: IECIESConfig = {
-      curveName: 'secp256k1',
-      primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
-      mnemonicStrength: 128,
-      symmetricAlgorithm: 'aes-256-gcm',
-      symmetricKeyBits: 256,
-      symmetricKeyMode: 'gcm',
+  beforeEach(async () => {
+    cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
+    processor = new MultiRecipientProcessor(cryptoCore);
+
+    const keyPair1 = await cryptoCore.generateEphemeralKeyPair();
+    recipient1 = {
+      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      publicKey: Buffer.from(keyPair1.publicKey),
+      privateKey: Buffer.from(keyPair1.privateKey),
     };
-    cryptoCore = new EciesCryptoCore(config);
-    eciesService = new ECIESService(config);
-    eciesMultiRecipient = new EciesMultiRecipient(cryptoCore);
 
-    // Create some mock recipients
-    const wallet1 = Wallet.generate();
-    const wallet2 = Wallet.generate();
-    const wallet3 = Wallet.generate();
-    recipients = [
-      new Member(
-        eciesService,
-        MemberType.User,
-        'Recipient 1',
-        new EmailString('recipient1@example.com'),
-        Buffer.from(wallet1.getPublicKey()),
-        new SecureBuffer(wallet1.getPrivateKey()),
-        wallet1,
-      ),
-      new Member(
-        eciesService,
-        MemberType.User,
-        'Recipient 2',
-        new EmailString('recipient2@example.com'),
-        Buffer.from(wallet2.getPublicKey()),
-        new SecureBuffer(wallet2.getPrivateKey()),
-        wallet2,
-      ),
-      new Member(
-        eciesService,
-        MemberType.User,
-        'Recipient 3',
-        new EmailString('recipient3@example.com'),
-        Buffer.from(wallet3.getPublicKey()),
-        new SecureBuffer(wallet3.getPrivateKey()),
-        wallet3,
-      ),
-    ];
+    const keyPair2 = await cryptoCore.generateEphemeralKeyPair();
+    recipient2 = {
+      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      publicKey: Buffer.from(keyPair2.publicKey),
+      privateKey: Buffer.from(keyPair2.privateKey),
+    };
+
+    const keyPair3 = await cryptoCore.generateEphemeralKeyPair();
+    recipient3 = {
+      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      publicKey: Buffer.from(keyPair3.publicKey),
+      privateKey: Buffer.from(keyPair3.privateKey),
+    };
   });
 
-  it('should encrypt a message for multiple recipients', async () => {
-    const encryptedMessage = await eciesMultiRecipient.encryptMultiple(
-      recipients,
-      message,
-    );
+  describe('encryptKey / decryptKey', () => {
+    it('should encrypt and decrypt symmetric key', async () => {
+      const symmetricKey = randomBytes(32);
+      const encryptedKey = await processor.encryptKey(recipient1.publicKey, symmetricKey);
 
-    expect(encryptedMessage).toBeDefined();
-    expect(encryptedMessage.recipientCount).toBe(recipients.length);
-    expect(encryptedMessage.recipientIds.length).toBe(recipients.length);
-    expect(encryptedMessage.recipientKeys.length).toBe(recipients.length);
-    expect(encryptedMessage.dataLength).toBe(message.length);
-    expect(encryptedMessage.encryptedMessage).toBeInstanceOf(Buffer);
+      expect(encryptedKey.length).toBe(Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE);
+
+      const decryptedKey = await processor.decryptKey(recipient1.privateKey, encryptedKey);
+      expect(decryptedKey).toEqual(symmetricKey);
+    });
+
+    it('should fail with invalid encrypted key length', async () => {
+      const invalidKey = randomBytes(100);
+      await expect(processor.decryptKey(recipient1.privateKey, invalidKey)).rejects.toThrow();
+    });
+
+    it('should fail with wrong private key', async () => {
+      const symmetricKey = randomBytes(32);
+      const encryptedKey = await processor.encryptKey(recipient1.publicKey, symmetricKey);
+
+      await expect(processor.decryptKey(recipient2.privateKey, encryptedKey)).rejects.toThrow();
+    });
   });
 
-  it('should decrypt a message for a recipient', async () => {
-    // First, encrypt the message
-    const encryptedMessage = await eciesMultiRecipient.encryptMultiple(
-      recipients,
-      message,
-    );
+  describe('encryptMultiple / decryptMultipleForRecipient', () => {
+    it('should encrypt for single recipient', async () => {
+      const message = Buffer.from('Test message for single recipient');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
 
-    // Pick one recipient to decrypt the message for
-    const recipient = recipients[1];
+      const encrypted = await processor.encryptMultiple(recipients, message);
 
-    // Decrypt the message
-    const decryptedMessage =
-      await eciesMultiRecipient.decryptMultipleECIEForRecipient(
-        encryptedMessage,
-        recipient,
+      expect(encrypted.recipientCount).toBe(1);
+      expect(encrypted.dataLength).toBe(message.length);
+      expect(encrypted.recipientIds).toHaveLength(1);
+      expect(encrypted.recipientKeys).toHaveLength(1);
+
+      const decrypted = await processor.decryptMultipleForRecipient(
+        encrypted,
+        recipient1.id,
+        recipient1.privateKey,
       );
 
-    expect(decryptedMessage).toBeInstanceOf(Buffer);
-    expect(decryptedMessage.toString()).toEqual(message.toString());
-  });
+      expect(decrypted).toEqual(message);
+    });
 
-  it('should throw an error if recipient is not in the list', async () => {
-    // First, encrypt the message
-    const encryptedMessage = await eciesMultiRecipient.encryptMultiple(
-      recipients,
-      message,
-    );
+    it('should encrypt for multiple recipients', async () => {
+      const message = Buffer.from('Test message for multiple recipients');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+        { id: recipient2.id, publicKey: recipient2.publicKey },
+        { id: recipient3.id, publicKey: recipient3.publicKey },
+      ];
 
-    // Create a new recipient that was not part of the original encryption
-    const wallet = Wallet.generate();
-    const outsider = new Member(
-      eciesService,
-      MemberType.User,
-      'Outsider',
-      new EmailString('outsider@example.com'),
-      Buffer.from(wallet.getPublicKey()),
-      new SecureBuffer(wallet.getPrivateKey()),
-      wallet,
-    );
+      const encrypted = await processor.encryptMultiple(recipients, message);
 
-    // Try to decrypt the message for the outsider
-    try {
-      await eciesMultiRecipient.decryptMultipleECIEForRecipient(
-        encryptedMessage,
-        outsider,
+      expect(encrypted.recipientCount).toBe(3);
+      expect(encrypted.dataLength).toBe(message.length);
+      expect(encrypted.recipientIds).toHaveLength(3);
+      expect(encrypted.recipientKeys).toHaveLength(3);
+
+      const decrypted1 = await processor.decryptMultipleForRecipient(
+        encrypted,
+        recipient1.id,
+        recipient1.privateKey,
       );
-      fail('Expected EciesError to be thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ECIESError);
-    }
-  });
+      expect(decrypted1).toEqual(message);
 
-  it('should throw an error if private key is not loaded for recipient', async () => {
-    const encryptedMessage = await eciesMultiRecipient.encryptMultiple(
-      recipients,
-      message,
-    );
-
-    const recipientWithNoKey = new Member(
-      eciesService,
-      recipients[0].type,
-      recipients[0].name,
-      recipients[0].email,
-      recipients[0].publicKey,
-      undefined,
-      undefined,
-      recipients[0].id,
-    );
-
-    try {
-      await eciesMultiRecipient.decryptMultipleECIEForRecipient(
-        encryptedMessage,
-        recipientWithNoKey,
+      const decrypted2 = await processor.decryptMultipleForRecipient(
+        encrypted,
+        recipient2.id,
+        recipient2.privateKey,
       );
-      fail('Expected ECIESError to be thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ECIESError);
-    }
+      expect(decrypted2).toEqual(message);
+
+      const decrypted3 = await processor.decryptMultipleForRecipient(
+        encrypted,
+        recipient3.id,
+        recipient3.privateKey,
+      );
+      expect(decrypted3).toEqual(message);
+    });
+
+    it('should fail with recipient not found', async () => {
+      const message = Buffer.from('Test message');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const encrypted = await processor.encryptMultiple(recipients, message);
+
+      await expect(
+        processor.decryptMultipleForRecipient(encrypted, recipient2.id, recipient2.privateKey),
+      ).rejects.toThrow();
+    });
+
+    it('should fail with wrong private key', async () => {
+      const message = Buffer.from('Test message');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const encrypted = await processor.encryptMultiple(recipients, message);
+
+      await expect(
+        processor.decryptMultipleForRecipient(encrypted, recipient1.id, recipient2.privateKey),
+      ).rejects.toThrow();
+    });
+
+    it('should handle large messages', async () => {
+      const message = randomBytes(1024 * 1024); // 1MB
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+        { id: recipient2.id, publicKey: recipient2.publicKey },
+      ];
+
+      const encrypted = await processor.encryptMultiple(recipients, message);
+      const decrypted = await processor.decryptMultipleForRecipient(
+        encrypted,
+        recipient1.id,
+        recipient1.privateKey,
+      );
+
+      expect(decrypted).toEqual(message);
+    });
+
+    it('should fail with too many recipients', async () => {
+      const message = Buffer.from('Test message');
+      const recipients: IMultiRecipient[] = [];
+
+      for (let i = 0; i < Constants.ECIES.MULTIPLE.MAX_RECIPIENTS + 1; i++) {
+        const keyPair = await cryptoCore.generateEphemeralKeyPair();
+        recipients.push({
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair.publicKey),
+        });
+      }
+
+      await expect(processor.encryptMultiple(recipients, message)).rejects.toThrow();
+    });
+
+    it('should handle large messages within limits', async () => {
+      const message = Buffer.alloc(1024 * 1024); // 1MB - within limits
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const encrypted = await processor.encryptMultiple(recipients, message);
+      expect(encrypted.dataLength).toBe(message.length);
+    });
   });
 
-  it('encryptMultiple and decryptMultipleECIEForRecipient should be compatible', async () => {
-    const originalMessage = Buffer.from(
-      'A very secret message for testing compatibility',
-    );
+  describe('buildHeader / parseHeader', () => {
+    it('should build and parse header', async () => {
+      const message = Buffer.from('Test message');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+        { id: recipient2.id, publicKey: recipient2.publicKey },
+      ];
 
-    const encrypted = await eciesMultiRecipient.encryptMultiple(
-      recipients,
-      originalMessage,
-    );
+      const encrypted = await processor.encryptMultiple(recipients, message);
+      const header = processor.buildHeader(encrypted);
 
-    for (const recipient of recipients) {
-      const decryptedMessage =
-        await eciesMultiRecipient.decryptMultipleECIEForRecipient(
-          encrypted,
-          recipient,
-        );
-      expect(decryptedMessage.toString()).toEqual(originalMessage.toString());
-    }
+      expect(header.length).toBeGreaterThan(0);
+
+      const parsed = processor.parseHeader(header);
+
+      expect(parsed.dataLength).toBe(encrypted.dataLength);
+      expect(parsed.recipientCount).toBe(encrypted.recipientCount);
+      expect(parsed.recipientIds).toHaveLength(encrypted.recipientIds.length);
+      expect(parsed.recipientKeys).toHaveLength(encrypted.recipientKeys.length);
+
+      for (let i = 0; i < parsed.recipientIds.length; i++) {
+        expect(Buffer.from(parsed.recipientIds[i])).toEqual(Buffer.from(encrypted.recipientIds[i]));
+        expect(Buffer.from(parsed.recipientKeys[i])).toEqual(Buffer.from(encrypted.recipientKeys[i]));
+      }
+    });
+
+    it('should fail with data too short', () => {
+      const shortData = Buffer.alloc(5);
+      expect(() => processor.parseHeader(shortData)).toThrow();
+    });
+
+    it('should fail with invalid recipient count', () => {
+      const data = Buffer.alloc(10);
+      data.writeBigUInt64BE(BigInt(100), 0);
+      data.writeUInt16BE(0, 8);
+
+      expect(() => processor.parseHeader(data)).toThrow();
+    });
+  });
+
+  describe('parseMessage', () => {
+    it('should parse complete message and decrypt successfully', async () => {
+      const message = Buffer.from('Test message for parsing');
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const encrypted = await processor.encryptMultiple(recipients, message);
+      const header = processor.buildHeader(encrypted);
+      const completeMessage = Buffer.concat([header, encrypted.encryptedMessage]);
+
+      const parsed = processor.parseMessage(completeMessage);
+
+      expect(parsed.dataLength).toBe(encrypted.dataLength);
+      expect(parsed.recipientCount).toBe(encrypted.recipientCount);
+      expect(parsed.recipientIds.length).toBe(1);
+      expect(parsed.recipientKeys.length).toBe(1);
+      
+      // Decrypt to verify the parsed message works
+      const decrypted = await processor.decryptMultipleForRecipient(
+        parsed,
+        recipient1.id,
+        recipient1.privateKey,
+      );
+      expect(decrypted).toEqual(message);
+    });
+  });
+
+  describe('encryptChunk / decryptChunk', () => {
+    it('should encrypt and decrypt chunk', async () => {
+      const data = Buffer.from('Chunk data');
+      const symmetricKey = randomBytes(32);
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const encryptedKeys = [await processor.encryptKey(recipient1.publicKey, symmetricKey)];
+
+      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+
+      expect(chunk.header.chunkIndex).toBe(0);
+      expect(chunk.header.flags).toBe(0);
+      expect(chunk.header.recipientCount).toBe(1);
+
+      const decrypted = await processor.decryptChunk(
+        chunk.data,
+        recipient1.id,
+        recipient1.privateKey,
+        encryptedKeys,
+        [recipient1.id],
+      );
+
+      expect(decrypted.data).toEqual(data);
+    });
+
+    it('should handle last chunk flag', async () => {
+      const data = Buffer.from('Last chunk');
+      const symmetricKey = randomBytes(32);
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const chunk = await processor.encryptChunk(data, recipients, 5, true, symmetricKey);
+
+      expect(chunk.header.chunkIndex).toBe(5);
+      expect(chunk.header.flags).toBe(1);
+    });
+
+    it('should fail with invalid chunk index', async () => {
+      const data = Buffer.from('Chunk data');
+      const symmetricKey = randomBytes(32);
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      await expect(
+        processor.encryptChunk(data, recipients, -1, false, symmetricKey),
+      ).rejects.toThrow();
+
+      await expect(
+        processor.encryptChunk(data, recipients, 0x100000000, false, symmetricKey),
+      ).rejects.toThrow();
+    });
+
+    it('should validate chunk size limit', async () => {
+      const data = Buffer.from('Valid chunk data');
+      const symmetricKey = randomBytes(32);
+      const recipients: IMultiRecipient[] = [
+        { id: recipient1.id, publicKey: recipient1.publicKey },
+      ];
+
+      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+      expect(chunk.data.length).toBeGreaterThan(data.length);
+    });
+  });
+
+  describe('getHeaderSize', () => {
+    it('should calculate correct header size', () => {
+      const size1 = processor.getHeaderSize(1);
+      const size2 = processor.getHeaderSize(2);
+      const size3 = processor.getHeaderSize(3);
+
+      expect(size1).toBe(
+        Constants.ECIES.MULTIPLE.DATA_LENGTH_SIZE +
+        Constants.ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE +
+        Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
+      );
+
+      expect(size2).toBeGreaterThan(size1);
+      expect(size3).toBeGreaterThan(size2);
+    });
   });
 });

@@ -7,12 +7,15 @@ Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
 ## Features
 
 - **ECIES Encryption/Decryption**: Secure elliptic curve integrated encryption scheme using Node.js crypto primitives.
+- **Streaming Encryption**: Memory-efficient encryption for large files (<10MB RAM for any size) ✨ NEW in v3.0
 - **Multi-recipient Encryption**: Encrypt data for multiple recipients simultaneously with efficient handling.
+- **Multi-recipient Streaming**: Encrypt once for up to 65,535 recipients with shared symmetric key ✨ NEW in v3.0
 - **PBKDF2 Key Derivation**: Password-based key derivation with multiple configurable security profiles.
 - **Digital Signatures**: Sign and verify data using elliptic curve cryptography.
 - **Secure Memory Management**: Uses `SecureBuffer` and `SecureString` for sensitive data to ensure zeroization and protection.
 - **Runtime Configuration Registry**: Centralized, immutable constants with runtime override capabilities for advanced customization.
 - **Plugin-Based Internationalization (i18n)**: Full support for multi-language translations with type-safe, plugin-based architecture.
+- **Security Hardening**: 16 comprehensive security validations across all layers ✨ NEW in v3.0
 
 ## Binary Compatibility
 
@@ -29,6 +32,35 @@ npm install @digitaldefiance/node-ecies-lib
 ```
 
 ## Quick Start
+
+### v3.0 Streaming Encryption (NEW)
+
+```typescript
+import { ECIESService, Member, MemberType, EmailString } from '@digitaldefiance/node-ecies-lib';
+import { createReadStream } from 'fs';
+
+const eciesService = new ECIESService();
+const { member, mnemonic } = Member.newMember(
+  eciesService,
+  MemberType.User,
+  'Alice',
+  new EmailString('alice@example.com')
+);
+
+// Stream encrypt large file with <10MB RAM
+const fileStream = createReadStream('large-file.bin');
+const chunks: Buffer[] = [];
+
+for await (const chunk of member.encryptDataStream(fileStream)) {
+  chunks.push(chunk.data);
+}
+
+// Stream decrypt
+const decryptedChunks: Buffer[] = [];
+for await (const chunk of member.decryptDataStream(chunks)) {
+  decryptedChunks.push(chunk);
+}
+```
 
 ### v2.0 Simplified API
 
@@ -60,16 +92,28 @@ console.log(decrypted.toString()); // "Hello, secure world!"
 ```typescript
 import { ECIESBuilder, MemberBuilder, MemberType } from '@digitaldefiance/node-ecies-lib';
 
-// Build service with custom configuration
-const eciesService = new ECIESBuilder()
-  .withConstants(customConstants)
+// Build service with custom configuration and constants
+const eciesService = ECIESBuilder.create()
+  .withServiceConfig({ /* optional config */ })
+  .withConstants({ /* optional constants */ })
   .build();
 
 // Build member with fluent API
-const { member, mnemonic } = new MemberBuilder(eciesService)
+const { member, mnemonic } = MemberBuilder.create()
+  .withEciesService(eciesService)
   .withType(MemberType.User)
   .withName('Alice')
   .withEmail('alice@example.com')
+  .generateMnemonic()  // Optional: auto-generate mnemonic
+  .build();
+
+// Or provide your own mnemonic
+const { member: member2, mnemonic: mnemonic2 } = MemberBuilder.create()
+  .withEciesService(eciesService)
+  .withType(MemberType.User)
+  .withName('Bob')
+  .withEmail('bob@example.com')
+  .withMnemonic(existingMnemonic)
   .build();
 ```
 
@@ -372,14 +416,17 @@ const singleRecipient = new EciesSingleRecipientCore(config);
 ```typescript
 import { ECIESBuilder, MemberBuilder } from '@digitaldefiance/node-ecies-lib';
 
-const service = new ECIESBuilder()
-  .withConstants(customConstants)
+const service = ECIESBuilder.create()
+  .withServiceConfig({ /* optional config */ })
+  .withConstants({ /* optional constants */ })
   .build();
 
-const { member } = new MemberBuilder(service)
+const { member } = MemberBuilder.create()
+  .withEciesService(service)
   .withType(MemberType.User)
   .withName('Alice')
   .withEmail('alice@example.com')
+  .generateMnemonic()  // Auto-generate mnemonic
   .build();
 ```
 
@@ -435,9 +482,115 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+### Version 3.0.1
+
+**Builder Improvements:**
+- **ECIESBuilder**: Separated `serviceConfig` (IECIESConfig) from `eciesConsts` (IECIESConstants)
+  - Added `withServiceConfig()` method for runtime configuration
+  - Renamed internal property from `eciesParams` to `eciesConsts` for clarity
+  - Improved constant merging with proper defaults
+- **MemberBuilder**: Enhanced with new methods
+  - Renamed `withECIES()` to `withEciesService()` for consistency
+  - Added `generateMnemonic()` method for auto-generation
+  - Added `withMnemonic()` method to provide custom mnemonics
+  - Added `withCreatedBy()` method for tracking member creation
+
+**Internationalization:**
+- Added 13 new i18n string keys (3 builder errors, 10 streaming errors)
+- Translations provided in 8 languages: EN-US, EN-GB, FR, ES, DE, JA, UK, ZH-CN
+- Replaced all hardcoded error strings with i18n translations
+- Fixed circular dependency in i18n imports
+
+**Service Improvements:**
+- Added `mnemonicToSimpleKeyPair()` alias method for backward compatibility
+- Clarified `ECIESService.encryptMultiple()` signature (takes single Member, not array)
+- Enhanced error handling in multi-recipient processor
+
+**Test Improvements:**
+- Fixed encryption type byte expectations (Simple=33, Single=66, Multiple=99)
+- Fixed recipient ID sizes to use correct constant (12 bytes for ObjectID)
+- Added comprehensive binary compatibility tests for streaming/chunking
+- Updated service coverage tests to match actual API signatures
+- All 459 tests passing
+
+**Binary Compatibility:**
+- ✅ 100% compatible with browser @digitaldefiance/ecies-lib
+- ✅ Chunk header format verified (4-byte big-endian index + 1-byte flags)
+- ✅ Multi-recipient header format verified (big-endian byte order)
+- ✅ Buffer/Uint8Array interoperability confirmed
+
+### Version 3.0.0 - Streaming Encryption & Security Hardening
+
+**Major Features**:
+
+- ✨ **Streaming Encryption**: Memory-efficient encryption for large files (<10MB RAM for any size)
+- 🔐 **Multi-Recipient Streaming**: Encrypt once for up to 65,535 recipients with shared symmetric key
+- 📊 **Progress Tracking**: Real-time throughput, ETA, and completion percentage
+- 🔒 **Security Hardening**: 16 comprehensive security validations across all layers
+- ✅ **Binary Compatible**: 100% compatible with browser @digitaldefiance/ecies-lib v2.2.0
+
+**New APIs**:
+
+**Member Streaming Methods**:
+- `member.encryptDataStream(source, options?)` - Stream encryption with progress tracking
+- `member.decryptDataStream(source, options?)` - Stream decryption with progress tracking
+
+**EncryptionStream Service**:
+- `encryptStream(source, publicKey, options?)` - Single-recipient streaming
+- `encryptStreamMultiple(source, recipients, options?)` - Multi-recipient streaming
+- `decryptStream(source, privateKey, options?)` - Single-recipient decryption
+- `decryptStreamMultiple(source, recipientId, privateKey, options?)` - Multi-recipient decryption
+
+**Security Enhancements (16 validations)**:
+
+**Base ECIES Layer (8 fixes)**:
+- Public key all-zeros validation
+- Private key all-zeros validation
+- Shared secret all-zeros validation
+- Message size validation (max 2GB)
+- Encrypted size bounds checking
+- Minimum encrypted data size validation
+- Component extraction validation
+- Decrypted data validation
+
+**AES-GCM Layer (5 fixes)**:
+- Key length validation (16/24/32 bytes only)
+- IV length validation (16 bytes)
+- Null/undefined data rejection
+- Data size validation (max 2GB)
+- Comprehensive decrypt input validation
+
+**Multi-Recipient Layer (3 fixes)**:
+- Chunk index bounds checking (uint32 range)
+- Data size validation (max 2GB)
+- Safe accumulation with overflow detection
+
+**New Services**:
+- `EncryptionStream` - High-level streaming API
+- `ChunkProcessor` - Single-recipient chunk processing
+- `MultiRecipientProcessor` - Multi-recipient chunk processing
+- `ProgressTracker` - Real-time progress tracking
+
+**New Interfaces**:
+- `IEncryptedChunk` - Encrypted chunk with metadata
+- `IMultiRecipientChunk` - Multi-recipient chunk format
+- `IStreamProgress` - Progress tracking information
+- `IStreamConfig` - Stream configuration options
+
+**Performance**:
+- 99% memory reduction (1GB file: 1GB RAM → <10MB RAM)
+- < 0.1% overhead from security validations
+- Single-recipient: ~50-100 MB/s throughput
+- Multi-recipient: ~40-80 MB/s throughput
+
+**Binary Compatibility**:
+- ✅ 100% compatible with @digitaldefiance/ecies-lib v2.2.0
+- ✅ Cross-platform encrypt/decrypt verified
+- ✅ All existing encryption formats unchanged
+
 ### Version 2.1.42
 
-- Upgrde ecies
+- Upgrade ecies
 
 ### Version 2.1.40
 

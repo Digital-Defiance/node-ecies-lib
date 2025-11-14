@@ -353,22 +353,16 @@ describe('ECIES Cross-Platform Compatibility', () => {
   });
 
   describe('Edge Cases and Error Handling', () => {
-    it('should handle empty messages', async () => {
+    it('should reject empty messages', async () => {
       const emptyMessage = Buffer.alloc(0);
 
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
-        receiverKeyPair.publicKey,
-        emptyMessage,
-      );
-
-      const decrypted = await frontendService.decryptSimpleOrSingleWithHeader(
-        false,
-        new Uint8Array(receiverKeyPair.privateKey),
-        new Uint8Array(encrypted),
-      );
-
-      expect(Buffer.from(decrypted)).toEqual(emptyMessage);
+      expect(() => {
+        backendService.encryptSimpleOrSingle(
+          false,
+          receiverKeyPair.publicKey,
+          emptyMessage,
+        );
+      }).toThrow();
     });
 
     it('should handle large messages', async () => {

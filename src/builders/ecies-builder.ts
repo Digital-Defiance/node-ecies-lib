@@ -1,20 +1,27 @@
 import { ECIESService } from '../services/ecies';
-import { IECIESConstants } from '@digitaldefiance/ecies-lib';
+import { IECIESConstants, IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { Constants } from '../constants';
 
 export class ECIESBuilder {
-  private eciesParams: IECIESConstants = Constants.ECIES;
+  private serviceConfig: Partial<IECIESConfig> = {};
+  private eciesConsts: Partial<IECIESConstants> = {};
 
   static create(): ECIESBuilder {
     return new ECIESBuilder();
   }
 
-  withConstants(params: IECIESConstants): this {
-    this.eciesParams = params;
+  withServiceConfig(config: Partial<IECIESConfig>): this {
+    this.serviceConfig = { ...this.serviceConfig, ...config };
+    return this;
+  }
+
+  withConstants(constants: Partial<IECIESConstants>): this {
+    this.eciesConsts = { ...this.eciesConsts, ...constants };
     return this;
   }
 
   build(): ECIESService {
-    return new ECIESService(undefined, this.eciesParams);
+    const finalConstants = { ...Constants.ECIES, ...this.eciesConsts };
+    return new ECIESService(this.serviceConfig, finalConstants);
   }
 }

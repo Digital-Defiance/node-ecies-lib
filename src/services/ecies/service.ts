@@ -1,24 +1,18 @@
 import {
+  EciesComponentId,
   EciesEncryptionType,
   EciesEncryptionTypeEnum,
-  ECIESError,
-  ECIESErrorTypeEnum,
+  EciesStringKey,
+  getEciesI18nEngine,
   HexString,
   IECIESConfig,
   IECIESConstants,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import {
-  createEciesTranslationEngine,
-  getEciesPluginI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../../i18n/ecies-i18n-factory';
 import { Member } from '../../member';
 
 // Import all the modular components
-import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
 import { Constants } from '../../constants';
 import { IWalletSeed } from '../../interfaces';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
@@ -107,6 +101,10 @@ export class ECIESService {
 
   public mnemonicToSimpleKeyPairBuffer(mnemonic: SecureString) {
     return this.cryptoCore.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  }
+
+  public mnemonicToSimpleKeyPair(mnemonic: SecureString) {
+    return this.mnemonicToSimpleKeyPairBuffer(mnemonic);
   }
 
   // === Core Encryption/Decryption Methods ===
@@ -226,12 +224,16 @@ export class ECIESService {
   }
 
   // === Multi-Recipient Methods ===
-
-  public encryptMultiple(
-    recipients: Member[],
+  public async encryptMultiple(
+    recipients: Array<Member>,
     message: Buffer,
-  ): IMultiEncryptedMessage {
-    return this.multiRecipient.encryptMultiple(recipients, message);
+    preamble?: Buffer,
+  ): Promise<IMultiEncryptedMessage> {
+    return this.multiRecipient.encryptMultiple(
+      recipients,
+      message,
+      preamble,
+    );
   }
 
   public decryptMultipleECIEForRecipient(
@@ -294,42 +296,23 @@ export class ECIESService {
 
   public encrypt(
     encryptionType: EciesEncryptionType,
-    recipients: Member[],
+    recipient: Member,
     message: Buffer,
     preamble?: Buffer,
   ): Buffer {
-    if (
-      (encryptionType === 'simple' || encryptionType === 'single') &&
-      recipients.length === 1
-    ) {
-      return this.singleRecipient.encrypt(
-        encryptionType === 'simple',
-        recipients[0].publicKey,
-        message,
-        preamble,
-      );
-    } else if (encryptionType === 'multiple' && recipients.length > 1) {
-      const result = this.multiRecipient.encryptMultiple(
-        recipients,
-        message,
-        preamble,
-      );
-      return result.encryptedMessage;
-    } else {
-      const pluginEngine = getEciesPluginI18nEngine();
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidEncryptionType,
-        undefined,
-        undefined,
-        {
-          error: pluginEngine.translate(
-            NodeEciesComponentId,
-            NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients,
-          ),
-          encryptionType: encryptionType,
-          recipients: String(recipients.length),
-        },
+    if (encryptionType === 'multiple') {
+      throw new Error(
+        getEciesI18nEngine().translate(
+          EciesComponentId,
+          EciesStringKey.Error_ECIESError_MultipleEncryptionTypeNotSupportedInSingleRecipientMode,
+        ),
       );
     }
+    return this.singleRecipient.encrypt(
+      encryptionType === 'simple',
+      recipient.publicKey,
+      message,
+      preamble,
+    );
   }
 }

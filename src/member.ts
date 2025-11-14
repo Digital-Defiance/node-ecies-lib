@@ -27,6 +27,9 @@ export class NodeMemberError extends Error {
 }
 
 import { ECIESService } from './services/ecies/service';
+import { EncryptionStream } from './services/encryption-stream';
+import { IEncryptedChunk } from './interfaces/encrypted-chunk';
+import { IStreamProgress } from './interfaces/stream-progress';
 // Removed: import { ServiceProvider } from './services/service.provider';
 import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
@@ -331,6 +334,51 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
       this._privateKey?.dispose();
     } finally {
       this.unloadWalletAndPrivateKey();
+    }
+  }
+
+  public async *encryptDataStream(
+    source: AsyncIterable<Buffer>,
+    options?: {
+      recipientPublicKey?: Buffer;
+      onProgress?: (progress: IStreamProgress) => void;
+      signal?: AbortSignal;
+    },
+  ): AsyncGenerator<IEncryptedChunk, void, unknown> {
+    const targetPublicKey = options?.recipientPublicKey || this._publicKey;
+    const stream = new EncryptionStream(this._eciesService);
+
+    for await (const chunk of stream.encryptStream(source, targetPublicKey, {
+      onProgress: options?.onProgress,
+      signal: options?.signal,
+    })) {
+      yield chunk;
+    }
+  }
+
+  public async *decryptDataStream(
+    source: AsyncIterable<Buffer>,
+    options?: {
+      onProgress?: (progress: IStreamProgress) => void;
+      signal?: AbortSignal;
+    },
+  ): AsyncGenerator<Buffer, void, unknown> {
+    if (!this._privateKey) {
+      throw new NodeMemberError(
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+        ),
+        MemberErrorType.MissingPrivateKey,
+      );
+    }
+
+    const stream = new EncryptionStream(this._eciesService);
+
+    for await (const chunk of stream.decryptStream(source, Buffer.from(this._privateKey.value), {
+      onProgress: options?.onProgress,
+      signal: options?.signal,
+    })) {
+      yield chunk;
     }
   }
 

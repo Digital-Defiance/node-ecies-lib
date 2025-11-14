@@ -31,7 +31,9 @@ describe('MemberBuilder', () => {
   });
 
   it('should build member with required fields', () => {
+    const ecies = new ECIESService();
     const result = MemberBuilder.create()
+      .withEciesService(ecies)
       .withType(MemberType.User)
       .withName('Test User')
       .withEmail('test@example.com')
@@ -45,8 +47,10 @@ describe('MemberBuilder', () => {
   });
 
   it('should build member with EmailString', () => {
+    const ecies = new ECIESService();
     const email = new EmailString('test@example.com');
     const result = MemberBuilder.create()
+      .withEciesService(ecies)
       .withType(MemberType.Admin)
       .withName('Admin User')
       .withEmail(email)
@@ -62,7 +66,7 @@ describe('MemberBuilder', () => {
       .withType(MemberType.System)
       .withName('System User')
       .withEmail('system@example.com')
-      .withECIES(ecies)
+      .withEciesService(ecies)
       .build();
     
     expect(result).toBeDefined();
@@ -70,29 +74,35 @@ describe('MemberBuilder', () => {
   });
 
   it('should throw error when type is missing', () => {
+    const ecies = new ECIESService();
     expect(() => {
       MemberBuilder.create()
+        .withEciesService(ecies)
         .withName('Test')
         .withEmail('test@example.com')
         .build();
-    }).toThrow('Member requires type, name, and email');
+    }).toThrow('Type, name, and email are required');
   });
 
   it('should throw error when name is missing', () => {
+    const ecies = new ECIESService();
     expect(() => {
       MemberBuilder.create()
+        .withEciesService(ecies)
         .withType(MemberType.User)
         .withEmail('test@example.com')
         .build();
-    }).toThrow('Member requires type, name, and email');
+    }).toThrow('Type, name, and email are required');
   });
 
   it('should throw error when email is missing', () => {
+    const ecies = new ECIESService();
     expect(() => {
       MemberBuilder.create()
+        .withEciesService(ecies)
         .withType(MemberType.User)
         .withName('Test')
         .build();
-    }).toThrow('Member requires type, name, and email');
+    }).toThrow('Type, name, and email are required');
   });
 });
