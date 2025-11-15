@@ -374,9 +374,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:3.0.3":
-  version: 3.0.3
-  resolution: "@digitaldefiance/ecies-lib@npm:3.0.3"
+"@digitaldefiance/ecies-lib@npm:3.0.4":
+  version: 3.0.4
+  resolution: "@digitaldefiance/ecies-lib@npm:3.0.4"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:3.6.0"
     "@ethereumjs/wallet": "npm:^10.0.0"
@@ -385,7 +385,7 @@ __metadata:
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/cf0352d7348fb4b7b4e45423fdb76b7fef486479c6682c6f49b87a3e8a293e5786a0a76be5d002921fadd548b9b897a3a32237510f3f17822601d6653d1abfa4
+  checksum: 10c0/14c3c5b9331f3bdac27f2239087998fa91ece396b961d50b316b91a0f33124d58da419dbe51de712f9a7e8a89ff764c19d5c0ea7b88c0080b681a15394f674e8
   languageName: node
   linkType: hard
 
@@ -417,7 +417,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:3.0.3"
+    "@digitaldefiance/ecies-lib": "npm:3.0.4"
     "@digitaldefiance/express-suite-test-utils": "npm:1.0.10"
     "@digitaldefiance/i18n-lib": "npm:3.6.0"
     "@ethereumjs/wallet": "npm:^10.0.0"
