@@ -482,6 +482,10 @@ No performance regression in v2.0:
 
 ## ChangeLog
 
+### Version 3.0.3
+
+- Update ecies
+
 ### Version 3.0.2
 
 - Update test-utils
