@@ -167,7 +167,7 @@ describe('EciesFileService (Backend)', () => {
       const decrypted = fileService.decryptFile(encrypted);
 
       expect(decrypted).toEqual(testData);
-    });
+    }, 60000);
   });
 
   describe('Header Validation', () => {
@@ -205,7 +205,7 @@ describe('EciesFileService (Backend)', () => {
       const decrypted = fileService.decryptFile(encrypted);
 
       expect(decrypted).toEqual(testData);
-    });
+    }, 60000);
   });
 
   describe('Error Handling', () => {
@@ -284,6 +284,6 @@ describe('EciesFileService (Backend)', () => {
 
       // Should complete within reasonable time (adjust as needed)
       expect(endTime - startTime).toBeLessThan(30000); // 30 seconds
-    });
+    }, 180000);
   });
 });

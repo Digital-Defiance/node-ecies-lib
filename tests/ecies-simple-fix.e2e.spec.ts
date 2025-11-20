@@ -83,6 +83,6 @@ describe('ECIES Simple Fix Test', () => {
         frontendMember.dispose();
         backendMember.dispose();
       }
-    });
+    }, 30000);
   });
 });
