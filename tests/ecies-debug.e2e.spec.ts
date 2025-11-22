@@ -61,8 +61,8 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
 
       // Validate header structure
       expect(encrypted[0]).toBeDefined(); // Encryption type byte
-      expect(parsed.header.ephemeralPublicKey.length).toBe(65);
-      expect(parsed.header.iv.length).toBe(16);
+      expect(parsed.header.ephemeralPublicKey.length).toBe(33);
+      expect(parsed.header.iv.length).toBe(12);
       expect(parsed.header.authTag.length).toBe(16);
       expect(parsed.header.dataLength).toBeGreaterThan(0);
       expect(parsed.data.length).toBeGreaterThan(0);
@@ -107,19 +107,27 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
         // Analyze raw data structure when frontend fails
         let offset = 0;
 
+        // Validate version
+        expect(encrypted[offset]).toBe(1);
+        offset += 1;
+
+        // Validate cipher suite
+        expect(encrypted[offset]).toBe(1);
+        offset += 1;
+
         // Validate encryption type
         expect(encrypted[offset]).toBeDefined();
         offset += 1;
 
-        // Validate ephemeral public key (65 bytes)
-        const ephemeralKey = encrypted.subarray(offset, offset + 65);
-        expect(ephemeralKey).toHaveLength(65);
-        offset += 65;
+        // Validate ephemeral public key (33 bytes)
+        const ephemeralKey = encrypted.subarray(offset, offset + 33);
+        expect(ephemeralKey).toHaveLength(33);
+        offset += 33;
 
-        // Validate IV (16 bytes)
-        const iv = encrypted.subarray(offset, offset + 16);
-        expect(iv).toHaveLength(16);
-        offset += 16;
+        // Validate IV (12 bytes)
+        const iv = encrypted.subarray(offset, offset + 12);
+        expect(iv).toHaveLength(12);
+        offset += 12;
 
         // Validate auth tag (16 bytes)
         const authTag = encrypted.subarray(offset, offset + 16);
@@ -209,16 +217,26 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
       // Manual parsing to validate structure
       let offset = 0;
 
+      // Version (1 byte)
+      const version = encrypted[offset];
+      expect(version).toBe(1);
+      offset += 1;
+
+      // CipherSuite (1 byte)
+      const cipherSuite = encrypted[offset];
+      expect(cipherSuite).toBe(1);
+      offset += 1;
+
       // Encryption type (1 byte)
       const encType = encrypted[offset];
       expect(encType).toBeDefined();
       offset += 1;
 
-      // Ephemeral public key (65 bytes)
-      offset += 65;
+      // Ephemeral public key (33 bytes)
+      offset += 33;
 
-      // IV (16 bytes)
-      offset += 16;
+      // IV (12 bytes)
+      offset += 12;
 
       // Auth tag (16 bytes)
       offset += 16;

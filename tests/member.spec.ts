@@ -221,11 +221,11 @@ describe('DigitalDefiance ECIES Member', () => {
       // Get the public key from the member (which uses ECDH internally)
       const memberPublicKey = member.member.publicKey;
 
-      // The public key should be in uncompressed format with 0x04 prefix
-      expect(memberPublicKey[0]).toEqual(ECIES.PUBLIC_KEY_MAGIC);
+      // The public key should be in compressed format with 0x02 or 0x03 prefix
+      expect([0x02, 0x03]).toContain(memberPublicKey[0]);
 
       // Verify the key length is correct for the curve
-      // For secp256k1, public key should be 65 bytes (1 byte prefix + 32 bytes x + 32 bytes y)
+      // For secp256k1, public key should be 33 bytes (1 byte prefix + 32 bytes x)
       expect(memberPublicKey.length).toEqual(ECIES.PUBLIC_KEY_LENGTH);
     });
 

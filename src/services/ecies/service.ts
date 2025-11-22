@@ -184,6 +184,7 @@ export class ECIESService {
     iv: Buffer,
     authTag: Buffer,
     encrypted: Buffer,
+    aad?: Buffer,
   ): { decrypted: Buffer; ciphertextLength?: number } {
     const decrypted = this.singleRecipient.decryptWithComponents(
       privateKey,
@@ -191,6 +192,7 @@ export class ECIESService {
       iv,
       authTag,
       encrypted,
+      aad,
     );
 
     // Return an object with a 'decrypted' property for compatibility with existing code

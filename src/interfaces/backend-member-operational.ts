@@ -13,7 +13,7 @@ import { IStreamProgress } from './stream-progress';
 /**
  * Operational interface for member - defines getters and methods
  */
-export interface IBackendMemberOperational<I extends string | Types.ObjectId> {
+export interface IBackendMemberOperational<I extends string | Types.ObjectId | Buffer | Uint8Array> {
   // Required getters
   get id(): I;
   get type(): MemberType;

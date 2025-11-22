@@ -1,4 +1,4 @@
-import { NodeEciesStringKey } from '../ecies-i18n-factory';
+import { NodeEciesStringKey } from '../node-keys';
 
 export const britishEnglishTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
@@ -75,4 +75,9 @@ export const britishEnglishTranslations: Record<NodeEciesStringKey, string> = {
     [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]: 'Invalid private key: must be 32 bytes',
     [NodeEciesStringKey.Error_Stream_DecryptionCancelled]: 'Decryption cancelled',
     [NodeEciesStringKey.Error_Stream_ChunkSequenceError]: 'Chunk sequence error',
+    [NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate]: 'Node.js configuration validation failed:\n{failures}',
+    [NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate]: "Invariant 'NodeRecipientIdConsistency' failed:\n  {issues}",
+    [NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate]: 'MEMBER_ID_LENGTH ({actual}) !== idProvider.byteLength ({expected})',
+    [NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate]: 'ECIES.MULTIPLE.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
+    [NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate]: 'ENCRYPTION.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
   };

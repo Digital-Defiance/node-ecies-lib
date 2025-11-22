@@ -1,3 +1,4 @@
+import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import {
   ECIES,
   EmailString,
@@ -35,18 +36,19 @@ import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
 import { IBackendMemberOperational } from './interfaces/backend-member-operational';
 import { SignatureBuffer } from './types';
+import { Constants } from './constants';
 
 /**
  * A member of an ECIES interchange
  */
-export class Member implements IBackendMemberOperational<Types.ObjectId> {
+export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer> implements IBackendMemberOperational<TID> {
   private readonly _eciesService: ECIESService;
-  private readonly _id: Types.ObjectId;
+  private readonly _id: TID;
   private readonly _type: MemberType;
   private readonly _name: string;
   private readonly _email: EmailString;
   private readonly _publicKey: Buffer;
-  private readonly _creatorId: Types.ObjectId;
+  private readonly _creatorId: TID;
   private readonly _dateCreated: Date;
   private readonly _dateUpdated: Date;
   private _privateKey?: SecureBuffer;
@@ -62,16 +64,16 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
     publicKey: Buffer,
     privateKey?: SecureBuffer,
     wallet?: Wallet,
-    id?: Types.ObjectId,
+    id?: TID,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: Types.ObjectId,
+    creatorId?: TID,
   ) {
     // Assign injected services
     this._eciesService = eciesService;
     // Assign original parameters
     this._type = type;
-    this._id = id ?? new ObjectId();
+    this._id = id ?? (Buffer.from(Constants.idProvider.generate()) as unknown as TID);
     this._name = name;
     if (!this._name || this._name.length == 0) {
       throw new NodeMemberError(
@@ -108,7 +110,7 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
   }
 
   // Required getters
-  public get id(): Types.ObjectId {
+  public get id(): TID {
     return this._id;
   }
   public get type(): MemberType {
@@ -123,7 +125,7 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
   public get publicKey(): Buffer {
     return this._publicKey;
   }
-  public get creatorId(): Types.ObjectId {
+  public get creatorId(): TID {
     return this._creatorId;
   }
   public get dateCreated(): Date {
@@ -178,11 +180,8 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
     }
     const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
-    const publicKey = wallet.getPublicKey();
-    const publicKeyWithPrefix = Buffer.concat([
-      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
-      publicKey,
-    ]);
+    const publicKey = secp256k1.getPublicKey(privateKey, true);
+    const publicKeyWithPrefix = Buffer.from(publicKey);
 
     if (
       publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
@@ -316,12 +315,12 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
 
   public toJson(): string {
     const storage: IMemberStorageData = {
-      id: this._id.toString(),
+      id: Constants.idProvider.serialize(this._id as unknown as Uint8Array),
       type: this._type,
       name: this._name,
       email: this._email.toString(),
       publicKey: this._publicKey.toString('base64'),
-      creatorId: this._creatorId.toString(),
+      creatorId: Constants.idProvider.serialize(this._creatorId as unknown as Uint8Array),
       dateCreated: this._dateCreated.toISOString(),
       dateUpdated: this._dateUpdated.toISOString(),
     };
@@ -400,10 +399,10 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
       Buffer.from(storage.publicKey, 'base64'),
       undefined,
       undefined,
-      new ObjectId(storage.id),
+      Buffer.from(Constants.idProvider.deserialize(storage.id)),
       dateCreated,
       new Date(storage.dateUpdated),
-      new ObjectId(storage.creatorId),
+      Buffer.from(Constants.idProvider.deserialize(storage.creatorId)),
     );
   }
 
@@ -416,10 +415,8 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
   ): Member {
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
-    const publicKeyWithPrefix = Buffer.concat([
-      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
-      wallet.getPublicKey(),
-    ]);
+    const publicKey = secp256k1.getPublicKey(privateKey, true);
+    const publicKeyWithPrefix = Buffer.from(publicKey);
 
     return new Member(
       eciesService,
@@ -440,7 +437,7 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
     name: string,
     email: EmailString,
     forceMnemonic?: SecureString,
-    createdBy?: Types.ObjectId,
+    createdBy?: Buffer,
   ): { member: Member; mnemonic: SecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {
@@ -481,12 +478,10 @@ export class Member implements IBackendMemberOperational<Types.ObjectId> {
     // Get private key from wallet
     const privateKey = wallet.getPrivateKey();
     // Get public key with 0x04 prefix
-    const publicKeyWithPrefix = Buffer.concat([
-      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
-      wallet.getPublicKey(),
-    ]);
+    const publicKey = secp256k1.getPublicKey(privateKey, true);
+    const publicKeyWithPrefix = Buffer.from(publicKey);
 
-    const newId = new ObjectId();
+    const newId = Buffer.from(Constants.idProvider.generate());
     const dateCreated = new Date();
     return {
       // Pass injected services to constructor

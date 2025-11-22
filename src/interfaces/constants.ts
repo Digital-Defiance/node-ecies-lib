@@ -1,4 +1,3 @@
-import { IPBkdf2Consts } from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
 import { IChecksumConsts } from './checksum-consts';
 import { IEncryptionConsts } from './encryption-consts';
@@ -7,37 +6,48 @@ import { PbkdfProfiles } from './pbkdf-profiles';
 import { IWrappedKeyConsts } from './wrapped-key-consts';
 import { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
 
-export interface IConstants extends IBaseConstants {
+/**
+ * Node.js-specific constants interface.
+ * Extends base ECIES constants with Node-specific additions.
+ * 
+ * Inherited from IBaseConstants:
+ * - idProvider: IIdProvider
+ * - OBJECT_ID_LENGTH: number
+ * - MEMBER_ID_LENGTH: number
+ * - PBKDF2: IPBkdf2Consts (overridden with Node crypto implementation)
+ * - PBKDF2_PROFILES: Pbkdf2Profiles (overridden with Node profiles)
+ * - CHECKSUM: IChecksumConsts (overridden)
+ * - ECIES: IECIESConstants
+ * - And other base constants...
+ */
+export interface IConstants extends Omit<IBaseConstants, 'PBKDF2_PROFILES' | 'CHECKSUM'> {
   /**
-   * The length of a raw object ID (not the hex string representation)
-   */
-  OBJECT_ID_LENGTH: number;
-  /**
-   * PBKDF2 key derivation function constants
-   */
-  PBKDF2: IPBkdf2Consts;
-  /**
-   * Predefined PBKDF2 configuration profiles for different use cases
+   * PBKDF2 configuration profiles (Node.js-specific)
+   * Overrides base profiles with Node crypto implementations
    */
   PBKDF2_PROFILES: PbkdfProfiles;
   /**
-   * Checksum constants used for data integrity
+   * Checksum constants (Node.js-specific)
+   * Overrides base checksum with Node crypto implementations
    */
   CHECKSUM: IChecksumConsts;
   /**
-   * Wrapped Key constants used for the key wrapping service
+   * Wrapped Key constants used for the key wrapping service (Node.js-only)
    */
   WRAPPED_KEY: IWrappedKeyConsts;
   /**
-   * Keyring constants used for key management
+   * Keyring constants used for key management (Node.js-only)
    */
   KEYRING: IKeyringConsts;
   /**
-   * Encryption constants used for encrypted data
+   * Encryption constants used for encrypted data (Node.js-only)
    */
   ENCRYPTION: IEncryptionConsts;
   /**
-   * Algorithm configuration string for keyring operations
+   * Algorithm configuration string for keyring operations (Node.js-only)
    */
   KEYRING_ALGORITHM_CONFIGURATION: CipherGCMTypes;
+  
+  ECIES_VERSION_SIZE: number;
+  ECIES_CIPHER_SUITE_SIZE: number;
 }

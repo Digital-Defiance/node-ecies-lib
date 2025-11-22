@@ -519,8 +519,8 @@ describe('ECIES Cross-Platform Compatibility', () => {
 
       // Both should have the same header structure
       expect(backendEncrypted[0]).toEqual(frontendEncrypted[0]); // Encryption type
-      expect(backendEncrypted.length).toBeGreaterThan(100); // Reasonable size
-      expect(frontendEncrypted.length).toBeGreaterThan(100); // Reasonable size
+      expect(backendEncrypted.length).toBeGreaterThan(90); // Reasonable size (Header ~72 bytes + Message 21 bytes = 93 bytes)
+      expect(frontendEncrypted.length).toBeGreaterThan(90); // Reasonable size
     });
 
     it('should handle different message types', async () => {

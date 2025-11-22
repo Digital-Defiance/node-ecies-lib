@@ -1,4 +1,4 @@
-import { NodeEciesStringKey } from '../ecies-i18n-factory';
+import { NodeEciesStringKey } from '../node-keys';
 
 export const mandarinTranslations: Record<NodeEciesStringKey, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]: '长度编码类型无效',
@@ -46,4 +46,9 @@ export const mandarinTranslations: Record<NodeEciesStringKey, string> = {
   [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]: '无效的私钥：必须为32字节',
   [NodeEciesStringKey.Error_Stream_DecryptionCancelled]: '解密已取消',
   [NodeEciesStringKey.Error_Stream_ChunkSequenceError]: '块序列错误',
+  [NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate]: 'Node.js configuration validation failed:\n{failures}',
+  [NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate]: "Invariant 'NodeRecipientIdConsistency' failed:\n  {issues}",
+  [NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate]: 'MEMBER_ID_LENGTH ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate]: 'ECIES.MULTIPLE.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate]: 'ENCRYPTION.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
 };

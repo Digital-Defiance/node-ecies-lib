@@ -5,4 +5,5 @@ export interface AuthenticatedDecipher {
   update(data: Buffer): Buffer;
   final(): Buffer;
   setAuthTag(tag: Buffer): void;
+  setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
 }

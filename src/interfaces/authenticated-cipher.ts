@@ -6,4 +6,5 @@ export interface AuthenticatedCipher {
   final(): Buffer;
   getAuthTag(): Buffer;
   setAutoPadding(autoPadding: boolean): void;
+  setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
 }

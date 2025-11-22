@@ -24,22 +24,22 @@ describe('EciesCryptoCore', () => {
       expect(() => core.normalizePublicKey(null as any)).toThrow(ECIESError);
     });
 
-    it('should accept 65-byte key with 0x04 prefix', () => {
-      const validKey = Buffer.alloc(65);
-      validKey[0] = 0x04;
+    it('should accept 33-byte key with 0x02/0x03 prefix', () => {
+      const validKey = Buffer.alloc(33);
+      validKey[0] = 0x02;
       const normalized = core.normalizePublicKey(validKey);
       expect(normalized).toEqual(validKey);
     });
 
-    it('should add 0x04 prefix to 64-byte raw key', () => {
-      const rawKey = Buffer.alloc(64);
+    it('should add 0x02 prefix to 32-byte raw key', () => {
+      const rawKey = Buffer.alloc(32);
       const normalized = core.normalizePublicKey(rawKey);
-      expect(normalized.length).toBe(65);
-      expect(normalized[0]).toBe(0x04);
+      expect(normalized.length).toBe(33);
+      expect(normalized[0]).toBe(0x02);
     });
 
     it('should throw on invalid key length', () => {
-      const invalidKey = Buffer.alloc(32);
+      const invalidKey = Buffer.alloc(31);
       expect(() => core.normalizePublicKey(invalidKey)).toThrow(ECIESError);
     });
   });
@@ -65,8 +65,8 @@ describe('EciesCryptoCore', () => {
       const mnemonic = core.generateNewMnemonic();
       const keyPair = core.mnemonicToSimpleKeyPairBuffer(mnemonic);
       expect(keyPair.privateKey.length).toBe(32);
-      expect(keyPair.publicKey.length).toBe(65);
-      expect(keyPair.publicKey[0]).toBe(0x04);
+      expect(keyPair.publicKey.length).toBe(33);
+      expect([0x02, 0x03]).toContain(keyPair.publicKey[0]);
     });
   });
 
@@ -79,15 +79,15 @@ describe('EciesCryptoCore', () => {
     it('should derive public key from private key', () => {
       const privateKey = core.generatePrivateKey();
       const publicKey = core.getPublicKey(privateKey);
-      expect(publicKey.length).toBe(65);
-      expect(publicKey[0]).toBe(0x04);
+      expect(publicKey.length).toBe(33);
+      expect([0x02, 0x03]).toContain(publicKey[0]);
     });
 
     it('should generate ephemeral key pair', async () => {
       const { privateKey, publicKey } = await core.generateEphemeralKeyPair();
       expect(privateKey.length).toBe(32);
-      expect(publicKey.length).toBe(65);
-      expect(publicKey[0]).toBe(0x04);
+      expect(publicKey.length).toBe(33);
+      expect([0x02, 0x03]).toContain(publicKey[0]);
     });
   });
 
@@ -122,7 +122,7 @@ describe('EciesCryptoCore', () => {
       const keyPair = core.walletToSimpleKeyPairBuffer(wallet);
       
       expect(keyPair.privateKey).toEqual(Buffer.from(wallet.getPrivateKey()));
-      expect(keyPair.publicKey[0]).toBe(0x04);
+      expect([0x02, 0x03]).toContain(keyPair.publicKey[0]);
     });
 
     it('should create key pair from seed', () => {
@@ -131,7 +131,7 @@ describe('EciesCryptoCore', () => {
       const keyPair = core.seedToSimpleKeyPairBuffer(Buffer.from(seed.value));
       
       expect(keyPair.privateKey.length).toBe(32);
-      expect(keyPair.publicKey.length).toBe(65);
+      expect(keyPair.publicKey.length).toBe(33);
     });
   });
 });

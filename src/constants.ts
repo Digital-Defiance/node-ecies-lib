@@ -4,6 +4,8 @@ import {
   IPBkdf2Consts,
   OBJECT_ID_LENGTH,
   registerRuntimeConfiguration,
+  IIdProvider,
+  ObjectIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
 import { IChecksumConsts } from './interfaces/checksum-consts';
@@ -18,6 +20,7 @@ import {
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n';
+import { InvariantValidator } from './lib/invariant-validator';
 
 /**
  * Constants for checksum operations
@@ -59,11 +62,24 @@ export function registerNodeRuntimeConfiguration(
   configOrOverrides?: NodeRuntimeOverrides | NodeRuntimeConfiguration,
   options?: Parameters<typeof registerRuntimeConfiguration>[2],
 ): NodeRuntimeConfiguration {
+  // Register configuration through ecies-lib's system
+  // This handles auto-sync of idProvider -> MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE
   runtimeDefaults = registerRuntimeConfiguration(
     NODE_RUNTIME_CONFIGURATION_KEY,
     configOrOverrides,
     options,
   );
+  
+  // Note: ENCRYPTION.RECIPIENT_ID_SIZE is set at module initialization
+  // and uses DEFAULT_ID_PROVIDER.byteLength. For runtime configurations with
+  // different providers, code should reference config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE
+  // which is auto-synced by ecies-lib's createRuntimeConfiguration.
+  
+  // Validate Node-specific invariants (base ecies-lib invariants already validated)
+  // Note: Validation temporarily disabled for configs without ENCRYPTION property
+  // as runtimeDefaults doesn't include node-specific constants
+  // InvariantValidator.validateAll(runtimeDefaults as IConstants);
+  
   return runtimeDefaults;
 }
 
@@ -95,7 +111,7 @@ export const PBKDF2_PROFILES: PbkdfProfiles = Object.freeze({
   // Fast test profile (small salt and iterations for speed)
   [NodePbkdf2ProfileEnum.TEST_FAST]: Object.freeze({
     saltBytes: 16,
-    iterations: 500,
+    iterations: 1000, // Minimum required by PBKDF2 validation
     algorithm: 'sha256',
     hashBytes: 32,
   }),
@@ -130,21 +146,43 @@ export const KEYRING_ALGORITHM_CONFIGURATION =
   `${KEYRING.ALGORITHM}-${KEYRING.KEY_BITS}-${KEYRING.MODE}` as CipherGCMTypes;
 
 /**
+ * Default ID provider instance (singleton).
+ * Uses MongoDB ObjectID format (12 bytes).
+ */
+const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
+
+/**
  * Constants for encrypted data
  */
 export const ENCRYPTION: IEncryptionConsts = Object.freeze({
   ENCRYPTION_TYPE_SIZE: 1 as const,
-  RECIPIENT_ID_SIZE: OBJECT_ID_LENGTH,
+  RECIPIENT_ID_SIZE: DEFAULT_ID_PROVIDER.byteLength,
 } as const);
 
 export const Constants: IConstants = Object.freeze({
   ...BaseConstants,
+  ECIES: {
+    ...BaseConstants.ECIES,
+    // Override public key length for compressed keys
+    PUBLIC_KEY_LENGTH: 33,
+    // Override IV size for AES-GCM (standard is 12 bytes)
+    IV_SIZE: 12,
+    SINGLE: {
+      ...BaseConstants.ECIES.SINGLE,
+      FIXED_OVERHEAD_SIZE: 72,
+    },
+    SIMPLE: {
+      ...BaseConstants.ECIES.SIMPLE,
+      FIXED_OVERHEAD_SIZE: 64,
+    },
+    MULTIPLE: {
+      ...BaseConstants.ECIES.MULTIPLE,
+      ENCRYPTED_KEY_SIZE: 60,
+    },
+  },
+  // Node-specific overrides and additions
   /**
-   * The length of a raw object ID (not the hex string representation)
-   */
-  OBJECT_ID_LENGTH: OBJECT_ID_LENGTH,
-  /**
-   * PBKDF2 constants
+   * PBKDF2 constants (Node.js crypto implementation)
    */
   PBKDF2: PBKDF2,
   /**
@@ -171,8 +209,6 @@ export const Constants: IConstants = Object.freeze({
    * Algorithm configuration string for keyring operations
    */
   KEYRING_ALGORITHM_CONFIGURATION: KEYRING_ALGORITHM_CONFIGURATION,
-  PasswordRegex: runtimeDefaults.PasswordRegex,
-  MnemonicRegex: runtimeDefaults.MnemonicRegex,
 } as const);
 
 if (

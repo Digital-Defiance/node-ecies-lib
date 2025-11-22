@@ -32,9 +32,11 @@ describe('Cross-Platform Compatibility', () => {
       const message = Buffer.from('Test');
       const encrypted = nodeEcies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
       
-      // Verify structure: type(1) + pubkey(65) + iv(16) + tag(16) + length(8) + data
-      expect(encrypted.length).toBeGreaterThan(1 + 65 + 16 + 16 + 8);
-      expect(encrypted[0]).toBe(66); // Single encryption type (ASCII 'B')
+      // Verify structure: version(1) + suite(1) + type(1) + pubkey(33) + iv(12) + tag(16) + length(8) + data
+      expect(encrypted.length).toBeGreaterThan(1 + 1 + 1 + 33 + 12 + 16 + 8);
+      expect(encrypted[0]).toBe(1); // Version 1
+      expect(encrypted[1]).toBe(1); // CipherSuite 1
+      expect(encrypted[2]).toBe(66); // Single encryption type (66)
     });
   });
 
@@ -166,12 +168,12 @@ describe('Cross-Platform Compatibility', () => {
   });
 
   describe('key format compatibility', () => {
-    it('should handle 65-byte uncompressed public keys', () => {
+    it('should handle 33-byte compressed public keys', () => {
       const mnemonic = nodeEcies.generateNewMnemonic();
       const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
       
-      expect(keyPair.publicKey.length).toBe(65);
-      expect(keyPair.publicKey[0]).toBe(0x04); // Uncompressed prefix
+      expect(keyPair.publicKey.length).toBe(33);
+      expect([0x02, 0x03]).toContain(keyPair.publicKey[0]); // Compressed prefix
     });
 
     it('should handle 32-byte private keys', () => {
@@ -225,10 +227,14 @@ describe('Cross-Platform Compatibility', () => {
       const header = processor.buildHeader(encrypted);
       
       // Verify big-endian byte order
-      const dataLength = header.readBigUInt64BE(0);
-      expect(Number(dataLength)).toBe(message.length);
+      // Offset: Version(1) + Suite(1) + Type(1) + PubKey(33) = 36
+      const combinedLength = header.readBigUInt64BE(36);
+      // Mask out the recipient ID size (top 8 bits)
+      const dataLength = Number(combinedLength & 0x00FFFFFFFFFFFFFFn);
+      expect(dataLength).toBe(message.length);
       
-      const recipientCount = header.readUInt16BE(8);
+      // Offset: DataLength(8) + 36 = 44
+      const recipientCount = header.readUInt16BE(44);
       expect(recipientCount).toBe(1);
     });
   });

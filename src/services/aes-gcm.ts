@@ -47,6 +47,7 @@ export class AESGCMService {
     data: Buffer,
     key: Buffer,
     authTag: boolean = false,
+    aad?: Buffer,
   ): { encrypted: Buffer; iv: Buffer; tag?: Buffer } {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
@@ -84,6 +85,10 @@ export class AESGCMService {
 
     const iv = randomBytes(this.ivSize);
     const cipher = createCipheriv(this.keyringAlgorithmConfiguration, key, iv);
+
+    if (aad) {
+      cipher.setAAD(aad);
+    }
 
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
     const tag = cipher.getAuthTag();
@@ -188,6 +193,7 @@ export class AESGCMService {
     encryptedData: Buffer,
     key: Buffer,
     authTag: boolean = false,
+    aad?: Buffer,
   ): Buffer {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
@@ -238,6 +244,10 @@ export class AESGCMService {
       key,
       iv,
     );
+
+    if (aad) {
+      decipher.setAAD(aad);
+    }
 
     const tagLength = 16;
     const tag = encryptedData.subarray(-tagLength);

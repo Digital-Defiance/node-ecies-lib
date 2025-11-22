@@ -374,18 +374,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:3.0.8":
-  version: 3.0.8
-  resolution: "@digitaldefiance/ecies-lib@npm:3.0.8"
+"@digitaldefiance/ecies-lib@npm:4.1.0":
+  version: 4.1.0
+  resolution: "@digitaldefiance/ecies-lib@npm:4.1.0"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:3.6.4"
+    "@digitaldefiance/i18n-lib": "npm:3.7.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/ab11d6833e371549bcdc696b786371b3cd8fb87dcd5d704d91f6bc08ca8f870ed84d1ed9489af10515ac6f57acef7086f492c8d4aea49eca32ab746b32d2f4e1
+  checksum: 10c0/edbae3889ad73256b953ddfd98e9c61cfce064ea4328cad3b03eab3282bddff07b1048e7849560567179e7ecb0ea9a87abd15b52169bc9244b7d0ad6cc49eaf7
   languageName: node
   linkType: hard
 
@@ -403,14 +403,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:3.6.4":
-  version: 3.6.4
-  resolution: "@digitaldefiance/i18n-lib@npm:3.6.4"
+"@digitaldefiance/i18n-lib@npm:3.7.2":
+  version: 3.7.2
+  resolution: "@digitaldefiance/i18n-lib@npm:3.7.2"
   dependencies:
     currency-codes: "npm:^2.2.0"
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/8176aa4489373d35d4326af16c618164a7e1f31b6d7502365cb2e7982f85bc2b4d5501e75dc563bc4fb316fe348ca6243491f46685da970482809277dd64f144
+  checksum: 10c0/446b2cbd86ff3a365e67c97f03d445221ca9f2c3412f228746d63bd144f995deed59d55d68879a25e2f084e8fbf211c0dbfe38cdc406ed7f343cbc52033ff60d
   languageName: node
   linkType: hard
 
@@ -418,9 +418,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:3.0.8"
+    "@digitaldefiance/ecies-lib": "npm:4.1.0"
     "@digitaldefiance/express-suite-test-utils": "npm:1.0.10"
-    "@digitaldefiance/i18n-lib": "npm:3.6.4"
+    "@digitaldefiance/i18n-lib": "npm:3.7.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"

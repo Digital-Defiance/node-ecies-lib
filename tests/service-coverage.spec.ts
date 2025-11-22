@@ -1,4 +1,12 @@
-import { ECIESError, ECIESErrorTypeEnum, EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+import { 
+  ECIESError, 
+  ECIESErrorTypeEnum, 
+  EmailString, 
+  MemberType,
+  EciesVersionEnum,
+  EciesCipherSuiteEnum,
+  EciesEncryptionTypeEnum
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../src/services/ecies/service';
 import { Member } from '../src/member';
 
@@ -49,12 +57,30 @@ describe('ECIESService - Coverage Tests', () => {
       const encrypted = service.encryptSimpleOrSingle(false, member1.publicKey, message);
       
       const header = service.parseSingleEncryptedHeader(undefined, encrypted);
+      
+      // Construct AAD
+      const versionBuffer = Buffer.alloc(1);
+      versionBuffer.writeUint8(EciesVersionEnum.V1);
+      const cipherSuiteBuffer = Buffer.alloc(1);
+      cipherSuiteBuffer.writeUint8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+      const encryptionTypeBuffer = Buffer.alloc(1);
+      encryptionTypeBuffer.writeUint8(header.encryptionType);
+      
+      const aad = Buffer.concat([
+        header.preamble ?? Buffer.alloc(0),
+        versionBuffer,
+        cipherSuiteBuffer,
+        encryptionTypeBuffer,
+        header.ephemeralPublicKey
+      ]);
+
       const result = service.decryptSingleWithComponents(
         Buffer.from(member1.privateKey.value),
         header.ephemeralPublicKey,
         header.iv,
         header.authTag,
-        encrypted.subarray(header.headerSize)
+        encrypted.subarray(header.headerSize),
+        aad
       );
       
       expect(result.decrypted).toBeDefined();

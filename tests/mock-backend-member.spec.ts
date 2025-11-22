@@ -1,5 +1,5 @@
 import { EmailString, MemberType, SecureBuffer, SecureString } from '@digitaldefiance/ecies-lib';
-import { ObjectId } from 'mongodb';
+import { randomBytes } from 'crypto';
 import { MockBackendMember } from '../src/test-mocks/mock-backend-member';
 
 describe('MockBackendMember', () => {
@@ -7,23 +7,23 @@ describe('MockBackendMember', () => {
     it('should create with default values', () => {
       const member = new MockBackendMember();
       expect(member.id).toBeDefined();
-      expect(member.id.constructor.name).toBe('ObjectId');
+      expect(member.id.constructor.name).toBe('Buffer');
       expect(Object.values(MemberType)).toContain(member.type);
       expect(member.name).toBeTruthy();
       expect(member.email).toBeInstanceOf(EmailString);
       expect(member.publicKey).toBeInstanceOf(Buffer);
       expect(member.creatorId).toBeDefined();
-      expect(member.creatorId.constructor.name).toBe('ObjectId');
+      expect(member.creatorId.constructor.name).toBe('Buffer');
       expect(member.dateCreated).toBeInstanceOf(Date);
       expect(member.dateUpdated).toBeInstanceOf(Date);
       expect(typeof member.hasPrivateKey).toBe('boolean');
     });
 
     it('should create with custom values', () => {
-      const id = new ObjectId();
+      const id = randomBytes(12);
       const email = new EmailString('test@example.com');
       const publicKey = Buffer.from('abcd', 'hex');
-      const creatorId = new ObjectId();
+      const creatorId = randomBytes(12);
       const dateCreated = new Date('2024-01-01');
       const dateUpdated = new Date('2024-01-02');
 

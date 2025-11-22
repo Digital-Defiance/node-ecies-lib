@@ -32,7 +32,7 @@ export class EncryptionStream {
     private readonly config: IStreamConfig = DEFAULT_STREAM_CONFIG,
   ) {
     this.processor = new ChunkProcessor(ecies);
-    this.multiRecipientProcessor = new MultiRecipientProcessor(ecies.core);
+    this.multiRecipientProcessor = new MultiRecipientProcessor(ecies.core, ecies.core.consts);
   }
 
   public async *encryptStream(
@@ -136,7 +136,7 @@ export class EncryptionStream {
       if (!recipient.publicKey || (recipient.publicKey.length !== 65 && recipient.publicKey.length !== 33)) {
         throw new Error(this.engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength));
       }
-      if (!recipient.id || recipient.id.length !== Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE) {
+      if (!recipient.id || recipient.id.length !== this.ecies.core.consts.MULTIPLE.RECIPIENT_ID_SIZE) {
         throw new Error(this.engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength));
       }
     }
@@ -264,7 +264,7 @@ export class EncryptionStream {
     privateKey: Buffer,
     options: IDecryptStreamOptions = {},
   ): AsyncGenerator<Buffer, void, unknown> {
-    if (!recipientId || recipientId.length !== Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE) {
+    if (!recipientId || recipientId.length !== this.ecies.core.consts.MULTIPLE.RECIPIENT_ID_SIZE) {
       throw new Error(this.engine.translate(NodeEciesComponentId, NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength));
     }
     if (!privateKey || privateKey.length !== 32) {

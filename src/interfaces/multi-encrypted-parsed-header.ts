@@ -12,7 +12,7 @@ export interface IMultiEncryptedParsedHeader {
   /**
    * The IDs of the recipients
    */
-  readonly recipientIds: Types.ObjectId[];
+  readonly recipientIds: Buffer[];
   /**
    * An encrypted version of the symmetric key for each recipient
    */
@@ -21,4 +21,8 @@ export interface IMultiEncryptedParsedHeader {
    * The size of the header, up to the encrypted message start (excludes encrypted message IV+auth tag)
    */
   readonly headerSize: number;
+  /**
+   * The ephemeral public key used for encryption
+   */
+  readonly ephemeralPublicKey?: Buffer;
 }

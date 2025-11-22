@@ -2,7 +2,6 @@ import { Member } from '../member';
 import { MemberType, EmailString, SecureString } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../services/ecies';
 import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
-import { ObjectId } from 'bson';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
 import { NodeEciesComponentId, NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 
@@ -12,7 +11,7 @@ export class MemberBuilder {
   private name?: string;
   private email?: EmailString;
   private mnemonic?: SecureString;
-  private createdBy?: ObjectId;
+  private createdBy?: Buffer;
 
   static create(): MemberBuilder {
     return new MemberBuilder();
@@ -43,7 +42,7 @@ export class MemberBuilder {
     return this;
   }
 
-  withCreatedBy(creatorId: ObjectId): this {
+  withCreatedBy(creatorId: Buffer): this {
     this.createdBy = creatorId;
     return this;
   }

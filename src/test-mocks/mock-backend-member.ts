@@ -6,9 +6,8 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
+import { randomBytes } from 'crypto';
 
-import { ObjectId } from 'mongodb';
-import { Types } from 'mongoose';
 import { IBackendMemberOperational } from '../interfaces';
 import { SignatureBuffer } from '../types';
 
@@ -21,14 +20,14 @@ const createMockWallet = (): Wallet =>
   } as any);
 
 export class MockBackendMember
-  implements IBackendMemberOperational<Types.ObjectId>
+  implements IBackendMemberOperational<Buffer>
 {
-  private _id: Types.ObjectId;
+  private _id: Buffer;
   private _type: MemberType;
   private _name: string;
   private _email: EmailString;
   private _publicKey: Buffer;
-  private _creatorId: Types.ObjectId;
+  private _creatorId: Buffer;
   private _dateCreated: Date;
   private _dateUpdated: Date;
   private _privateKey?: SecureBuffer;
@@ -37,20 +36,20 @@ export class MockBackendMember
 
   constructor(
     data: Partial<{
-      id: Types.ObjectId;
+      id: Buffer;
       type: MemberType;
       name: string;
       email: EmailString;
       publicKey: Buffer;
       privateKey: SecureBuffer;
       wallet: Wallet;
-      creatorId: Types.ObjectId;
+      creatorId: Buffer;
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
     }> = {},
   ) {
-    this._id = data.id || new ObjectId();
+    this._id = data.id || randomBytes(12);
     this._type = data.type || faker.helpers.enumValue(MemberType);
     this._name = data.name || faker.person.fullName();
     this._email = data.email || new EmailString(faker.internet.email());
@@ -69,7 +68,7 @@ export class MockBackendMember
     this._hasPrivateKey = data.hasPrivateKey ?? !!this._privateKey;
   }
 
-  get id(): Types.ObjectId {
+  get id(): Buffer {
     return this._id;
   }
   get type(): MemberType {
@@ -84,7 +83,7 @@ export class MockBackendMember
   get publicKey(): Uint8Array {
     return this._publicKey;
   }
-  get creatorId(): Types.ObjectId {
+  get creatorId(): Buffer {
     return this._creatorId;
   }
   get dateCreated(): Date {
@@ -142,12 +141,12 @@ export class MockBackendMember
 
   toJson(): string {
     return JSON.stringify({
-      id: this._id.toString(),
+      id: this._id.toString('hex'),
       type: this._type,
       name: this._name,
       email: this._email.toString(),
       publicKey: this._publicKey.toString('base64'),
-      creatorId: this._creatorId.toString(),
+      creatorId: this._creatorId.toString('hex'),
       dateCreated: this._dateCreated.toISOString(),
       dateUpdated: this._dateUpdated.toISOString(),
     });
@@ -157,14 +156,14 @@ export class MockBackendMember
 
   static create(
     overrides: Partial<{
-      id: Types.ObjectId;
+      id: Buffer;
       type: MemberType;
       name: string;
       email: EmailString;
       publicKey: Buffer;
       privateKey: SecureBuffer;
       wallet: Wallet;
-      creatorId: Types.ObjectId;
+      creatorId: Buffer;
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;

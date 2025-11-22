@@ -1,8 +1,10 @@
-import { ECIESError, ECIESErrorTypeEnum, EciesEncryptionTypeEnum, IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { ECIESError, ECIESErrorTypeEnum, EciesEncryptionTypeEnum, IECIESConfig, EciesVersionEnum, EciesCipherSuiteEnum } from '@digitaldefiance/ecies-lib';
 import { EciesSingleRecipientCore } from '../src/services/ecies/single-recipient';
+import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { getNodeRuntimeConfiguration } from '../src/constants';
 import { randomBytes } from 'crypto';
 import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
+import { getEciesPluginI18nEngine } from '../src/i18n/ecies-i18n-factory';
 
 describe('EciesSingleRecipientCore - Coverage Tests', () => {
   let singleRecipient: EciesSingleRecipientCore;
@@ -10,7 +12,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
   let privateKey: Buffer;
   let publicKey: Buffer;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    getEciesPluginI18nEngine();
     const eciesDefaults = getNodeRuntimeConfiguration().ECIES;
     config = {
       curveName: eciesDefaults.CURVE_NAME,
@@ -22,12 +25,11 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     };
     singleRecipient = new EciesSingleRecipientCore(config);
     
-    // Generate test keys
-    const { createECDH } = require('crypto');
-    const ecdh = createECDH(config.curveName);
-    ecdh.generateKeys();
-    privateKey = ecdh.getPrivateKey();
-    publicKey = ecdh.getPublicKey();
+    // Generate test keys using cryptoCore to ensure compatibility
+    const cryptoCore = new EciesCryptoCore(config);
+    const keyPair = await cryptoCore.generateEphemeralKeyPair();
+    privateKey = keyPair.privateKey;
+    publicKey = keyPair.publicKey;
   });
 
   describe('getHeaderSize', () => {
@@ -92,14 +94,18 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for multiple encryption type', () => {
       const data = Buffer.alloc(200);
-      data.writeUInt8(EciesEncryptionTypeEnum.Multiple, 0);
+      data.writeUInt8(EciesVersionEnum.V1, 0);
+      data.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256, 1);
+      data.writeUInt8(EciesEncryptionTypeEnum.Multiple, 2);
       
       expect(() => singleRecipient.parseEncryptedMessage(undefined, data, 0)).toThrow(ECIESError);
     });
 
     it('should throw error for too short data', () => {
       const tooShort = Buffer.alloc(10);
-      tooShort.writeUInt8(EciesEncryptionTypeEnum.Single, 0);
+      tooShort.writeUInt8(EciesVersionEnum.V1, 0);
+      tooShort.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256, 1);
+      tooShort.writeUInt8(EciesEncryptionTypeEnum.Single, 2);
       
       expect(() => singleRecipient.parseEncryptedMessage(undefined, tooShort, 0)).toThrow(ECIESError);
       expect(() => singleRecipient.parseEncryptedMessage(undefined, tooShort, 0)).toThrow(
@@ -121,10 +127,12 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for invalid ephemeral public key length', () => {
       const data = Buffer.alloc(200);
-      data.writeUInt8(EciesEncryptionTypeEnum.Single, 0);
+      data.writeUInt8(EciesVersionEnum.V1, 0);
+      data.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256, 1);
+      data.writeUInt8(EciesEncryptionTypeEnum.Single, 2);
       // Write invalid key (wrong length)
       const invalidKey = Buffer.alloc(32);
-      invalidKey.copy(data, 1);
+      invalidKey.copy(data, 3);
       
       expect(() => singleRecipient.parseEncryptedMessage(undefined, data, 0)).toThrow(ECIESError);
     });
@@ -132,11 +140,14 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for invalid IV length', () => {
       const message = Buffer.from('test');
       const encrypted = singleRecipient.encrypt(false, publicKey, message);
-      // Corrupt IV section
+      // Corrupt AuthTag section (IV is 12 bytes, AuthTag is 16 bytes)
+      // Offset: Preamble(0) + Ver(1) + Suite(1) + Type(1) + PubKey(33) = 36
+      // IV: 36 -> 48
+      // AuthTag: 48 -> 64
       const corrupted = Buffer.from(encrypted);
-      corrupted.fill(0, 66, 70); // Corrupt part of IV
+      corrupted.fill(0, 48, 52); // Corrupt part of AuthTag
       
-      // This will fail during decryption, not parsing
+      // This will fail during decryption due to auth tag mismatch
       expect(() => singleRecipient.decryptWithHeader(
         EciesEncryptionTypeEnum.Single,
         privateKey,
@@ -228,12 +239,29 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         
         const invalidAuthTag = Buffer.alloc(8); // Wrong length
         
+        // Construct AAD
+        const versionBuffer = Buffer.alloc(1);
+        versionBuffer.writeUInt8(EciesVersionEnum.V1);
+        const cipherSuiteBuffer = Buffer.alloc(1);
+        cipherSuiteBuffer.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+        const encryptionTypeBuffer = Buffer.alloc(1);
+        encryptionTypeBuffer.writeUInt8(header.encryptionType);
+        
+        const aad = Buffer.concat([
+          header.preamble ?? Buffer.alloc(0),
+          versionBuffer,
+          cipherSuiteBuffer,
+          encryptionTypeBuffer,
+          header.ephemeralPublicKey
+        ]);
+
         expect(() => singleRecipient.decryptWithComponents(
           privateKey,
           header.ephemeralPublicKey,
           header.iv,
           invalidAuthTag,
-          data
+          data,
+          aad
         )).toThrow(ECIESError);
       });
     });
@@ -249,12 +277,29 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         
         const invalidIV = Buffer.alloc(8); // Wrong length
         
+        // Construct AAD
+        const versionBuffer = Buffer.alloc(1);
+        versionBuffer.writeUInt8(EciesVersionEnum.V1);
+        const cipherSuiteBuffer = Buffer.alloc(1);
+        cipherSuiteBuffer.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+        const encryptionTypeBuffer = Buffer.alloc(1);
+        encryptionTypeBuffer.writeUInt8(header.encryptionType);
+        
+        const aad = Buffer.concat([
+          header.preamble ?? Buffer.alloc(0),
+          versionBuffer,
+          cipherSuiteBuffer,
+          encryptionTypeBuffer,
+          header.ephemeralPublicKey
+        ]);
+
         expect(() => singleRecipient.decryptWithComponents(
           privateKey,
           header.ephemeralPublicKey,
           invalidIV,
           header.authTag,
-          data
+          data,
+          aad
         )).toThrow(ECIESError);
       });
     });
@@ -270,12 +315,29 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         
         const emptyData = Buffer.alloc(0);
         
+        // Construct AAD
+        const versionBuffer = Buffer.alloc(1);
+        versionBuffer.writeUInt8(EciesVersionEnum.V1);
+        const cipherSuiteBuffer = Buffer.alloc(1);
+        cipherSuiteBuffer.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+        const encryptionTypeBuffer = Buffer.alloc(1);
+        encryptionTypeBuffer.writeUInt8(header.encryptionType);
+        
+        const aad = Buffer.concat([
+          header.preamble ?? Buffer.alloc(0),
+          versionBuffer,
+          cipherSuiteBuffer,
+          encryptionTypeBuffer,
+          header.ephemeralPublicKey
+        ]);
+
         expect(() => singleRecipient.decryptWithComponents(
           privateKey,
           header.ephemeralPublicKey,
           header.iv,
           header.authTag,
-          emptyData
+          emptyData,
+          aad
         )).toThrow(ECIESError);
       });
     });
@@ -291,12 +353,29 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         
         const wrongKey = randomBytes(32);
         
+        // Construct AAD
+        const versionBuffer = Buffer.alloc(1);
+        versionBuffer.writeUInt8(EciesVersionEnum.V1);
+        const cipherSuiteBuffer = Buffer.alloc(1);
+        cipherSuiteBuffer.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+        const encryptionTypeBuffer = Buffer.alloc(1);
+        encryptionTypeBuffer.writeUInt8(header.encryptionType);
+        
+        const aad = Buffer.concat([
+          header.preamble ?? Buffer.alloc(0),
+          versionBuffer,
+          cipherSuiteBuffer,
+          encryptionTypeBuffer,
+          header.ephemeralPublicKey
+        ]);
+
         expect(() => singleRecipient.decryptWithComponents(
           wrongKey,
           header.ephemeralPublicKey,
           header.iv,
           header.authTag,
-          data
+          data,
+          aad
         )).toThrow(ECIESError);
       });
     });

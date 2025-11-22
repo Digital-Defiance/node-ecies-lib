@@ -9,6 +9,7 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
+import { createHash, hkdfSync } from 'crypto';
 import {
   createEciesTranslationEngine,
   getEciesPluginI18nEngine,
@@ -64,17 +65,42 @@ export class EciesCryptoCore {
     }
 
     const keyLength = publicKey.length;
+    // console.log('[normalizePublicKey] Magic:', this._consts.PUBLIC_KEY_MAGIC);
 
-    // Already in correct format (65 bytes with 0x04 prefix)
+    // Check for compressed key (33 bytes, starts with 0x02 or 0x03)
     if (
-      keyLength === this._consts.PUBLIC_KEY_LENGTH &&
-      publicKey[0] === this._consts.PUBLIC_KEY_MAGIC
+      keyLength === 33 &&
+      (publicKey[0] === 0x02 || publicKey[0] === 0x03)
+    ) {
+      return publicKey;
+    }
+
+    // Check for uncompressed key (65 bytes, starts with 0x04)
+    if (
+      keyLength === 65 &&
+      publicKey[0] === 0x04
     ) {
       return publicKey;
     }
 
     // Raw key without prefix (64 bytes) - add the 0x04 prefix
+    if (keyLength === 64) {
+      return Buffer.concat([
+        Buffer.from([0x04]),
+        publicKey,
+      ]);
+    }
+
+    // Raw key without prefix (32 bytes) - add the 0x02 prefix (assuming even Y)
+    // Note: This is ambiguous for compressed keys as we don't know Y parity.
+    // But if we assume it's a raw X coordinate, we might default to 0x02?
+    // Actually, RAW_PUBLIC_KEY_LENGTH is 32.
     if (keyLength === this._consts.RAW_PUBLIC_KEY_LENGTH) {
+       // If we only have X, we can't fully reconstruct without knowing Y parity.
+       // But maybe the intention of RAW_PUBLIC_KEY_LENGTH was for uncompressed without prefix (64 bytes)?
+       // The constants say RAW_PUBLIC_KEY_LENGTH = 32.
+       // So it expects X coordinate only.
+       // We can try to prepend 0x02.
       return Buffer.concat([
         Buffer.from([this._consts.PUBLIC_KEY_MAGIC]),
         publicKey,
@@ -150,9 +176,7 @@ export class EciesCryptoCore {
    */
   public walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
     const privateKey = Buffer.from(wallet.getPrivateKey());
-    const buf04 = new Uint8Array(1);
-    buf04[0] = this._consts.PUBLIC_KEY_MAGIC;
-    const publicKey = Buffer.concat([buf04, wallet.getPublicKey()]);
+    const publicKey = this.getPublicKey(privateKey);
 
     return {
       privateKey,
@@ -203,7 +227,7 @@ export class EciesCryptoCore {
         createEciesTranslationEngine(),
       );
     }
-    const publicKey = secp256k1.getPublicKey(privateKey, false);
+    const publicKey = secp256k1.getPublicKey(privateKey, true);
     return Buffer.from(publicKey);
   }
 
@@ -249,5 +273,47 @@ export class EciesCryptoCore {
     }
     
     return secret;
+  }
+
+  /**
+   * Derive a symmetric key from a shared secret using HKDF
+   * @param sharedSecret The shared secret (ECDH output)
+   * @param salt Optional salt
+   * @param info Optional context info
+   * @param length Length of the output key (default 32 for AES-256)
+   */
+  public deriveSharedKey(
+    sharedSecret: Buffer,
+    salt: Buffer = Buffer.alloc(0),
+    info: Buffer = Buffer.alloc(0),
+    length: number = 32
+  ): Buffer {
+    return Buffer.from(hkdfSync('sha256', sharedSecret, salt, info, length));
+  }
+
+  /**
+   * Sign a message using ECDSA
+   * @param privateKey The private key to sign with
+   * @param message The message to sign
+   */
+  public sign(privateKey: Buffer, message: Buffer): Buffer {
+    const hash = createHash('sha256').update(message).digest();
+    const signature = secp256k1.sign(hash, privateKey);
+    return Buffer.from(signature.toCompactRawBytes());
+  }
+
+  /**
+   * Verify a signature using ECDSA
+   * @param publicKey The public key to verify with
+   * @param message The message that was signed
+   * @param signature The signature to verify
+   */
+  public verify(publicKey: Buffer, message: Buffer, signature: Buffer): boolean {
+    const hash = createHash('sha256').update(message).digest();
+    try {
+      return secp256k1.verify(signature, hash, publicKey);
+    } catch (e) {
+      return false;
+    }
   }
 }

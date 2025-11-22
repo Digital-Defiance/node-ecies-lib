@@ -1,4 +1,4 @@
-import { NodeEciesStringKey } from '../ecies-i18n-factory';
+import { NodeEciesStringKey } from '../node-keys';
 
 export const japaneseTranslations: Record<NodeEciesStringKey, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]: '長さエンコーディングタイプが無効です',
@@ -46,4 +46,9 @@ export const japaneseTranslations: Record<NodeEciesStringKey, string> = {
   [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]: '無効な秘密鍵：32バイトである必要があります',
   [NodeEciesStringKey.Error_Stream_DecryptionCancelled]: '復号化がキャンセルされました',
   [NodeEciesStringKey.Error_Stream_ChunkSequenceError]: 'チャンクシーケンスエラー',
+  [NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate]: 'Node.js configuration validation failed:\n{failures}',
+  [NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate]: "Invariant 'NodeRecipientIdConsistency' failed:\n  {issues}",
+  [NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate]: 'MEMBER_ID_LENGTH ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate]: 'ECIES.MULTIPLE.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate]: 'ENCRYPTION.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
 };

@@ -11,13 +11,14 @@ import {
   IECIESConfig,
   UINT32_MAX,
   UINT64_SIZE,
+  EciesVersionEnum,
+  EciesCipherSuiteEnum,
 } from '@digitaldefiance/ecies-lib';
 import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import {
   createCipheriv,
   createDecipheriv,
-  createECDH,
   randomBytes,
 } from 'crypto';
 import {
@@ -96,6 +97,13 @@ export class EciesSingleRecipientCore {
         encryptionType as keyof typeof EciesEncryptionTypeMap
       ] as number,
     );
+
+    const versionBuffer = Buffer.alloc(1);
+    versionBuffer.writeUint8(EciesVersionEnum.V1);
+
+    const cipherSuiteBuffer = Buffer.alloc(1);
+    cipherSuiteBuffer.writeUint8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+
     if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new ECIESError(
@@ -113,8 +121,9 @@ export class EciesSingleRecipientCore {
       );
     }
     // Generate ephemeral ECDH key pair
-    const ecdh = createECDH(this.config.curveName);
-    ecdh.generateKeys();
+    // Use cryptoCore to generate keys to ensure compatibility with computeSharedSecret
+    const ephemeralPrivateKey = this.cryptoCore.generatePrivateKey();
+    let ephemeralPublicKey = this.cryptoCore.getPublicKey(ephemeralPrivateKey);
 
     // Compute shared secret
     let sharedSecret: Buffer;
@@ -123,9 +132,11 @@ export class EciesSingleRecipientCore {
       const normalizedReceiverPublicKey =
         this.cryptoCore.normalizePublicKey(receiverPublicKey);
 
-      // Ensure we're using the properly formatted public key (with 0x04 prefix)
-      // Our debugging shows only the full format with prefix works correctly
-      sharedSecret = ecdh.computeSecret(normalizedReceiverPublicKey);
+      // Use cryptoCore to compute shared secret (handles compressed keys better)
+      sharedSecret = this.cryptoCore.computeSharedSecret(
+        ephemeralPrivateKey,
+        normalizedReceiverPublicKey
+      );
     } catch (error: unknown) {
       if (process.env.NODE_ENV !== 'test') {
         console.error('[ERROR][encrypt] Failed to compute shared secret:', error);
@@ -133,14 +144,14 @@ export class EciesSingleRecipientCore {
       if (error instanceof Error) {
         if (
           'code' in error &&
-          error.code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
+          (error as any).code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
         ) {
           throw new ECIESError(
             ECIESErrorTypeEnum.InvalidRecipientPublicKey,
             undefined,
             undefined,
             {
-              nodeError: error.code,
+              nodeError: (error as any).code,
             },
           );
         }
@@ -159,23 +170,17 @@ export class EciesSingleRecipientCore {
     }
 
     // Get the ephemeral public key and ensure it has the 0x04 prefix
-    let ephemeralPublicKey = ecdh.getPublicKey();
-    if (
-      ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH
-    ) {
-      ephemeralPublicKey = Buffer.concat([
-        Buffer.from([this.cryptoCore.consts.PUBLIC_KEY_MAGIC]),
-        ephemeralPublicKey,
-      ]);
-    }
+    // ephemeralPublicKey is already set above and is compressed.
 
     // Generate random IV
     const iv = randomBytes(this.cryptoCore.consts.IV_SIZE);
 
-    // Get the key from the shared secret (always use first 32 bytes)
-    const symKey = sharedSecret.subarray(
-      0,
-      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
+    // Use HKDF to derive the key
+    const symKey = this.cryptoCore.deriveSharedKey(
+      sharedSecret,
+      Buffer.alloc(0), // No salt
+      Buffer.from('ecies-v2-key-derivation'), // Info
+      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
     );
 
     // Create cipher with the derived symmetric key
@@ -187,6 +192,21 @@ export class EciesSingleRecipientCore {
 
     // Ensure auto padding is enabled
     cipher.setAutoPadding(true);
+
+    // Construct AAD
+    // AAD = Preamble + Version + CipherSuite + EncryptionType + EphemeralPublicKey
+    // We don't include IV in AAD as it's already authenticated by GCM mechanism
+    // We don't include Length in AAD because it's variable/optional and might complicate things? 
+    // Actually, let's include what we can.
+    // For now, let's stick to the metadata that identifies the context.
+    const aad = Buffer.concat([
+      preamble,
+      versionBuffer,
+      cipherSuiteBuffer,
+      encryptionTypeBuffer,
+      ephemeralPublicKey
+    ]);
+    cipher.setAAD(aad);
 
     // Encrypt the message
     let encrypted = cipher.update(message);
@@ -210,9 +230,11 @@ export class EciesSingleRecipientCore {
       );
     }
 
-    // Format: [optional preamble] | type (1) | ephemeralPublicKey (65) | iv (16) | authTag (16) | length (8) | encryptedData
+    // Format: [optional preamble] | version (1) | cipherSuite (1) | type (1) | ephemeralPublicKey (65) | iv (16) | authTag (16) | length (8) | encryptedData
     return Buffer.concat([
       preamble,
+      versionBuffer,
+      cipherSuiteBuffer,
       encryptionTypeBuffer,
       ephemeralPublicKey,
       iv,
@@ -239,9 +261,37 @@ export class EciesSingleRecipientCore {
       dataLength?: number;
     },
   ): { header: ISingleEncryptedParsedHeader; data: Buffer; remainder: Buffer } {
-    // read the encryption type from the first byte after the preamble
+    let offset = 0;
+    const preamble = data.subarray(0, preambleSize);
+    offset += preambleSize;
+
+    // Read Version
+    const version = data.readUInt8(offset);
+    offset += this.cryptoCore.consts.VERSION_SIZE;
+    if (version !== EciesVersionEnum.V1) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.InvalidVersionTemplate,
+        undefined,
+        undefined,
+        { version: String(version) }
+      );
+    }
+
+    // Read CipherSuite
+    const cipherSuite = data.readUInt8(offset);
+    offset += this.cryptoCore.consts.CIPHER_SUITE_SIZE;
+    if (cipherSuite !== EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256) {
+      throw new ECIESError(
+        ECIESErrorTypeEnum.InvalidCipherSuiteTemplate,
+        undefined,
+        undefined,
+        { cipherSuite: String(cipherSuite) }
+      );
+    }
+
+    // read the encryption type from the first byte after the preamble and version/suite
     const actualEncryptionTypeEnum = ensureEciesEncryptionTypeEnum(
-      data.readUInt8(preambleSize),
+      data.readUInt8(offset),
     );
     // if a type is provided, ensure it matches the actual type
     if (
@@ -282,10 +332,6 @@ export class EciesSingleRecipientCore {
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
       );
     }
-
-    let offset = 0;
-    const preamble = data.subarray(0, preambleSize);
-    offset += preambleSize;
 
     // skip the already-read encryption type
     offset += 1;
@@ -418,6 +464,7 @@ export class EciesSingleRecipientCore {
 
     return {
       header: {
+        preamble,
         encryptionType: actualEncryptionTypeEnum,
         ephemeralPublicKey: normalizedKey,
         iv,
@@ -425,7 +472,7 @@ export class EciesSingleRecipientCore {
         dataLength,
         headerSize: includeLengthAndCrc
           ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
-          : this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE,
+          : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE,
       },
       data: encryptedData,
       remainder,
@@ -453,33 +500,10 @@ export class EciesSingleRecipientCore {
       dataLength?: number;
     },
   ): Buffer {
-    const readEncryptionType = encryptedData.readUInt8(
-      preambleSize,
-    ) as EciesEncryptionTypeEnum;
-    const actualEncryptionTypeEnum =
-      ensureEciesEncryptionTypeEnum(readEncryptionType);
-    if (
-      encryptionType !== undefined &&
-      actualEncryptionTypeEnum !== encryptionType
-    ) {
-      const expectedType = encryptionTypeEnumToType(encryptionType);
-      const actualEncryptionType = encryptionTypeEnumToType(
-        actualEncryptionTypeEnum,
-      );
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidEncryptionType,
-        undefined,
-        undefined,
-        {
-          expected: expectedType,
-          actual: actualEncryptionType,
-        },
-      );
-    }
     try {
       // Call the extended version and return only the decrypted buffer for backward compatibility
       const result = this.decryptWithHeaderEx(
-        actualEncryptionTypeEnum,
+        encryptionType,
         privateKey,
         encryptedData,
         preambleSize,
@@ -533,6 +557,24 @@ export class EciesSingleRecipientCore {
         header.ephemeralPublicKey,
       );
 
+      // Construct AAD
+      const versionBuffer = Buffer.alloc(1);
+      versionBuffer.writeUint8(EciesVersionEnum.V1);
+
+      const cipherSuiteBuffer = Buffer.alloc(1);
+      cipherSuiteBuffer.writeUint8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+
+      const encryptionTypeBuffer = Buffer.alloc(1);
+      encryptionTypeBuffer.writeUint8(header.encryptionType);
+
+      const aad = Buffer.concat([
+        header.preamble ?? Buffer.alloc(preambleSize),
+        versionBuffer,
+        cipherSuiteBuffer,
+        encryptionTypeBuffer,
+        normalizedKey
+      ]);
+
       // Decrypt using components with the normalized key
       const decrypted = this.decryptWithComponents(
         privateKey,
@@ -540,6 +582,7 @@ export class EciesSingleRecipientCore {
         header.iv,
         header.authTag,
         data,
+        aad
       );
 
       return {
@@ -576,21 +619,20 @@ export class EciesSingleRecipientCore {
     iv: Buffer,
     authTag: Buffer,
     encrypted: Buffer,
+    aad?: Buffer,
   ): Buffer {
     try {
       // Ensure the ephemeral public key has the correct format
       const normalizedEphemeralKey =
         this.cryptoCore.normalizePublicKey(ephemeralPublicKey);
 
-      // Set up ECDH with the private key
-      const ecdh = createECDH(this.config.curveName);
-      ecdh.setPrivateKey(privateKey);
-
-      // Based on our ECDH test, we need to consistently use the full key with 0x04 prefix
-      // Our debugging showed the raw keys without prefix always fail
+      // Use cryptoCore to compute shared secret (handles compressed keys better)
       let sharedSecret: Buffer;
       try {
-        sharedSecret = ecdh.computeSecret(normalizedEphemeralKey);
+        sharedSecret = this.cryptoCore.computeSharedSecret(
+          privateKey,
+          normalizedEphemeralKey
+        );
       } catch (err) {
         if (process.env.NODE_ENV !== 'test') {
           console.error('[ERROR][decrypt] Failed to compute shared secret:', err);
@@ -606,10 +648,12 @@ export class EciesSingleRecipientCore {
         );
       }
 
-      // Get the key from the shared secret (always use first 32 bytes)
-      const symKey = sharedSecret.subarray(
-        0,
-        this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
+      // Use HKDF to derive the key
+      const symKey = this.cryptoCore.deriveSharedKey(
+        sharedSecret,
+        Buffer.alloc(0), // No salt
+        Buffer.from('ecies-v2-key-derivation'), // Info
+        this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
       );
 
       // Create decipher with shared secret-derived key
@@ -648,6 +692,10 @@ export class EciesSingleRecipientCore {
 
       // Set the authentication tag for GCM mode
       decipher.setAuthTag(authTag);
+      
+      if (aad) {
+        decipher.setAAD(aad);
+      }
 
       // Decrypt the data
       try {
