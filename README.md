@@ -247,6 +247,10 @@ yarn format         # Fix all (prettier + lint)
 
 ## ChangeLog
 
+### v4.1.1
+
+- Upgrade ecies
+
 ### v4.1.0
 
 - **ID Provider Integration**: The `Member` model now fully utilizes the configured `IdProvider` for all ID operations, removing hard dependencies on specific ID formats.
