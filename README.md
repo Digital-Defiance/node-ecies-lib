@@ -247,6 +247,10 @@ yarn format         # Fix all (prettier + lint)
 
 ## ChangeLog
 
+### v4.2.0
+
+- Upgrade ecies
+
 ### v4.1.1
 
 - Upgrade ecies
