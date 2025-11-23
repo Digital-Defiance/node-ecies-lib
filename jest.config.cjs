@@ -2,7 +2,6 @@ const { pathsToModuleNameMapper } = require('ts-jest');
 const { compilerOptions } = require('../../tsconfig.base.json');
 
 module.exports = {
-  preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
@@ -10,21 +9,33 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   setupFiles: ['<rootDir>/tests/jest-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
-  extensionsToTreatAsEsm: ['.ts'],
   transformIgnorePatterns: [
-    'node_modules/(?!(@faker-js|@noble|@digitaldefiance|@scure|@ethereumjs)/)',
+    'node_modules/(?!(@faker-js|@noble|@scure|@ethereumjs))',
   ],
   transform: {
     '^.+\\.(ts|tsx)$': [
-      'ts-jest',
+      '@swc/jest',
       {
-        useESM: true,
-        tsconfig: '<rootDir>/tsconfig.spec.json',
+        jsc: {
+          parser: {
+            syntax: 'typescript',
+            decorators: true,
+          },
+          target: 'es2020',
+        },
+        module: {
+          type: 'commonjs',
+        },
       },
     ],
     '^.+\\.(js|jsx|mjs)$': 'babel-jest',
   },
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
-    prefix: '<rootDir>/../../',
-  }),
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@digitaldefiance/ecies-lib$':
+      '<rootDir>/../digitaldefiance-ecies-lib/src/index.ts',
+    ...pathsToModuleNameMapper(compilerOptions.paths, {
+      prefix: '<rootDir>/../../',
+    }),
+  },
 };

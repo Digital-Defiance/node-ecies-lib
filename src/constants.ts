@@ -3,24 +3,22 @@ import {
   IConstants as IBaseConstants,
   IPBkdf2Consts,
   OBJECT_ID_LENGTH,
-  registerRuntimeConfiguration,
-  IIdProvider,
   ObjectIdProvider,
+  registerRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
+import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
+import {
+  getNodeEciesI18nEngine,
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+} from './i18n';
 import { IChecksumConsts } from './interfaces/checksum-consts';
 import { IConstants } from './interfaces/constants';
 import { IEncryptionConsts } from './interfaces/encryption-consts';
 import { IKeyringConsts } from './interfaces/keyring-consts';
 import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
-import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
-import {
-  getEciesPluginI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from './i18n';
-import { InvariantValidator } from './lib/invariant-validator';
 
 /**
  * Constants for checksum operations
@@ -28,7 +26,7 @@ import { InvariantValidator } from './lib/invariant-validator';
  * in an already established system as it will break all existing checksums.
  */
 export const NODE_RUNTIME_CONFIGURATION_KEY = Symbol.for(
-  'digitaldefiance.node.ecies.defaults',
+  'digitaldefiance.node.ecies.defaults'
 );
 
 /**
@@ -51,7 +49,7 @@ export const NODE_DEFAULTS_OVERRIDES: NodeRuntimeOverrides = Object.freeze({
 
 let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
   NODE_RUNTIME_CONFIGURATION_KEY,
-  NODE_DEFAULTS_OVERRIDES,
+  NODE_DEFAULTS_OVERRIDES
 );
 
 export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
@@ -60,26 +58,26 @@ export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
 
 export function registerNodeRuntimeConfiguration(
   configOrOverrides?: NodeRuntimeOverrides | NodeRuntimeConfiguration,
-  options?: Parameters<typeof registerRuntimeConfiguration>[2],
+  options?: Parameters<typeof registerRuntimeConfiguration>[2]
 ): NodeRuntimeConfiguration {
   // Register configuration through ecies-lib's system
   // This handles auto-sync of idProvider -> MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE
   runtimeDefaults = registerRuntimeConfiguration(
     NODE_RUNTIME_CONFIGURATION_KEY,
     configOrOverrides,
-    options,
+    options
   );
-  
+
   // Note: ENCRYPTION.RECIPIENT_ID_SIZE is set at module initialization
   // and uses DEFAULT_ID_PROVIDER.byteLength. For runtime configurations with
   // different providers, code should reference config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE
   // which is auto-synced by ecies-lib's createRuntimeConfiguration.
-  
+
   // Validate Node-specific invariants (base ecies-lib invariants already validated)
   // Note: Validation temporarily disabled for configs without ENCRYPTION property
   // as runtimeDefaults doesn't include node-specific constants
   // InvariantValidator.validateAll(runtimeDefaults as IConstants);
-  
+
   return runtimeDefaults;
 }
 
@@ -211,22 +209,41 @@ export const Constants: IConstants = Object.freeze({
   KEYRING_ALGORITHM_CONFIGURATION: KEYRING_ALGORITHM_CONFIGURATION,
 } as const);
 
+/**
+ * Safe translation helper for early initialization
+ * During module initialization, i18n may not be fully available.
+ * This function attempts to use i18n but falls back to a basic error message.
+ *
+ * @param key - The translation key
+ * @param fallback - The fallback message if i18n is not available
+ * @returns The translated message or fallback
+ */
+function safeTranslate(key: NodeEciesStringKey, fallback: string): string {
+  try {
+    const engine = getNodeEciesI18nEngine();
+    return engine.translate(NodeEciesComponentId, key);
+  } catch {
+    return fallback;
+  }
+}
+
+// Validate checksum constants during module initialization
+// Use safeTranslate to handle the case where i18n is not yet fully initialized
 if (
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8 ||
   CHECKSUM.SHA3_BUFFER_LENGTH !== CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8
 ) {
-  const pluginEngine = getEciesPluginI18nEngine();
   throw new Error(
-    pluginEngine.translate(
-      NodeEciesComponentId,
+    safeTranslate(
       NodeEciesStringKey.Error_InvalidChecksumConstants,
-    ),
+      'Invalid checksum constants: SHA3_BUFFER_LENGTH must equal SHA3_DEFAULT_HASH_BITS / 8'
+    )
   );
 }
 
 if (OBJECT_ID_LENGTH !== 12) {
   console.warn(
     'ObjectID length may have changed, breaking encryption',
-    OBJECT_ID_LENGTH,
+    OBJECT_ID_LENGTH
   );
 }

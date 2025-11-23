@@ -257,6 +257,10 @@ yarn format         # Fix all (prettier + lint)
 - Added 30+ unit tests and property-based tests for type safety validation
 - Improved TypeScript type inference and compile-time safety
 
+### v4.2.7
+
+- Minor bump. Fix tests
+
 ### v4.2.0
 
 - Upgrade ecies
