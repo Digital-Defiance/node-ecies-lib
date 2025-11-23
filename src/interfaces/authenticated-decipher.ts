@@ -1,9 +1,9 @@
+import type { Decipher } from 'crypto';
+
 /**
- * Extended Decipher type with auth tag support
+ * Extended Decipher type with auth tag support for AES-GCM
  */
-export interface AuthenticatedDecipher {
-  update(data: Buffer): Buffer;
-  final(): Buffer;
+export interface AuthenticatedDecipher extends Decipher {
   setAuthTag(tag: Buffer): void;
   setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
 }

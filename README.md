@@ -247,6 +247,16 @@ yarn format         # Fix all (prettier + lint)
 
 ## ChangeLog
 
+### v4.2.5
+
+**Type Safety Improvements**:
+- Added comprehensive ID type guards and converters (`isBuffer`, `isUint8Array`, `toBuffer`, `toUint8Array`, `convertId`)
+- Created `AuthenticatedCipher` and `AuthenticatedDecipher` interfaces for proper crypto type handling
+- Removed unsafe type casts throughout the codebase, replacing with type-safe conversions
+- Enhanced member ID serialization with proper type guards
+- Added 30+ unit tests and property-based tests for type safety validation
+- Improved TypeScript type inference and compile-time safety
+
 ### v4.2.0
 
 - Upgrade ecies

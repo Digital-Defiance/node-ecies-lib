@@ -1,13 +1,27 @@
-import { ECIESError, ECIESErrorTypeEnum, IECIESConstants } from '@digitaldefiance/ecies-lib';
+import {
+  ECIESError,
+  ECIESErrorTypeEnum,
+  IECIESConstants,
+} from '@digitaldefiance/ecies-lib';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createECDH,
+  randomBytes,
+} from 'crypto';
 import { Constants } from '../constants';
-import { IMultiRecipientChunk, IMultiRecipientChunkHeader, getMultiRecipientConstants, IMultiRecipientConstants } from '../interfaces/multi-recipient-chunk';
+import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
+import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
+import {
+  getMultiRecipientConstants,
+  IMultiRecipientChunk,
+  IMultiRecipientChunkHeader,
+  IMultiRecipientConstants,
+} from '../interfaces/multi-recipient-chunk';
+import { Member } from '../member';
 import { AESGCMService } from './aes-gcm';
 import { EciesCryptoCore } from './ecies/crypto-core';
 import { EciesMultiRecipient } from './ecies/multi-recipient';
-import { randomBytes, createECDH, createCipheriv, createDecipheriv } from 'crypto';
-import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
-import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
-import { Member } from '../member';
 
 export interface IMultiRecipient {
   id: Buffer;
@@ -32,7 +46,10 @@ export class MultiRecipientProcessor {
   private readonly constants: IMultiRecipientConstants;
   private readonly recipientIdSize: number;
 
-  constructor(cryptoCore: EciesCryptoCore, consts: IECIESConstants = Constants.ECIES) {
+  constructor(
+    cryptoCore: EciesCryptoCore,
+    consts: IECIESConstants = Constants.ECIES
+  ) {
     this.cryptoCore = cryptoCore;
     this.consts = consts;
     this.aesGcm = new AESGCMService();
@@ -48,15 +65,19 @@ export class MultiRecipientProcessor {
   public async encryptMultiple(
     recipients: IMultiRecipient[],
     message: Buffer,
-    preamble: Buffer = Buffer.alloc(0),
+    preamble: Buffer = Buffer.alloc(0)
   ): Promise<IMultiEncryptedMessage> {
     // Convert IMultiRecipient to Member-like objects
     // EciesMultiRecipient expects Member[] which has id: Buffer and publicKey: Buffer
-    // IMultiRecipient already matches this structure
-    const members = recipients as unknown as Member[];
+    // IMultiRecipient already matches this structure, so we can safely cast
+    const members = recipients as Member[];
 
-    const result = this.eciesMultiRecipient.encryptMultiple(members, message, preamble);
-    
+    const result = this.eciesMultiRecipient.encryptMultiple(
+      members,
+      message,
+      preamble
+    );
+
     return result;
   }
 
@@ -74,9 +95,9 @@ export class MultiRecipientProcessor {
     chunkIndex: number,
     isLast: boolean,
     symmetricKey: Buffer,
-    senderPrivateKey?: Buffer,
+    senderPrivateKey?: Buffer
   ): Promise<IMultiRecipientChunk> {
-    if (chunkIndex < 0 || chunkIndex > 0xFFFFFFFF) {
+    if (chunkIndex < 0 || chunkIndex > 0xffffffff) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
     }
 
@@ -96,9 +117,11 @@ export class MultiRecipientProcessor {
     ecdh.generateKeys();
     const ephemeralPrivateKey = ecdh.getPrivateKey();
     let ephemeralPublicKey = ecdh.getPublicKey(null, 'compressed');
-    
+
     // Ensure public key has 0x04 prefix
-    if (ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH) {
+    if (
+      ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH
+    ) {
       ephemeralPublicKey = Buffer.concat([
         Buffer.from([this.cryptoCore.consts.PUBLIC_KEY_MAGIC]),
         ephemeralPublicKey,
@@ -106,7 +129,11 @@ export class MultiRecipientProcessor {
     }
 
     // Build recipient headers
-    const recipientHeaders: Array<{ id: Buffer; keySize: number; encryptedKey: Buffer }> = [];
+    const recipientHeaders: Array<{
+      id: Buffer;
+      keySize: number;
+      encryptedKey: Buffer;
+    }> = [];
     for (const recipient of recipients) {
       // Use Recipient ID as AAD for key encryption
       const encryptedKey = this.eciesMultiRecipient.encryptKey(
@@ -115,7 +142,7 @@ export class MultiRecipientProcessor {
         ephemeralPrivateKey,
         recipient.id
       );
-      
+
       recipientHeaders.push({
         id: recipient.id,
         keySize: encryptedKey.length,
@@ -130,13 +157,15 @@ export class MultiRecipientProcessor {
     // Calculate total size
     let recipientHeadersSize = 0;
     for (const h of recipientHeaders) {
-      recipientHeadersSize += this.recipientIdSize + this.constants.KEY_SIZE_BYTES + h.keySize;
+      recipientHeadersSize +=
+        this.recipientIdSize + this.constants.KEY_SIZE_BYTES + h.keySize;
     }
 
-    const totalSize = this.constants.HEADER_SIZE + 
-                     recipientHeadersSize + 
-                     12 + // IV
-                     encryptedSize;
+    const totalSize =
+      this.constants.HEADER_SIZE +
+      recipientHeadersSize +
+      12 + // IV
+      encryptedSize;
 
     // Build chunk buffer
     const chunk = Buffer.alloc(totalSize);
@@ -183,8 +212,8 @@ export class MultiRecipientProcessor {
     const cipher = createCipheriv(
       this.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
-      iv,
-    ) as unknown as AuthenticatedCipher;
+      iv
+    ) as AuthenticatedCipher;
 
     cipher.setAAD(headerBytes);
 
@@ -225,7 +254,7 @@ export class MultiRecipientProcessor {
     chunkData: Buffer,
     recipientId: Buffer,
     privateKey: Buffer,
-    senderPublicKey?: Buffer,
+    senderPublicKey?: Buffer
   ): Promise<{ data: Buffer; header: IMultiRecipientChunkHeader }> {
     if (chunkData.length < this.constants.HEADER_SIZE) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
@@ -248,7 +277,7 @@ export class MultiRecipientProcessor {
 
     const recipientCount = chunkData.readUInt16BE(offset);
     offset += 2;
-    
+
     const chunkIndex = chunkData.readUInt32BE(offset);
     offset += 4;
     const originalSize = chunkData.readUInt32BE(offset);
@@ -267,28 +296,36 @@ export class MultiRecipientProcessor {
     // Find recipient header and decrypt symmetric key
     let symmetricKey: Buffer | null = null;
     let tempOffset = offset;
-    
+
     for (let i = 0; i < recipientCount; i++) {
-      const id = chunkData.subarray(tempOffset, tempOffset + this.recipientIdSize);
+      const id = chunkData.subarray(
+        tempOffset,
+        tempOffset + this.recipientIdSize
+      );
       tempOffset += this.recipientIdSize;
-      
+
       const keySize = chunkData.readUInt16BE(tempOffset);
       tempOffset += this.constants.KEY_SIZE_BYTES;
-      
+
       const encryptedKey = chunkData.subarray(tempOffset, tempOffset + keySize);
       tempOffset += keySize;
 
       // Check if this is our recipient
       if (id.equals(recipientId)) {
         // Use Recipient ID as AAD for key decryption
-        symmetricKey = this.eciesMultiRecipient.decryptKey(privateKey, encryptedKey, ephemeralPublicKey, id);
+        symmetricKey = this.eciesMultiRecipient.decryptKey(
+          privateKey,
+          encryptedKey,
+          ephemeralPublicKey,
+          id
+        );
       }
     }
 
     if (!symmetricKey) {
       throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
     }
-    
+
     // Update offset to after all recipient headers
     offset = tempOffset;
 
@@ -305,15 +342,18 @@ export class MultiRecipientProcessor {
 
     // Extract tag from end of encrypted data
     const authTag = encryptedWithTag.subarray(encryptedWithTag.length - 16);
-    const encrypted = encryptedWithTag.subarray(0, encryptedWithTag.length - 16);
+    const encrypted = encryptedWithTag.subarray(
+      0,
+      encryptedWithTag.length - 16
+    );
 
     // Decrypt with AAD
     const decipher = createDecipheriv(
       this.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
-      iv,
-    ) as unknown as AuthenticatedDecipher;
-    
+      iv
+    ) as AuthenticatedDecipher;
+
     decipher.setAuthTag(authTag);
     decipher.setAAD(headerBytes);
 
@@ -329,8 +369,12 @@ export class MultiRecipientProcessor {
       }
       const signature = decryptedMessage.subarray(0, 64);
       const message = decryptedMessage.subarray(64);
-      
-      const isValid = this.cryptoCore.verify(senderPublicKey, message, signature);
+
+      const isValid = this.cryptoCore.verify(
+        senderPublicKey,
+        message,
+        signature
+      );
       if (!isValid) {
         throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
       }
@@ -359,13 +403,13 @@ export class MultiRecipientProcessor {
     encryptedData: IMultiEncryptedMessage,
     recipientId: Buffer,
     privateKey: Buffer,
-    senderPublicKey?: Buffer,
+    senderPublicKey?: Buffer
   ): Promise<Buffer> {
-    // Create a mock Member
+    // Create a mock Member with minimal required properties
     const member = {
       id: recipientId,
-      privateKey: { value: privateKey }
-    } as unknown as Member;
+      privateKey: { value: privateKey },
+    } as Member;
 
     return this.eciesMultiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,
@@ -378,7 +422,9 @@ export class MultiRecipientProcessor {
    * Parses a multi-encrypted header.
    * Wrapper around EciesMultiRecipient.parseMultiEncryptedHeader for backward compatibility.
    */
-  public parseHeader(data: Buffer): Omit<IMultiEncryptedMessage, 'encryptedMessage'> & { headerSize: number } {
+  public parseHeader(
+    data: Buffer
+  ): Omit<IMultiEncryptedMessage, 'encryptedMessage'> & { headerSize: number } {
     const result = this.eciesMultiRecipient.parseMultiEncryptedHeader(data);
     return result;
   }
@@ -399,7 +445,7 @@ export class MultiRecipientProcessor {
    */
   public async encryptKey(
     recipientPublicKey: Buffer,
-    symmetricKey: Buffer,
+    symmetricKey: Buffer
   ): Promise<Buffer> {
     // Generate ephemeral key pair
     const ecdh = createECDH(this.cryptoCore.config.curveName);
@@ -408,7 +454,9 @@ export class MultiRecipientProcessor {
     let ephemeralPublicKey = ecdh.getPublicKey(null, 'compressed');
 
     // Ensure public key has 0x04 prefix
-    if (ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH) {
+    if (
+      ephemeralPublicKey.length === this.cryptoCore.consts.RAW_PUBLIC_KEY_LENGTH
+    ) {
       ephemeralPublicKey = Buffer.concat([
         Buffer.from([this.cryptoCore.consts.PUBLIC_KEY_MAGIC]),
         ephemeralPublicKey,
@@ -431,12 +479,12 @@ export class MultiRecipientProcessor {
    */
   public async decryptKey(
     privateKey: Buffer,
-    encryptedData: Buffer,
+    encryptedData: Buffer
   ): Promise<Buffer> {
     // Extract ephemeral public key
     const pubKeyLength = this.cryptoCore.consts.PUBLIC_KEY_LENGTH; // 33
-    
-    const ephemeralPublicKey = encryptedData.subarray(0, 33); 
+
+    const ephemeralPublicKey = encryptedData.subarray(0, 33);
     const encryptedKey = encryptedData.subarray(33);
 
     return this.eciesMultiRecipient.decryptKey(

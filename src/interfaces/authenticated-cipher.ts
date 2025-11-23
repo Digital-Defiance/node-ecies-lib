@@ -1,10 +1,10 @@
+import type { Cipher } from 'crypto';
+
 /**
- * Extended Cipher type with auth tag support
+ * Extended Cipher type with auth tag support for AES-GCM
  */
-export interface AuthenticatedCipher {
-  update(data: Buffer): Buffer;
-  final(): Buffer;
+export interface AuthenticatedCipher extends Cipher {
   getAuthTag(): Buffer;
-  setAutoPadding(autoPadding: boolean): void;
   setAAD(buffer: Buffer, options?: { plaintextLength: number }): this;
+  setAutoPadding(autoPadding?: boolean): this;
 }

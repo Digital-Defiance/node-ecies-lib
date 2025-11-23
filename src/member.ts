@@ -1,6 +1,4 @@
-import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import {
-  ECIES,
   EmailString,
   IMemberStorageData,
   MemberErrorType,
@@ -9,6 +7,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
+import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
@@ -18,30 +17,29 @@ import {
  * Custom error classes that work with the plugin i18n system
  */
 export class NodeMemberError extends Error {
-  constructor(
-    message: string,
-    public readonly type: MemberErrorType,
-  ) {
+  constructor(message: string, public readonly type: MemberErrorType) {
     super(message);
     this.name = 'NodeMemberError';
   }
 }
 
-import { ECIESService } from './services/ecies/service';
-import { EncryptionStream } from './services/encryption-stream';
 import { IEncryptedChunk } from './interfaces/encrypted-chunk';
 import { IStreamProgress } from './interfaces/stream-progress';
+import { ECIESService } from './services/ecies/service';
+import { EncryptionStream } from './services/encryption-stream';
 // Removed: import { ServiceProvider } from './services/service.provider';
-import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
-import { IBackendMemberOperational } from './interfaces/backend-member-operational';
-import { SignatureBuffer } from './types';
 import { Constants } from './constants';
+import { IBackendMemberOperational } from './interfaces/backend-member-operational';
+import { SignatureBuffer, toBuffer, toUint8Array } from './types';
 
 /**
  * A member of an ECIES interchange
  */
-export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer> implements IBackendMemberOperational<TID> {
+export class Member<
+  TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer
+> implements IBackendMemberOperational<TID>
+{
   private readonly _eciesService: ECIESService;
   private readonly _id: TID;
   private readonly _type: MemberType;
@@ -67,28 +65,28 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     id?: TID,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: TID,
+    creatorId?: TID
   ) {
     // Assign injected services
     this._eciesService = eciesService;
     // Assign original parameters
     this._type = type;
-    this._id = id ?? (Buffer.from(Constants.idProvider.generate()) as unknown as TID);
+    this._id = id ?? (toBuffer(Constants.idProvider.generate()) as TID);
     this._name = name;
     if (!this._name || this._name.length == 0) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName,
+          NodeEciesStringKey.Error_Member_MissingMemberName
         ),
-        MemberErrorType.MissingMemberName,
+        MemberErrorType.MissingMemberName
       );
     }
     if (this._name.trim() != this._name) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace,
+          NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace
         ),
-        MemberErrorType.InvalidMemberNameWhitespace,
+        MemberErrorType.InvalidMemberNameWhitespace
       );
     }
     this._email = email;
@@ -143,7 +141,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (!this._wallet) {
       throw new NodeMemberError(
         getNodeEciesTranslation(NodeEciesStringKey.Error_Member_NoWallet),
-        MemberErrorType.NoWallet,
+        MemberErrorType.NoWallet
       );
     }
     return this._wallet;
@@ -173,9 +171,9 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (this._wallet) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_WalletAlreadyLoaded,
+          NodeEciesStringKey.Error_Member_WalletAlreadyLoaded
         ),
-        MemberErrorType.WalletAlreadyLoaded,
+        MemberErrorType.WalletAlreadyLoaded
       );
     }
     const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
@@ -188,9 +186,9 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     ) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidMnemonic,
+          NodeEciesStringKey.Error_Member_InvalidMnemonic
         ),
-        MemberErrorType.InvalidMnemonic,
+        MemberErrorType.InvalidMnemonic
       );
     }
     this._wallet = wallet;
@@ -211,14 +209,14 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (!this._privateKey) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+          NodeEciesStringKey.Error_Member_MissingPrivateKey
         ),
-        MemberErrorType.MissingPrivateKey,
+        MemberErrorType.MissingPrivateKey
       );
     }
     return this._eciesService.signMessage(
       Buffer.from(this._privateKey.value),
-      data,
+      data
     );
   }
 
@@ -226,14 +224,14 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (!this._privateKey) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+          NodeEciesStringKey.Error_Member_MissingPrivateKey
         ),
-        MemberErrorType.MissingPrivateKey,
+        MemberErrorType.MissingPrivateKey
       );
     }
     return this._eciesService.signMessage(
       Buffer.from(this._privateKey.value),
-      data,
+      data
     );
   }
 
@@ -244,12 +242,12 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
   public verifySignature(
     data: Buffer,
     signature: Buffer,
-    publicKey: Buffer,
+    publicKey: Buffer
   ): boolean {
     return this._eciesService.verifyMessage(
       publicKey,
       data,
-      signature as SignatureBuffer,
+      signature as SignatureBuffer
     );
   }
 
@@ -258,15 +256,15 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
 
   public encryptData(
     data: string | Buffer,
-    recipientPublicKey?: Buffer,
+    recipientPublicKey?: Buffer
   ): Buffer {
     // Validate input
     if (!data) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingEncryptionData,
+          NodeEciesStringKey.Error_Member_MissingEncryptionData
         ),
-        MemberErrorType.MissingEncryptionData,
+        MemberErrorType.MissingEncryptionData
       );
     }
 
@@ -277,9 +275,9 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (dataSize > Member.MAX_ENCRYPTION_SIZE) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_EncryptionDataTooLarge,
+          NodeEciesStringKey.Error_Member_EncryptionDataTooLarge
         ),
-        MemberErrorType.EncryptionDataTooLarge,
+        MemberErrorType.EncryptionDataTooLarge
       );
     }
 
@@ -292,7 +290,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     return this._eciesService.encryptSimpleOrSingle(
       false,
       targetPublicKey,
-      bufferData,
+      bufferData
     );
   }
 
@@ -300,27 +298,31 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     if (!this._privateKey) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+          NodeEciesStringKey.Error_Member_MissingPrivateKey
         ),
-        MemberErrorType.MissingPrivateKey,
+        MemberErrorType.MissingPrivateKey
       );
     }
     // decryptSingleWithHeader now returns the Buffer directly
     return this._eciesService.decryptSimpleOrSingleWithHeader(
       false,
       Buffer.from(this._privateKey.value),
-      encryptedData,
+      encryptedData
     );
   }
 
   public toJson(): string {
     const storage: IMemberStorageData = {
-      id: Constants.idProvider.serialize(this._id as unknown as Uint8Array),
+      id: Constants.idProvider.serialize(
+        toUint8Array(this._id as Buffer | Uint8Array | string)
+      ),
       type: this._type,
       name: this._name,
       email: this._email.toString(),
       publicKey: this._publicKey.toString('base64'),
-      creatorId: Constants.idProvider.serialize(this._creatorId as unknown as Uint8Array),
+      creatorId: Constants.idProvider.serialize(
+        toUint8Array(this._creatorId as Buffer | Uint8Array | string)
+      ),
       dateCreated: this._dateCreated.toISOString(),
       dateUpdated: this._dateUpdated.toISOString(),
     };
@@ -342,7 +344,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
       recipientPublicKey?: Buffer;
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    },
+    }
   ): AsyncGenerator<IEncryptedChunk, void, unknown> {
     const targetPublicKey = options?.recipientPublicKey || this._publicKey;
     const stream = new EncryptionStream(this._eciesService);
@@ -360,23 +362,27 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     options?: {
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    },
+    }
   ): AsyncGenerator<Buffer, void, unknown> {
     if (!this._privateKey) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+          NodeEciesStringKey.Error_Member_MissingPrivateKey
         ),
-        MemberErrorType.MissingPrivateKey,
+        MemberErrorType.MissingPrivateKey
       );
     }
 
     const stream = new EncryptionStream(this._eciesService);
 
-    for await (const chunk of stream.decryptStream(source, Buffer.from(this._privateKey.value), {
-      onProgress: options?.onProgress,
-      signal: options?.signal,
-    })) {
+    for await (const chunk of stream.decryptStream(
+      source,
+      Buffer.from(this._privateKey.value),
+      {
+        onProgress: options?.onProgress,
+        signal: options?.signal,
+      }
+    )) {
       yield chunk;
     }
   }
@@ -384,7 +390,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
   public static fromJson(
     json: string,
     // Add injected services as parameters
-    eciesService: ECIESService,
+    eciesService: ECIESService
   ): Member {
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
@@ -402,7 +408,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
       Buffer.from(Constants.idProvider.deserialize(storage.id)),
       dateCreated,
       new Date(storage.dateUpdated),
-      Buffer.from(Constants.idProvider.deserialize(storage.creatorId)),
+      Buffer.from(Constants.idProvider.deserialize(storage.creatorId))
     );
   }
 
@@ -411,7 +417,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     eciesService: ECIESService,
     memberType = MemberType.User,
     name = 'Test User',
-    email = new EmailString('test@example.com'),
+    email = new EmailString('test@example.com')
   ): Member {
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
@@ -425,7 +431,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
       email,
       publicKeyWithPrefix,
       new SecureBuffer(privateKey),
-      wallet,
+      wallet
     );
   }
 
@@ -437,37 +443,37 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
     name: string,
     email: EmailString,
     forceMnemonic?: SecureString,
-    createdBy?: Buffer,
+    createdBy?: Buffer
   ): { member: Member; mnemonic: SecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName,
+          NodeEciesStringKey.Error_Member_MissingMemberName
         ),
-        MemberErrorType.MissingMemberName,
+        MemberErrorType.MissingMemberName
       );
     }
     if (name.trim() != name) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace,
+          NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace
         ),
-        MemberErrorType.InvalidMemberNameWhitespace,
+        MemberErrorType.InvalidMemberNameWhitespace
       );
     }
     if (!email || email.toString().length == 0) {
       throw new NodeMemberError(
         getNodeEciesTranslation(NodeEciesStringKey.Error_Member_MissingEmail),
-        MemberErrorType.MissingEmail,
+        MemberErrorType.MissingEmail
       );
     }
     if (email.toString().trim() != email.toString()) {
       throw new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidEmailWhitespace,
+          NodeEciesStringKey.Error_Member_InvalidEmailWhitespace
         ),
-        MemberErrorType.InvalidEmailWhitespace,
+        MemberErrorType.InvalidEmailWhitespace
       );
     }
 
@@ -496,7 +502,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer | Uint8Array = 
         newId,
         dateCreated,
         dateCreated,
-        createdBy ?? newId,
+        createdBy ?? newId
       ),
       mnemonic,
     };
