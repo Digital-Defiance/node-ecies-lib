@@ -217,6 +217,6 @@ describe('Circular Dependency - Property-Based Tests', () => {
           eciesLibCircular
         );
       }
-    });
+    }, 30000); // Increase timeout for madge analysis
   });
 });

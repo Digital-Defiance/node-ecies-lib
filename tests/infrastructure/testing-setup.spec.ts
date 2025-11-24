@@ -16,7 +16,12 @@ import {
 describe('Testing Infrastructure', () => {
   describe('Madge Integration', () => {
     it('should be able to analyze the project for circular dependencies', async () => {
-      const result = await checkCircularDependencies('src/index.ts');
+      // Use the package directory as base, not the monorepo root
+      const packageDir = require('path').resolve(__dirname, '../..');
+      const result = await checkCircularDependencies(
+        'src/index.ts',
+        packageDir
+      );
 
       expect(result).toBeDefined();
       expect(typeof result.hasCircular).toBe('boolean');

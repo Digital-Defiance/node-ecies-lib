@@ -165,7 +165,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
       }
 
       expect(internalCircular).toHaveLength(0);
-    });
+    }, 30000); // Increase timeout for madge analysis
 
     it('should respect module boundary rules', async () => {
       const srcPath = path.join(__dirname, '../../src/index.ts');
@@ -199,7 +199,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
           expect(hasCircular).toBe(false);
         }
       }
-    });
+    }, 30000); // Increase timeout for madge analysis
 
     it('should not have previously identified circular dependencies', async () => {
       const srcPath = path.join(__dirname, '../../src/index.ts');
@@ -240,6 +240,6 @@ describe('Property-Based Test: Business Logic Independence', () => {
       }
 
       expect(foundProblematicCycles).toHaveLength(0);
-    });
+    }, 30000); // Increase timeout for madge analysis
   });
 });
