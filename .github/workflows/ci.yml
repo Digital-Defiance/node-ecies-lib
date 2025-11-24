@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  circular-dependency-check:
+    name: Check for Circular Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check for circular dependencies
+        run: yarn check:circular:ci
+        working-directory: packages/digitaldefiance-node-ecies-lib
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: circular-dependency-check
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: yarn test
+        working-directory: packages/digitaldefiance-node-ecies-lib
+
+      - name: Run lint
+        run: yarn lint
+        working-directory: packages/digitaldefiance-node-ecies-lib
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+        working-directory: packages/digitaldefiance-node-ecies-lib

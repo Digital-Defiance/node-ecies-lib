@@ -24,6 +24,7 @@
     "test:coverage": "npx jest --coverage --testPathPattern=digitaldefiance-node-ecies-lib --coverageReporters=text",
     "check:circular": "madge --circular --extensions ts src/index.ts",
     "check:circular:json": "madge --circular --extensions ts --json src/index.ts",
+    "check:circular:ci": "node scripts/check-circular-deps.js",
     "lint": "npx nx lint digitaldefiance-node-ecies-lib",
     "lint:fix": "npx nx lint digitaldefiance-node-ecies-lib --fix",
     "prettier:check": "prettier --check 'src/**/*.{ts,tsx}'",

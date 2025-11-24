@@ -46,6 +46,13 @@
           "packages/digitaldefiance-node-ecies-lib/tests/**/*.ts"
         ]
       }
+    },
+    "check-circular": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --circular --extensions ts src/index.ts",
+        "cwd": "packages/digitaldefiance-node-ecies-lib"
+      }
     }
   }
 }
