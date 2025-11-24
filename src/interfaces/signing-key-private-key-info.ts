@@ -1,5 +1,5 @@
-import { ec } from 'elliptic';
-import { IKeyPairBufferWithUnEncryptedPrivateKey } from './keypair-buffer-with-un-encrypted-private-key';
+import type { ec } from 'elliptic';
+import type { IKeyPairBufferWithUnEncryptedPrivateKey } from './keypair-buffer-with-un-encrypted-private-key';
 
 export interface ISigningKeyPrivateKeyInfo
   extends IKeyPairBufferWithUnEncryptedPrivateKey {

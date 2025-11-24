@@ -1,5 +1,5 @@
-import { SecureString } from '@digitaldefiance/ecies-lib';
-import { Member } from '../member';
+import type { SecureString } from '@digitaldefiance/ecies-lib';
+import type { Member } from '../member';
 
 export interface IBackendMemberWithMnemonic {
   member: Member;

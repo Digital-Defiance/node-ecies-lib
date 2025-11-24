@@ -1,7 +1,9 @@
-import {
-  Constants as BaseConstants,
+import type {
   IConstants as IBaseConstants,
   IPBkdf2Consts,
+} from '@digitaldefiance/ecies-lib';
+import {
+  Constants as BaseConstants,
   OBJECT_ID_LENGTH,
   ObjectIdProvider,
   registerRuntimeConfiguration,
@@ -13,12 +15,12 @@ import {
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n';
-import { IChecksumConsts } from './interfaces/checksum-consts';
-import { IConstants } from './interfaces/constants';
-import { IEncryptionConsts } from './interfaces/encryption-consts';
-import { IKeyringConsts } from './interfaces/keyring-consts';
-import { PbkdfProfiles } from './interfaces/pbkdf-profiles';
-import { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
+import type { IChecksumConsts } from './interfaces/checksum-consts';
+import type { IConstants } from './interfaces/constants';
+import type { IEncryptionConsts } from './interfaces/encryption-consts';
+import type { IKeyringConsts } from './interfaces/keyring-consts';
+import type { PbkdfProfiles } from './interfaces/pbkdf-profiles';
+import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 
 /**
  * Constants for checksum operations

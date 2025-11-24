@@ -247,6 +247,10 @@ yarn format         # Fix all (prettier + lint)
 
 ## ChangeLog
 
+### v4.3.0
+
+- Improving dependency loops/constants/direcular dependency
+
 ### v4.2.5
 
 **Type Safety Improvements**:

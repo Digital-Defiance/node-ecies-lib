@@ -48,12 +48,16 @@ export class MultiRecipientProcessor {
 
   constructor(
     cryptoCore: EciesCryptoCore,
-    consts: IECIESConstants = Constants.ECIES
+    consts: IECIESConstants = Constants.ECIES,
+    aesGcm?: AESGCMService,
+    eciesMultiRecipient?: EciesMultiRecipient
   ) {
     this.cryptoCore = cryptoCore;
     this.consts = consts;
-    this.aesGcm = new AESGCMService();
-    this.eciesMultiRecipient = new EciesMultiRecipient(cryptoCore);
+    // Use injected dependencies or create defaults
+    this.aesGcm = aesGcm ?? new AESGCMService();
+    this.eciesMultiRecipient =
+      eciesMultiRecipient ?? new EciesMultiRecipient(cryptoCore);
     this.recipientIdSize = consts.MULTIPLE.RECIPIENT_ID_SIZE;
     this.constants = getMultiRecipientConstants(this.recipientIdSize);
   }

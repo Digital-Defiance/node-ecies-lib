@@ -1,4 +1,4 @@
-import { IMultiEncryptedParsedHeader } from './multi-encrypted-parsed-header';
+import type { IMultiEncryptedParsedHeader } from './multi-encrypted-parsed-header';
 
 export interface IMultiEncryptedMessage extends IMultiEncryptedParsedHeader {
   /**

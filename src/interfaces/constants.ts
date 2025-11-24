@@ -1,15 +1,15 @@
-import { CipherGCMTypes } from 'crypto';
-import { IChecksumConsts } from './checksum-consts';
-import { IEncryptionConsts } from './encryption-consts';
-import { IKeyringConsts } from './keyring-consts';
-import { PbkdfProfiles } from './pbkdf-profiles';
-import { IWrappedKeyConsts } from './wrapped-key-consts';
-import { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
+import type { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
+import type { CipherGCMTypes } from 'crypto';
+import type { IChecksumConsts } from './checksum-consts';
+import type { IEncryptionConsts } from './encryption-consts';
+import type { IKeyringConsts } from './keyring-consts';
+import type { PbkdfProfiles } from './pbkdf-profiles';
+import type { IWrappedKeyConsts } from './wrapped-key-consts';
 
 /**
  * Node.js-specific constants interface.
  * Extends base ECIES constants with Node-specific additions.
- * 
+ *
  * Inherited from IBaseConstants:
  * - idProvider: IIdProvider
  * - OBJECT_ID_LENGTH: number
@@ -20,7 +20,8 @@ import { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
  * - ECIES: IECIESConstants
  * - And other base constants...
  */
-export interface IConstants extends Omit<IBaseConstants, 'PBKDF2_PROFILES' | 'CHECKSUM'> {
+export interface IConstants
+  extends Omit<IBaseConstants, 'PBKDF2_PROFILES' | 'CHECKSUM'> {
   /**
    * PBKDF2 configuration profiles (Node.js-specific)
    * Overrides base profiles with Node crypto implementations
@@ -47,7 +48,7 @@ export interface IConstants extends Omit<IBaseConstants, 'PBKDF2_PROFILES' | 'CH
    * Algorithm configuration string for keyring operations (Node.js-only)
    */
   KEYRING_ALGORITHM_CONFIGURATION: CipherGCMTypes;
-  
+
   ECIES_VERSION_SIZE: number;
   ECIES_CIPHER_SUITE_SIZE: number;
 }

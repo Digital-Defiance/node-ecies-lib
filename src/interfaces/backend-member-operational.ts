@@ -1,19 +1,21 @@
-import {
+import type {
   EmailString,
   MemberType,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { Wallet } from '@ethereumjs/wallet';
-import { Types } from 'mongoose';
-import { SignatureBuffer } from '../types';
-import { IEncryptedChunk } from './encrypted-chunk';
-import { IStreamProgress } from './stream-progress';
+import type { Wallet } from '@ethereumjs/wallet';
+import type { Types } from 'mongoose';
+import type { SignatureBuffer } from '../types';
+import type { IEncryptedChunk } from './encrypted-chunk';
+import type { IStreamProgress } from './stream-progress';
 
 /**
  * Operational interface for member - defines getters and methods
  */
-export interface IBackendMemberOperational<I extends string | Types.ObjectId | Buffer | Uint8Array> {
+export interface IBackendMemberOperational<
+  I extends string | Types.ObjectId | Buffer | Uint8Array
+> {
   // Required getters
   get id(): I;
   get type(): MemberType;
@@ -46,15 +48,15 @@ export interface IBackendMemberOperational<I extends string | Types.ObjectId | B
       recipientPublicKey?: Buffer;
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    },
+    }
   ): AsyncGenerator<IEncryptedChunk, void, unknown>;
-  
+
   decryptDataStream(
     source: AsyncIterable<Buffer>,
     options?: {
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    },
+    }
   ): AsyncGenerator<Buffer, void, unknown>;
 
   // Private key management
