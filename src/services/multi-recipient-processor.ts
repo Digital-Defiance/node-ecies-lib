@@ -12,13 +12,13 @@ import {
 import { Constants } from '../constants';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
+import type { IMember } from '../interfaces/member';
 import {
   getMultiRecipientConstants,
   IMultiRecipientChunk,
   IMultiRecipientChunkHeader,
   IMultiRecipientConstants,
 } from '../interfaces/multi-recipient-chunk';
-import { Member } from '../member';
 import { AESGCMService } from './aes-gcm';
 import { EciesCryptoCore } from './ecies/crypto-core';
 import { EciesMultiRecipient } from './ecies/multi-recipient';
@@ -71,10 +71,10 @@ export class MultiRecipientProcessor {
     message: Buffer,
     preamble: Buffer = Buffer.alloc(0)
   ): Promise<IMultiEncryptedMessage> {
-    // Convert IMultiRecipient to Member-like objects
-    // EciesMultiRecipient expects Member[] which has id: Buffer and publicKey: Buffer
+    // Convert IMultiRecipient to IMember-like objects
+    // EciesMultiRecipient expects IMember[] which has id: Buffer and publicKey: Buffer
     // IMultiRecipient already matches this structure, so we can safely cast
-    const members = recipients as Member[];
+    const members = recipients as IMember[];
 
     const result = this.eciesMultiRecipient.encryptMultiple(
       members,
@@ -409,11 +409,11 @@ export class MultiRecipientProcessor {
     privateKey: Buffer,
     senderPublicKey?: Buffer
   ): Promise<Buffer> {
-    // Create a mock Member with minimal required properties
+    // Create a mock IMember with minimal required properties
     const member = {
       id: recipientId,
       privateKey: { value: privateKey },
-    } as Member;
+    } as IMember;
 
     return this.eciesMultiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,

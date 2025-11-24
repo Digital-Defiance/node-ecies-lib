@@ -24,6 +24,7 @@ export class NodeMemberError extends Error {
 }
 
 import { IEncryptedChunk } from './interfaces/encrypted-chunk';
+import { IMember } from './interfaces/member';
 import { IStreamProgress } from './interfaces/stream-progress';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
@@ -38,7 +39,7 @@ import { SignatureBuffer, toBuffer, toUint8Array } from './types';
  */
 export class Member<
   TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer
-> implements IBackendMemberOperational<TID>
+> implements IMember<TID>, IBackendMemberOperational<TID>
 {
   private readonly _eciesService: ECIESService;
   private readonly _id: TID;

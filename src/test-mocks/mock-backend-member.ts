@@ -8,20 +8,21 @@ import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
 
-import { IBackendMemberOperational } from '../interfaces';
+import type { IBackendMemberOperational } from '../interfaces/backend-member-operational';
 import { SignatureBuffer } from '../types';
 
 const createMockWallet = (): Wallet =>
   ({
-    getPrivateKey: () => Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex'),
-    getPublicKey: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
-    getAddress: () => Buffer.from(faker.string.hexadecimal({ length: 40 }), 'hex'),
+    getPrivateKey: () =>
+      Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex'),
+    getPublicKey: () =>
+      Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
+    getAddress: () =>
+      Buffer.from(faker.string.hexadecimal({ length: 40 }), 'hex'),
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
   } as any);
 
-export class MockBackendMember
-  implements IBackendMemberOperational<Buffer>
-{
+export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   private _id: Buffer;
   private _type: MemberType;
   private _name: string;
@@ -47,7 +48,7 @@ export class MockBackendMember
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
-    }> = {},
+    }> = {}
   ) {
     this._id = data.id || randomBytes(12);
     this._type = data.type || faker.helpers.enumValue(MemberType);
@@ -115,7 +116,7 @@ export class MockBackendMember
   sign(data: Buffer): SignatureBuffer {
     return Buffer.from(
       faker.string.hexadecimal({ length: 128 }),
-      'hex',
+      'hex'
     ) as SignatureBuffer;
   }
 
@@ -167,7 +168,7 @@ export class MockBackendMember
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
-    }> = {},
+    }> = {}
   ): MockBackendMember {
     return new MockBackendMember(overrides);
   }
@@ -179,7 +180,7 @@ export class MockBackendMember
   static createWithPrivateKey(): MockBackendMember {
     return new MockBackendMember({
       privateKey: new SecureBuffer(
-        Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex'),
+        Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex')
       ),
       hasPrivateKey: true,
     });

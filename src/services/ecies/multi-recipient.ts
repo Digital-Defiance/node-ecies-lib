@@ -14,9 +14,9 @@ import {
 } from 'crypto';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
+import type { IMember } from '../../interfaces/member';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
-import { Member } from '../../member';
 import { EciesCryptoCore } from './crypto-core';
 import { EciesSingleRecipientCore } from './single-recipient';
 
@@ -236,7 +236,7 @@ export class EciesMultiRecipient {
    * @throws EciesError if the number of recipients is greater than 65535.
    */
   public encryptMultiple(
-    recipients: Member[],
+    recipients: IMember[],
     message: Buffer,
     preamble?: Buffer,
     senderPrivateKey?: Buffer
@@ -362,7 +362,7 @@ export class EciesMultiRecipient {
    */
   public decryptMultipleECIEForRecipient(
     encryptedData: IMultiEncryptedMessage,
-    recipient: Member,
+    recipient: IMember,
     senderPublicKey?: Buffer
   ): Buffer {
     if (recipient.privateKey === undefined) {
