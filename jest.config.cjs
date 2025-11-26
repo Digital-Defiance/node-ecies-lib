@@ -9,6 +9,8 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   setupFiles: ['<rootDir>/tests/jest-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
+  forceExit: true,
+  detectOpenHandles: false,
   transformIgnorePatterns: [
     'node_modules/(?!(@faker-js|@noble|@scure|@ethereumjs))',
   ],

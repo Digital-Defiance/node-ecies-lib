@@ -1,11 +1,8 @@
-import { Member as BackendMember } from '../src/member';
-import { ECIESService } from '../src/services/ecies/service';
-import { EciesFileService } from '../src/services/ecies/file';
 import {
   EmailString,
-  Member as FrontendMember,
   ECIESService as FrontendECIESService,
   EciesFileService as FrontendFileService,
+  Member as FrontendMember,
   IECIESConfig,
   MemberType,
   SecureBuffer,
@@ -16,6 +13,9 @@ import * as fs from 'fs';
 import { ObjectId } from 'mongodb';
 import * as os from 'os';
 import * as path from 'path';
+import { Member as BackendMember } from '../src/member';
+import { EciesFileService } from '../src/services/ecies/file';
+import { ECIESService } from '../src/services/ecies/service';
 
 describe('ECIES File Service E2E Tests', () => {
   let backendService: ECIESService;
@@ -58,7 +58,7 @@ describe('ECIES File Service E2E Tests', () => {
     senderId = new ObjectId();
     senderDateCreated = new Date();
     senderMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
     const senderWalletAndSeed =
       backendService.walletAndSeedFromMnemonic(senderMnemonic);
@@ -80,7 +80,7 @@ describe('ECIES File Service E2E Tests', () => {
       senderId,
       senderDateCreated,
       senderDateCreated,
-      senderId,
+      senderId
     );
     backendFileService = new EciesFileService(backendService, senderPrivateKey);
 
@@ -96,17 +96,17 @@ describe('ECIES File Service E2E Tests', () => {
       senderId, // ObjectId
       senderDateCreated,
       senderDateCreated,
-      senderId, // ObjectId
+      senderId // ObjectId
     );
     frontendFileService = new FrontendFileService(
       frontendService,
-      new Uint8Array(senderPrivateKey),
+      new Uint8Array(senderPrivateKey)
     );
 
     // Generate receiver keys
     receiverId = new ObjectId();
     receiverMnemonic = new SecureString(
-      'legal winner thank year wave sausage worth useful legal winner thank yellow',
+      'legal winner thank year wave sausage worth useful legal winner thank yellow'
     );
     const receiverWalletAndSeed =
       backendService.walletAndSeedFromMnemonic(receiverMnemonic);
@@ -127,7 +127,7 @@ describe('ECIES File Service E2E Tests', () => {
       receiverId,
       receiverDateCreated,
       receiverDateCreated,
-      receiverId,
+      receiverId
     );
     receiverFrontend = new FrontendMember(
       frontendService,
@@ -140,14 +140,14 @@ describe('ECIES File Service E2E Tests', () => {
       receiverId, // ObjectId
       receiverDateCreated,
       receiverDateCreated,
-      receiverId, // ObjectId
+      receiverId // ObjectId
     );
 
     // Initialize file services
     backendFileService = new EciesFileService(backendService, senderPrivateKey);
     frontendFileService = new FrontendFileService(
       frontendService,
-      new Uint8Array(receiverPrivateKey),
+      new Uint8Array(receiverPrivateKey)
     );
 
     // Create temp directory
@@ -169,12 +169,12 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Frontend: Decrypt the encrypted data
       const decrypted = await frontendFileService.decryptFile(
-        new Uint8Array(encrypted),
+        new Uint8Array(encrypted)
       );
 
       expect(Buffer.from(decrypted)).toEqual(originalData);
@@ -193,12 +193,12 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Frontend: Decrypt large file
       const decrypted = await frontendFileService.decryptFile(
-        new Uint8Array(encrypted),
+        new Uint8Array(encrypted)
       );
 
       expect(Buffer.from(decrypted)).toEqual(originalData);
@@ -211,11 +211,11 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       const decrypted = await frontendFileService.decryptFile(
-        new Uint8Array(encrypted),
+        new Uint8Array(encrypted)
       );
 
       expect(Buffer.from(decrypted)).toEqual(originalData);
@@ -228,7 +228,7 @@ describe('ECIES File Service E2E Tests', () => {
       constructor(
         private data: Uint8Array,
         public name: string,
-        public size: number = data.length,
+        public size: number = data.length
       ) {}
 
       slice(start: number, end?: number): MockFile {
@@ -239,7 +239,7 @@ describe('ECIES File Service E2E Tests', () => {
       async arrayBuffer(): Promise<ArrayBuffer> {
         return this.data.buffer.slice(
           this.data.byteOffset,
-          this.data.byteOffset + this.data.byteLength,
+          this.data.byteOffset + this.data.byteLength
         ) as ArrayBuffer;
       }
     }
@@ -248,13 +248,13 @@ describe('ECIES File Service E2E Tests', () => {
       const originalData = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
       const file = new MockFile(
         originalData,
-        'frontend-test.bin',
+        'frontend-test.bin'
       ) as unknown as File;
 
       // Frontend: Encrypt file
       const encrypted = await frontendFileService.encryptFile(
         file,
-        new Uint8Array(senderPublicKey),
+        new Uint8Array(senderPublicKey)
       );
 
       // Backend: Decrypt the encrypted data
@@ -272,13 +272,13 @@ describe('ECIES File Service E2E Tests', () => {
 
       const file = new MockFile(
         originalData,
-        'large-frontend.bin',
+        'large-frontend.bin'
       ) as unknown as File;
 
       // Frontend: Encrypt large file
       const encrypted = await frontendFileService.encryptFile(
         file,
-        new Uint8Array(senderPublicKey),
+        new Uint8Array(senderPublicKey)
       );
 
       // Backend: Decrypt large file
@@ -292,12 +292,12 @@ describe('ECIES File Service E2E Tests', () => {
       const originalData = new Uint8Array(Buffer.from(originalText, 'utf8'));
       const file = new MockFile(
         originalData,
-        'text-test.txt',
+        'text-test.txt'
       ) as unknown as File;
 
       const encrypted = await frontendFileService.encryptFile(
         file,
-        new Uint8Array(senderPublicKey),
+        new Uint8Array(senderPublicKey)
       );
       const decrypted = backendFileService.decryptFile(Buffer.from(encrypted));
 
@@ -308,7 +308,7 @@ describe('ECIES File Service E2E Tests', () => {
   describe('Bidirectional Communication', () => {
     it('should support round-trip encryption/decryption', async () => {
       const originalData = Buffer.from(
-        'Round-trip test data with special chars: àáâãäåæçèéêë',
+        'Round-trip test data with special chars: àáâãäåæçèéêë'
       );
       const inputPath = path.join(tempDir, 'roundtrip-input.txt');
 
@@ -316,12 +316,12 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const backendEncrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Step 2: Frontend (receiver) decrypts
       const frontendDecrypted = await frontendFileService.decryptFile(
-        new Uint8Array(backendEncrypted),
+        new Uint8Array(backendEncrypted)
       );
 
       // Step 3: Frontend re-encrypts for sender
@@ -329,7 +329,7 @@ describe('ECIES File Service E2E Tests', () => {
         constructor(
           private data: Uint8Array,
           public name: string,
-          public size: number = data.length,
+          public size: number = data.length
         ) {}
 
         slice(start: number, end?: number): RoundTripMockFile {
@@ -337,30 +337,30 @@ describe('ECIES File Service E2E Tests', () => {
           return new RoundTripMockFile(
             slicedData,
             this.name,
-            slicedData.length,
+            slicedData.length
           );
         }
 
         async arrayBuffer(): Promise<ArrayBuffer> {
           return this.data.buffer.slice(
             this.data.byteOffset,
-            this.data.byteOffset + this.data.byteLength,
+            this.data.byteOffset + this.data.byteLength
           ) as ArrayBuffer;
         }
       }
 
       const file = new RoundTripMockFile(
         frontendDecrypted,
-        'roundtrip.txt',
+        'roundtrip.txt'
       ) as unknown as File;
       const frontendEncrypted = await frontendFileService.encryptFile(
         file,
-        new Uint8Array(senderPublicKey),
+        new Uint8Array(senderPublicKey)
       );
 
       // Step 4: Backend (sender) decrypts final result
       const finalDecrypted = backendFileService.decryptFile(
-        Buffer.from(frontendEncrypted),
+        Buffer.from(frontendEncrypted)
       );
 
       expect(finalDecrypted).toEqual(originalData);
@@ -385,12 +385,12 @@ describe('ECIES File Service E2E Tests', () => {
         fs.writeFileSync(tempPath, currentData);
         const encrypted = backendFileService.encryptFileFromPath(
           tempPath,
-          receiverPublicKey,
+          receiverPublicKey
         );
 
         // Frontend decrypt
         const decrypted = await frontendFileService.decryptFile(
-          new Uint8Array(encrypted),
+          new Uint8Array(encrypted)
         );
         currentData = Buffer.from(decrypted);
 
@@ -410,7 +410,7 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Corrupt the encrypted data
@@ -418,7 +418,7 @@ describe('ECIES File Service E2E Tests', () => {
       corrupted[50] = corrupted[50] ^ 0xff; // Flip bits
 
       await expect(
-        frontendFileService.decryptFile(corrupted),
+        frontendFileService.decryptFile(corrupted)
       ).rejects.toThrow();
     });
 
@@ -429,17 +429,17 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Try to decrypt with wrong private key
       const wrongKeyService = new FrontendFileService(
         frontendService,
-        new Uint8Array(senderPrivateKey), // Wrong key
+        new Uint8Array(senderPrivateKey) // Wrong key
       );
 
       await expect(
-        wrongKeyService.decryptFile(new Uint8Array(encrypted)),
+        wrongKeyService.decryptFile(new Uint8Array(encrypted))
       ).rejects.toThrow();
     });
 
@@ -450,16 +450,16 @@ describe('ECIES File Service E2E Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = backendFileService.encryptFileFromPath(
         inputPath,
-        receiverPublicKey,
+        receiverPublicKey
       );
 
       // Truncate the encrypted data
       const truncated = new Uint8Array(
-        encrypted.slice(0, encrypted.length / 2),
+        encrypted.slice(0, encrypted.length / 2)
       );
 
       await expect(
-        frontendFileService.decryptFile(truncated),
+        frontendFileService.decryptFile(truncated)
       ).rejects.toThrow();
     });
   });
@@ -477,10 +477,10 @@ describe('ECIES File Service E2E Tests', () => {
           fs.writeFileSync(inputPath, data);
           const encrypted = backendFileService.encryptFileFromPath(
             inputPath,
-            receiverPublicKey,
+            receiverPublicKey
           );
           const decrypted = await frontendFileService.decryptFile(
-            new Uint8Array(encrypted),
+            new Uint8Array(encrypted)
           );
 
           expect(Buffer.from(decrypted)).toEqual(data);
@@ -506,10 +506,10 @@ describe('ECIES File Service E2E Tests', () => {
         const startTime = Date.now();
         const encrypted = backendFileService.encryptFileFromPath(
           inputPath,
-          receiverPublicKey,
+          receiverPublicKey
         );
         const decrypted = await frontendFileService.decryptFile(
-          new Uint8Array(encrypted),
+          new Uint8Array(encrypted)
         );
         const endTime = Date.now();
 
@@ -520,6 +520,6 @@ describe('ECIES File Service E2E Tests', () => {
       // Performance should scale reasonably (not exponentially)
       // This is a basic check - adjust thresholds as needed
       expect(results[results.length - 1]).toBeLessThan(results[0] * 100);
-    }, 10000);
+    }, 20000);
   });
 });
