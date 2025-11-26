@@ -29,7 +29,7 @@ import { IStreamProgress } from './interfaces/stream-progress';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
 // Removed: import { ServiceProvider } from './services/service.provider';
-import { Types } from 'mongoose';
+import { Types } from '@digitaldefiance/mongoose-types';
 import { Constants } from './constants';
 import { IBackendMemberOperational } from './interfaces/backend-member-operational';
 import { SignatureBuffer, toBuffer, toUint8Array } from './types';

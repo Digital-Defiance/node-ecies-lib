@@ -5,7 +5,7 @@ import type {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import type { Wallet } from '@ethereumjs/wallet';
-import type { Types } from 'mongoose';
+import type { Types } from '@digitaldefiance/mongoose-types';
 import type { SignatureBuffer } from '../types';
 import type { IEncryptedChunk } from './encrypted-chunk';
 import type { IStreamProgress } from './stream-progress';

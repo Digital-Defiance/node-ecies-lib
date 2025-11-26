@@ -434,6 +434,11 @@ describe('Integration with suite-core-lib', () => {
 
 ## ChangeLog
 
+### v4.4.2
+
+- Update ecies lib
+- Properly import from @digitaldefiance/mongoose-types
+
 ### v4.4.1
 
 - Update ecies lib
