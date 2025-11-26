@@ -245,6 +245,193 @@ yarn lint           # ESLint check
 yarn format         # Fix all (prettier + lint)
 ```
 
+## Testing
+
+### Testing Approach
+
+The node-ecies-lib package uses comprehensive testing with 220+ tests covering all Node.js-specific cryptographic operations and binary compatibility with the browser-based ecies-lib.
+
+**Test Framework**: Jest with TypeScript support  
+**Property-Based Testing**: fast-check for cryptographic properties  
+**Coverage Target**: 90%+ for all cryptographic operations  
+**Binary Compatibility**: Verified with @digitaldefiance/ecies-lib
+
+### Test Structure
+
+```
+tests/
+  ├── unit/              # Unit tests for Node.js services
+  ├── integration/       # Integration tests for protocol flows
+  ├── e2e/               # End-to-end encryption/decryption tests
+  ├── compatibility/     # Cross-platform compatibility with ecies-lib
+  └── streaming/         # Streaming encryption tests
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run specific test suite
+npm test -- ecies-service.spec.ts
+
+# Run compatibility tests
+npm test -- cross-platform-compatibility.e2e.spec.ts
+
+# Run in watch mode
+npm test -- --watch
+```
+
+### Test Patterns
+
+#### Testing Node.js Encryption
+
+```typescript
+import { ECIESService, registerNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
+import { ObjectIdProvider } from '@digitaldefiance/ecies-lib';
+
+describe('Node ECIES Encryption', () => {
+  let ecies: ECIESService;
+
+  beforeEach(() => {
+    registerNodeRuntimeConfiguration({
+      idProvider: new ObjectIdProvider()
+    });
+    ecies = new ECIESService();
+  });
+
+  it('should encrypt and decrypt with Buffer', () => {
+    const mnemonic = ecies.generateNewMnemonic();
+    const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(mnemonic);
+    
+    const message = Buffer.from('Secret Message');
+    const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, message);
+    const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+    
+    expect(decrypted.toString()).toBe('Secret Message');
+  });
+});
+```
+
+#### Testing Streaming Encryption
+
+```typescript
+import { ECIESService, EncryptionStream } from '@digitaldefiance/node-ecies-lib';
+import { createReadStream } from 'fs';
+
+describe('Streaming Encryption', () => {
+  it('should encrypt large files efficiently', async () => {
+    const ecies = new ECIESService();
+    const stream = new EncryptionStream(ecies);
+    
+    const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(ecies.generateNewMnemonic());
+    const fileStream = createReadStream('test-file.dat');
+    
+    const encryptedChunks: Buffer[] = [];
+    for await (const chunk of stream.encryptStream(fileStream, publicKey)) {
+      encryptedChunks.push(chunk.data);
+    }
+    
+    expect(encryptedChunks.length).toBeGreaterThan(0);
+  });
+});
+```
+
+#### Testing Binary Compatibility
+
+```typescript
+import { ECIESService as NodeECIES } from '@digitaldefiance/node-ecies-lib';
+import { ECIESService as BrowserECIES } from '@digitaldefiance/ecies-lib';
+
+describe('Binary Compatibility', () => {
+  it('should decrypt browser-encrypted data in Node.js', async () => {
+    const browserEcies = new BrowserECIES();
+    const nodeEcies = new NodeECIES();
+    
+    const mnemonic = browserEcies.generateNewMnemonic();
+    const { privateKey, publicKey } = browserEcies.mnemonicToSimpleKeyPair(mnemonic);
+    
+    // Encrypt in browser
+    const message = new TextEncoder().encode('Cross-platform message');
+    const encrypted = await browserEcies.encryptSimpleOrSingle(false, publicKey, message);
+    
+    // Decrypt in Node.js
+    const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
+      false,
+      Buffer.from(privateKey),
+      Buffer.from(encrypted)
+    );
+    
+    expect(decrypted.toString()).toBe('Cross-platform message');
+  });
+});
+```
+
+#### Property-Based Testing
+
+```typescript
+import * as fc from 'fast-check';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+
+describe('Cryptographic Properties', () => {
+  it('should maintain encryption round-trip for any Buffer', () => {
+    const ecies = new ECIESService();
+    const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(ecies.generateNewMnemonic());
+    
+    fc.assert(
+      fc.property(
+        fc.uint8Array({ minLength: 1, maxLength: 1000 }),
+        (data) => {
+          const message = Buffer.from(data);
+          const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, message);
+          const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+          
+          expect(decrypted.equals(message)).toBe(true);
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+});
+```
+
+### Testing Best Practices
+
+1. **Configure runtime** before tests with `registerNodeRuntimeConfiguration()`
+2. **Test Buffer operations** specific to Node.js
+3. **Test streaming** for large file handling
+4. **Verify binary compatibility** with browser ecies-lib
+5. **Test all ID providers** (ObjectId, GUID, UUID, Custom)
+6. **Test error conditions** like invalid keys and corrupted data
+
+### Cross-Package Testing
+
+Testing integration with other Express Suite packages:
+
+```typescript
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { Member, MemberType, EmailString } from '@digitaldefiance/ecies-lib';
+
+describe('Integration with suite-core-lib', () => {
+  it('should work with Member abstraction', () => {
+    const ecies = new ECIESService();
+    const { member, mnemonic } = Member.newMember(
+      ecies,
+      MemberType.User,
+      'Alice',
+      new EmailString('alice@example.com')
+    );
+    
+    const encrypted = member.encryptData('Secret');
+    expect(encrypted).toBeDefined();
+  });
+});
+```
+
 ## ChangeLog
 
 ### v4.4.0

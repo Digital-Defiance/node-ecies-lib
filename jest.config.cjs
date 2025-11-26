@@ -28,7 +28,20 @@ module.exports = {
         },
       },
     ],
-    '^.+\\.(js|jsx|mjs)$': 'babel-jest',
+    '^.+\\.(js|jsx|mjs)$': [
+      '@swc/jest',
+      {
+        jsc: {
+          parser: {
+            syntax: 'ecmascript',
+          },
+          target: 'es2020',
+        },
+        module: {
+          type: 'commonjs',
+        },
+      },
+    ],
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',

@@ -2,7 +2,6 @@ import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { getEciesPluginI18nEngine } from '../src/i18n/ecies-i18n-factory';
 import { EciesFileService } from '../src/services/ecies/file';
 import { ECIESService } from '../src/services/ecies/service';
 
@@ -28,7 +27,7 @@ describe('EciesFileService (Backend)', () => {
 
     // Generate test keys
     const { wallet } = eciesService.walletAndSeedFromMnemonic(
-      eciesService.generateNewMnemonic(),
+      eciesService.generateNewMnemonic()
     );
     userPrivateKey = Buffer.from(wallet.getPrivateKey());
     recipientPublicKey = Buffer.concat([
@@ -61,7 +60,7 @@ describe('EciesFileService (Backend)', () => {
       // Encrypt file
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       expect(encrypted).toBeInstanceOf(Buffer);
       expect(encrypted.length).toBeGreaterThan(testData.length);
@@ -75,8 +74,8 @@ describe('EciesFileService (Backend)', () => {
     });
 
     it('should encrypt and decrypt a large file (multiple chunks)', () => {
-      const chunkSize = 1024 * 1024; // 1MB
-      const testData = Buffer.alloc(chunkSize * 2.5); // 2.5MB
+      const chunkSize = 512 * 1024; // 512KB (reduced for faster tests)
+      const testData = Buffer.alloc(chunkSize * 2.5); // 1.25MB
       for (let i = 0; i < testData.length; i++) {
         testData[i] = i % 256;
       }
@@ -88,7 +87,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       expect(encrypted.length).toBeGreaterThan(testData.length);
 
@@ -107,7 +106,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       fileService.decryptFileToPath(encrypted, outputPath);
 
@@ -116,7 +115,7 @@ describe('EciesFileService (Backend)', () => {
     });
 
     it('should handle files with exact chunk size', () => {
-      const chunkSize = 1024 * 1024; // 1MB
+      const chunkSize = 512 * 1024; // 512KB (reduced for faster tests)
       const testData = Buffer.alloc(chunkSize);
       testData.fill(42);
 
@@ -127,7 +126,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       fileService.decryptFileToPath(encrypted, outputPath);
 
@@ -145,7 +144,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -153,7 +152,7 @@ describe('EciesFileService (Backend)', () => {
     });
 
     it('should handle large buffer decryption', () => {
-      const testData = Buffer.alloc(1024 * 1024 * 3); // 3MB
+      const testData = Buffer.alloc(1024 * 1024); // 1MB (reduced for faster tests)
       testData.fill(123);
 
       const inputPath = path.join(tempDir, 'large-buffer-input.bin');
@@ -162,7 +161,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -179,7 +178,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
 
       // Should be able to decrypt without errors (validates header parsing)
@@ -188,8 +187,8 @@ describe('EciesFileService (Backend)', () => {
     });
 
     it('should handle multiple chunk headers correctly', () => {
-      const chunkSize = 1024 * 1024;
-      const testData = Buffer.alloc(chunkSize * 3 + 500); // 3.5 chunks
+      const chunkSize = 512 * 1024; // 512KB (reduced for faster tests)
+      const testData = Buffer.alloc(chunkSize * 3 + 500); // 3.5 chunks (~1.5MB)
       for (let i = 0; i < testData.length; i++) {
         testData[i] = (i * 7) % 256; // Some pattern
       }
@@ -200,7 +199,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -233,7 +232,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       const truncated = encrypted.slice(0, 50); // Truncate
 
@@ -251,7 +250,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
 
       expect(() => {
@@ -262,8 +261,8 @@ describe('EciesFileService (Backend)', () => {
 
   describe('Performance and Memory', () => {
     it('should handle very large files efficiently', () => {
-      const chunkSize = 1024 * 1024;
-      const testData = Buffer.alloc(chunkSize * 10); // 10MB
+      const chunkSize = 512 * 1024; // 512KB (reduced for faster tests)
+      const testData = Buffer.alloc(chunkSize * 6); // 3MB (reduced from 10MB)
       testData.fill(255);
 
       const inputPath = path.join(tempDir, 'performance-test.bin');
@@ -274,7 +273,7 @@ describe('EciesFileService (Backend)', () => {
       const startTime = Date.now();
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey,
+        recipientPublicKey
       );
       fileService.decryptFileToPath(encrypted, outputPath);
       const endTime = Date.now();

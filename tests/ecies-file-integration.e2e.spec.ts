@@ -1,10 +1,10 @@
 import { IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { ECIESService } from '../src/services/ecies';
 import { EciesFileService } from '../src/services/ecies/file';
-import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 describe('ECIES File Service Integration Tests', () => {
   let eciesService: ECIESService;
@@ -34,7 +34,7 @@ describe('ECIES File Service Integration Tests', () => {
 
     // Generate Alice's keys
     const aliceMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
     const { wallet: aliceWallet } =
       eciesService.walletAndSeedFromMnemonic(aliceMnemonic);
@@ -46,7 +46,7 @@ describe('ECIES File Service Integration Tests', () => {
 
     // Generate Bob's keys
     const bobMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
     const { wallet: bobWallet } =
       eciesService.walletAndSeedFromMnemonic(bobMnemonic);
@@ -58,7 +58,7 @@ describe('ECIES File Service Integration Tests', () => {
 
     // Generate Charlie's keys
     const charlieMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art'
     );
     const { wallet: charlieWallet } =
       eciesService.walletAndSeedFromMnemonic(charlieMnemonic);
@@ -71,7 +71,7 @@ describe('ECIES File Service Integration Tests', () => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ecies-integration-test-'));
   });
 
-  afterAll(() => {
+  afterEach(() => {
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
     }
@@ -81,7 +81,7 @@ describe('ECIES File Service Integration Tests', () => {
     it('should allow Alice to encrypt a file for Bob', () => {
       const aliceFileService = new EciesFileService(
         eciesService,
-        alicePrivateKey,
+        alicePrivateKey
       );
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
 
@@ -93,7 +93,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, secretMessage);
       const encrypted = aliceFileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       // Bob decrypts the file
@@ -106,11 +106,11 @@ describe('ECIES File Service Integration Tests', () => {
     it("should prevent Charlie from decrypting Alice's message to Bob", () => {
       const aliceFileService = new EciesFileService(
         eciesService,
-        alicePrivateKey,
+        alicePrivateKey
       );
       const charlieFileService = new EciesFileService(
         eciesService,
-        charliePrivateKey,
+        charliePrivateKey
       );
 
       const secretMessage = Buffer.from('Private message from Alice to Bob');
@@ -119,7 +119,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, secretMessage);
       const encrypted = aliceFileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       // Charlie should not be able to decrypt
@@ -131,16 +131,16 @@ describe('ECIES File Service Integration Tests', () => {
     it('should handle file sharing chain: Alice -> Bob -> Charlie', () => {
       const aliceFileService = new EciesFileService(
         eciesService,
-        alicePrivateKey,
+        alicePrivateKey
       );
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
       const charlieFileService = new EciesFileService(
         eciesService,
-        charliePrivateKey,
+        charliePrivateKey
       );
 
       const originalMessage = Buffer.from(
-        'Chain message: Alice -> Bob -> Charlie',
+        'Chain message: Alice -> Bob -> Charlie'
       );
       const aliceInputPath = path.join(tempDir, 'chain-alice.txt');
       const bobTempPath = path.join(tempDir, 'chain-bob-temp.txt');
@@ -150,7 +150,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(aliceInputPath, originalMessage);
       const aliceToBob = aliceFileService.encryptFileFromPath(
         aliceInputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       // Bob decrypts and re-encrypts for Charlie
@@ -158,7 +158,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(bobTempPath, bobDecrypted);
       const bobToCharlie = bobFileService.encryptFileFromPath(
         bobTempPath,
-        charliePublicKey,
+        charliePublicKey
       );
 
       // Charlie decrypts final message
@@ -192,12 +192,12 @@ describe('ECIES File Service Integration Tests', () => {
         fs.writeFileSync(inputPath, testCase.content, testCase.encoding);
         const encrypted = fileService.encryptFileFromPath(
           inputPath,
-          bobPublicKey,
+          bobPublicKey
         );
 
         const bobFileService = new EciesFileService(
           eciesService,
-          bobPrivateKey,
+          bobPrivateKey
         );
         bobFileService.decryptFileToPath(encrypted, outputPath);
 
@@ -221,7 +221,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, binaryData);
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
@@ -252,7 +252,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, JSON.stringify(jsonData, null, 2));
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
@@ -280,7 +280,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, largeData);
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
@@ -310,12 +310,12 @@ describe('ECIES File Service Integration Tests', () => {
         fs.writeFileSync(inputPath, data);
         const encrypted = fileService.encryptFileFromPath(
           inputPath,
-          bobPublicKey,
+          bobPublicKey
         );
 
         const bobFileService = new EciesFileService(
           eciesService,
-          bobPrivateKey,
+          bobPrivateKey
         );
         bobFileService.decryptFileToPath(encrypted, outputPath);
 
@@ -331,14 +331,14 @@ describe('ECIES File Service Integration Tests', () => {
         const fileService = new EciesFileService(eciesService, alicePrivateKey);
 
         const originalData = Buffer.from(
-          'Data that will be partially corrupted',
+          'Data that will be partially corrupted'
         );
         const inputPath = path.join(tempDir, 'corruption-test.txt');
 
         fs.writeFileSync(inputPath, originalData);
         const encrypted = fileService.encryptFileFromPath(
           inputPath,
-          bobPublicKey,
+          bobPublicKey
         );
 
         // Corrupt a single byte in the middle
@@ -347,7 +347,7 @@ describe('ECIES File Service Integration Tests', () => {
 
         const bobFileService = new EciesFileService(
           eciesService,
-          bobPrivateKey,
+          bobPrivateKey
         );
 
         expect(() => {
@@ -365,7 +365,7 @@ describe('ECIES File Service Integration Tests', () => {
       fs.writeFileSync(inputPath, originalData);
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        bobPublicKey,
+        bobPublicKey
       );
 
       // Modify the authentication tag
@@ -383,50 +383,53 @@ describe('ECIES File Service Integration Tests', () => {
   describe('Performance Benchmarks', () => {
     it('should maintain reasonable performance across different file sizes', async () => {
       await withConsoleMocks({ mute: true }, async () => {
-      const fileService = new EciesFileService(eciesService, alicePrivateKey);
-      const bobFileService = new EciesFileService(eciesService, bobPrivateKey);
-
-      const fileSizes = [
-        { size: 1024, name: '1KB' },
-        { size: 10240, name: '10KB' },
-        { size: 102400, name: '100KB' },
-        { size: 1048576, name: '1MB' },
-      ];
-
-      const results: Array<{
-        size: string;
-        encryptTime: number;
-        decryptTime: number;
-      }> = [];
-
-      fileSizes.forEach(({ size, name }) => {
-        const data = Buffer.alloc(size);
-        data.fill(42);
-
-        const inputPath = path.join(tempDir, `perf-${name}.bin`);
-        fs.writeFileSync(inputPath, data);
-
-        // Measure encryption time
-        const encryptStart = Date.now();
-        const encrypted = fileService.encryptFileFromPath(
-          inputPath,
-          bobPublicKey,
+        const fileService = new EciesFileService(eciesService, alicePrivateKey);
+        const bobFileService = new EciesFileService(
+          eciesService,
+          bobPrivateKey
         );
-        const encryptEnd = Date.now();
 
-        // Measure decryption time
-        const decryptStart = Date.now();
-        const decrypted = bobFileService.decryptFile(encrypted);
-        const decryptEnd = Date.now();
+        const fileSizes = [
+          { size: 1024, name: '1KB' },
+          { size: 10240, name: '10KB' },
+          { size: 102400, name: '100KB' },
+          { size: 1048576, name: '1MB' },
+        ];
 
-        results.push({
-          size: name,
-          encryptTime: encryptEnd - encryptStart,
-          decryptTime: decryptEnd - decryptStart,
+        const results: Array<{
+          size: string;
+          encryptTime: number;
+          decryptTime: number;
+        }> = [];
+
+        fileSizes.forEach(({ size, name }) => {
+          const data = Buffer.alloc(size);
+          data.fill(42);
+
+          const inputPath = path.join(tempDir, `perf-${name}.bin`);
+          fs.writeFileSync(inputPath, data);
+
+          // Measure encryption time
+          const encryptStart = Date.now();
+          const encrypted = fileService.encryptFileFromPath(
+            inputPath,
+            bobPublicKey
+          );
+          const encryptEnd = Date.now();
+
+          // Measure decryption time
+          const decryptStart = Date.now();
+          const decrypted = bobFileService.decryptFile(encrypted);
+          const decryptEnd = Date.now();
+
+          results.push({
+            size: name,
+            encryptTime: encryptEnd - encryptStart,
+            decryptTime: decryptEnd - decryptStart,
+          });
+
+          expect(decrypted).toEqual(data);
         });
-
-        expect(decrypted).toEqual(data);
-      });
 
         // Log performance results for analysis - this is expected output for performance tests
         console.log('Performance Results:', results);
@@ -448,11 +451,11 @@ describe('ECIES File Service Integration Tests', () => {
           try {
             const fileService = new EciesFileService(
               eciesService,
-              alicePrivateKey,
+              alicePrivateKey
             );
             const bobFileService = new EciesFileService(
               eciesService,
-              bobPrivateKey,
+              bobPrivateKey
             );
 
             const data = Buffer.from(`Concurrent operation ${i}`);
@@ -461,7 +464,7 @@ describe('ECIES File Service Integration Tests', () => {
             fs.writeFileSync(inputPath, data);
             const encrypted = fileService.encryptFileFromPath(
               inputPath,
-              bobPublicKey,
+              bobPublicKey
             );
             const decrypted = bobFileService.decryptFile(encrypted);
 

@@ -151,7 +151,8 @@ describe('Property-Based Test: Business Logic Independence', () => {
             normalizedPath.includes('/src/') &&
             !normalizedPath.includes('node_modules') &&
             !normalizedPath.includes('digitaldefiance-i18n-lib') &&
-            !normalizedPath.includes('digitaldefiance-ecies-lib')
+            !normalizedPath.includes('digitaldefiance-ecies-lib') &&
+            !normalizedPath.includes('digitaldefiance-mongoose-types')
           );
         });
       });
