@@ -434,6 +434,10 @@ describe('Integration with suite-core-lib', () => {
 
 ## ChangeLog
 
+### v4.4.1
+
+- Update ecies lib
+
 ### v4.4.0
 
 - Improving dependency loops/constants/direcular dependency
