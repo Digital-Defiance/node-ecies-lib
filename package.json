@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "4.4.3",
+  "version": "4.4.5",
   "description": "Digital Defiance Node ECIES Library",
   "homepage": "https://github.com/Digital-Defiance/node-ecies-lib",
   "repository": {
@@ -53,7 +53,7 @@
   "license": "MIT",
   "packageManager": "yarn@4.10.3",
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "4.4.6",
+    "@digitaldefiance/ecies-lib": "4.4.7",
     "@digitaldefiance/i18n-lib": "3.8.2",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "^2.0.1",
@@ -64,7 +64,7 @@
     "ts-brand": "^0.2.0"
   },
   "devDependencies": {
-    "@digitaldefiance/express-suite-test-utils": "1.0.11",
+    "@digitaldefiance/express-suite-test-utils": "1.0.12",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
     "eslint-plugin-import": "^2.32.0",
