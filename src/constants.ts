@@ -209,6 +209,14 @@ export const Constants: IConstants = Object.freeze({
    * Algorithm configuration string for keyring operations
    */
   KEYRING_ALGORITHM_CONFIGURATION: KEYRING_ALGORITHM_CONFIGURATION,
+  /**
+   * Size of ECIES version field in bytes
+   */
+  ECIES_VERSION_SIZE: 1,
+  /**
+   * Size of ECIES cipher suite field in bytes
+   */
+  ECIES_CIPHER_SUITE_SIZE: 1,
 } as const);
 
 /**

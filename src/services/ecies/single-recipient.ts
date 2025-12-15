@@ -255,7 +255,7 @@ export class EciesSingleRecipientCore {
     offset += this.cryptoCore.consts.VERSION_SIZE;
     if (version !== EciesVersionEnum.V1) {
       throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidVersionTemplate,
+        ECIESErrorTypeEnum.InvalidVersion,
         undefined,
         undefined,
         { version: String(version) }
@@ -267,7 +267,7 @@ export class EciesSingleRecipientCore {
     offset += this.cryptoCore.consts.CIPHER_SUITE_SIZE;
     if (cipherSuite !== EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256) {
       throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidCipherSuiteTemplate,
+        ECIESErrorTypeEnum.InvalidCipherSuite,
         undefined,
         undefined,
         { cipherSuite: String(cipherSuite) }

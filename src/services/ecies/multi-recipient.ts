@@ -380,7 +380,7 @@ export class EciesMultiRecipient {
     const encryptedKey = encryptedData.recipientKeys[recipientIndex];
 
     if (!encryptedData.ephemeralPublicKey) {
-      throw new ECIESError(ECIESErrorTypeEnum.MissingEphemeralPublicKey);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidEphemeralPublicKey);
     }
 
     // Decrypt the symmetric key using the detected encryption type
@@ -519,7 +519,7 @@ export class EciesMultiRecipient {
     }
 
     if (!data.ephemeralPublicKey) {
-      throw new ECIESError(ECIESErrorTypeEnum.MissingEphemeralPublicKey);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidEphemeralPublicKey);
     }
 
     // Create version buffer
@@ -544,7 +544,7 @@ export class EciesMultiRecipient {
     // We use the most significant byte (MSB) to store the recipient ID size
     const recipientIdSize = this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE;
     if (recipientIdSize > 255) {
-      throw new ECIESError(ECIESErrorTypeEnum.RecipientIdSizeTooLarge);
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidRecipientCount);
     }
 
     const dataLengthBigInt = BigInt(data.dataLength);

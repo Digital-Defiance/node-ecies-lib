@@ -2,6 +2,7 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   IECIESConstants,
+  SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
 import {
   createCipheriv,
@@ -409,15 +410,15 @@ export class MultiRecipientProcessor {
     privateKey: Buffer,
     senderPublicKey?: Buffer
   ): Promise<Buffer> {
-    // Create a mock IMember with minimal required properties
-    const member = {
+    // Create a partial IMember with only the properties needed for decryption
+    const member: Pick<IMember, 'id' | 'privateKey'> = {
       id: recipientId,
-      privateKey: { value: privateKey },
-    } as IMember;
+      privateKey: new SecureBuffer(privateKey),
+    };
 
     return this.eciesMultiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,
-      member,
+      member as IMember,
       senderPublicKey
     );
   }
