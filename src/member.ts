@@ -7,7 +7,6 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
-import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
@@ -179,8 +178,9 @@ export class Member<
     }
     const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
-    const publicKey = secp256k1.getPublicKey(privateKey, true);
-    const publicKeyWithPrefix = Buffer.from(publicKey);
+    const publicKeyWithPrefix = this._eciesService.getPublicKey(
+      Buffer.from(privateKey)
+    );
 
     if (
       publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
@@ -422,8 +422,9 @@ export class Member<
   ): Member {
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
-    const publicKey = secp256k1.getPublicKey(privateKey, true);
-    const publicKeyWithPrefix = Buffer.from(publicKey);
+    const publicKeyWithPrefix = eciesService.getPublicKey(
+      Buffer.from(privateKey)
+    );
 
     return new Member(
       eciesService,
@@ -484,9 +485,10 @@ export class Member<
 
     // Get private key from wallet
     const privateKey = wallet.getPrivateKey();
-    // Get public key with 0x04 prefix
-    const publicKey = secp256k1.getPublicKey(privateKey, true);
-    const publicKeyWithPrefix = Buffer.from(publicKey);
+    // Get compressed public key (33 bytes with 0x02 or 0x03 prefix)
+    const publicKeyWithPrefix = eciesService.getPublicKey(
+      Buffer.from(privateKey)
+    );
 
     const newId = Buffer.from(Constants.idProvider.generate());
     const dateCreated = new Date();
