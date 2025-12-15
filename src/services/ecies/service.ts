@@ -107,6 +107,15 @@ export class ECIESService {
     return this.mnemonicToSimpleKeyPairBuffer(mnemonic);
   }
 
+  /**
+   * Get compressed public key from private key
+   * @param privateKey The private key
+   * @returns Compressed public key (33 bytes with prefix)
+   */
+  public getPublicKey(privateKey: Buffer): Buffer {
+    return this.cryptoCore.getPublicKey(privateKey);
+  }
+
   // === Core Encryption/Decryption Methods ===
 
   public encryptSimpleOrSingle(
