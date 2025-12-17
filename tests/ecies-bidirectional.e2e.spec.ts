@@ -1,15 +1,15 @@
-import { Member as BackendMember } from '../src/member';
-import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
-import { getNodeRuntimeConfiguration } from '../src/constants';
 import {
   EmailString,
-  Member as FrontendMember,
   ECIESService as FrontendECIESService,
-  getEciesI18nEngine,
+  Member as FrontendMember,
   IECIESConfig,
   MemberType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+
+import { getNodeRuntimeConfiguration } from '../src/constants';
+import { Member as BackendMember } from '../src/member';
+import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 
@@ -35,7 +35,7 @@ describe('ECIES Bidirectional Compatibility', () => {
     frontendService = new FrontendECIESService(config);
     backendService = new BackendECIESService(config);
     testMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
   });
 
@@ -48,7 +48,7 @@ describe('ECIES Bidirectional Compatibility', () => {
       MemberType.User,
       'Frontend User',
       email,
-      testMnemonic,
+      testMnemonic
     );
     frontendMember = frontendResult.member;
 
@@ -58,7 +58,7 @@ describe('ECIES Bidirectional Compatibility', () => {
       MemberType.User,
       'Backend User',
       email,
-      testMnemonic,
+      testMnemonic
     );
     backendMember = backendResult.member;
   });
@@ -71,7 +71,7 @@ describe('ECIES Bidirectional Compatibility', () => {
   describe('Cross-Platform Member Communication', () => {
     it('should have identical public keys from same mnemonic', () => {
       expect(Buffer.from(frontendMember.publicKey)).toEqual(
-        backendMember.publicKey,
+        backendMember.publicKey
       );
     });
 
@@ -81,14 +81,14 @@ describe('ECIES Bidirectional Compatibility', () => {
       // Frontend encrypts for backend
       const frontendEncrypted = await frontendMember.encryptData(testMessage);
       const backendDecrypted = backendMember.decryptData(
-        Buffer.from(frontendEncrypted),
+        Buffer.from(frontendEncrypted)
       );
       expect(backendDecrypted.toString()).toEqual(testMessage);
 
       // Backend encrypts for frontend
       const backendEncrypted = backendMember.encryptData(testMessage);
       const frontendDecrypted = await frontendMember.decryptData(
-        backendEncrypted,
+        backendEncrypted
       );
       expect(Buffer.from(frontendDecrypted).toString()).toEqual(testMessage);
     });
@@ -109,14 +109,14 @@ describe('ECIES Bidirectional Compatibility', () => {
         // Frontend → Backend
         const frontendEncrypted = await frontendMember.encryptData(testCase);
         const backendDecrypted = backendMember.decryptData(
-          Buffer.from(frontendEncrypted),
+          Buffer.from(frontendEncrypted)
         );
         expect(backendDecrypted.toString()).toEqual(testCase);
 
         // Backend → Frontend
         const backendEncrypted = backendMember.encryptData(testCase);
         const frontendDecrypted = await frontendMember.decryptData(
-          backendEncrypted,
+          backendEncrypted
         );
         expect(Buffer.from(frontendDecrypted).toString()).toEqual(testCase);
       }
@@ -129,7 +129,7 @@ describe('ECIES Bidirectional Compatibility', () => {
       const frontendSignature = frontendMember.sign(testData);
       const frontendVerified = backendMember.verify(
         Buffer.from(frontendSignature) as any,
-        testData,
+        testData
       );
       expect(frontendVerified).toBe(true);
 
@@ -137,7 +137,7 @@ describe('ECIES Bidirectional Compatibility', () => {
       const backendSignature = backendMember.sign(testData);
       const backendVerified = frontendMember.verify(
         new Uint8Array(backendSignature) as any,
-        testData,
+        testData
       );
       expect(backendVerified).toBe(true);
     });
@@ -157,14 +157,14 @@ describe('ECIES Bidirectional Compatibility', () => {
       const backendEncrypted = backendService.encryptSimpleOrSingle(
         false, // single mode
         publicKey,
-        testMessage,
+        testMessage
       );
 
       const frontendDecrypted =
         await frontendService.decryptSimpleOrSingleWithHeader(
           false, // single mode
           new Uint8Array(privateKey),
-          new Uint8Array(backendEncrypted),
+          new Uint8Array(backendEncrypted)
         );
 
       expect(Buffer.from(frontendDecrypted)).toEqual(testMessage);
@@ -173,13 +173,13 @@ describe('ECIES Bidirectional Compatibility', () => {
       const frontendEncrypted = await frontendService.encryptSimpleOrSingle(
         false, // single mode
         new Uint8Array(publicKey),
-        new Uint8Array(testMessage),
+        new Uint8Array(testMessage)
       );
 
       const backendDecrypted = backendService.decryptSimpleOrSingleWithHeader(
         false, // single mode
         privateKey,
-        Buffer.from(frontendEncrypted),
+        Buffer.from(frontendEncrypted)
       );
 
       expect(backendDecrypted).toEqual(testMessage);
@@ -198,13 +198,13 @@ describe('ECIES Bidirectional Compatibility', () => {
       const backendSimple = backendService.encryptSimpleOrSingle(
         true,
         publicKey,
-        testMessage,
+        testMessage
       );
       const frontendSimpleDecrypted =
         await frontendService.decryptSimpleOrSingleWithHeader(
           true,
           new Uint8Array(privateKey),
-          new Uint8Array(backendSimple),
+          new Uint8Array(backendSimple)
         );
       expect(Buffer.from(frontendSimpleDecrypted)).toEqual(testMessage);
 
@@ -212,13 +212,13 @@ describe('ECIES Bidirectional Compatibility', () => {
       const backendSingle = backendService.encryptSimpleOrSingle(
         false,
         publicKey,
-        testMessage,
+        testMessage
       );
       const frontendSingleDecrypted =
         await frontendService.decryptSimpleOrSingleWithHeader(
           false,
           new Uint8Array(privateKey),
-          new Uint8Array(backendSingle),
+          new Uint8Array(backendSingle)
         );
       expect(Buffer.from(frontendSingleDecrypted)).toEqual(testMessage);
     });
@@ -249,22 +249,22 @@ describe('ECIES Bidirectional Compatibility', () => {
         MemberType.User,
         'Wrong User',
         new EmailString('wrong@example.com'),
-        wrongMnemonic,
+        wrongMnemonic
       );
       const wrongFrontend = FrontendMember.newMember(
         frontendService,
         MemberType.User,
         'Wrong User',
         new EmailString('wrong@example.com'),
-        wrongMnemonic,
+        wrongMnemonic
       );
 
       // Both should reject with wrong keys
       expect(() =>
-        wrongBackend.member.decryptData(Buffer.from(encrypted)),
+        wrongBackend.member.decryptData(Buffer.from(encrypted))
       ).toThrow();
       await expect(
-        wrongFrontend.member.decryptData(Buffer.from(encrypted)),
+        wrongFrontend.member.decryptData(Buffer.from(encrypted))
       ).rejects.toThrow();
 
       wrongBackend.member.dispose();

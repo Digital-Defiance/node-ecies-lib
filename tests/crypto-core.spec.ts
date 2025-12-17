@@ -1,6 +1,11 @@
-import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
+import {
+  ECIESError,
+  IECIESConfig,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
+
 import { getNodeRuntimeConfiguration } from '../src/constants';
-import { ECIESError, ECIESErrorTypeEnum, IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
+import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 
 describe('EciesCryptoCore', () => {
   let core: EciesCryptoCore;
@@ -111,7 +116,7 @@ describe('EciesCryptoCore', () => {
       const mnemonic = core.generateNewMnemonic();
       const { seed, wallet } = core.walletAndSeedFromMnemonic(mnemonic);
       const wallet2 = core.walletFromSeed(Buffer.from(seed.value));
-      
+
       expect(wallet.getPrivateKey()).toEqual(wallet2.getPrivateKey());
       expect(wallet.getPublicKey()).toEqual(wallet2.getPublicKey());
     });
@@ -120,7 +125,7 @@ describe('EciesCryptoCore', () => {
       const mnemonic = core.generateNewMnemonic();
       const { wallet } = core.walletAndSeedFromMnemonic(mnemonic);
       const keyPair = core.walletToSimpleKeyPairBuffer(wallet);
-      
+
       expect(keyPair.privateKey).toEqual(Buffer.from(wallet.getPrivateKey()));
       expect([0x02, 0x03]).toContain(keyPair.publicKey[0]);
     });
@@ -129,7 +134,7 @@ describe('EciesCryptoCore', () => {
       const mnemonic = core.generateNewMnemonic();
       const { seed } = core.walletAndSeedFromMnemonic(mnemonic);
       const keyPair = core.seedToSimpleKeyPairBuffer(Buffer.from(seed.value));
-      
+
       expect(keyPair.privateKey.length).toBe(32);
       expect(keyPair.publicKey.length).toBe(33);
     });

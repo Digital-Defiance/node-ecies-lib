@@ -1,5 +1,6 @@
-import { lengthEncodeData, decodeLengthEncodedData } from '../src/utils';
 import { LengthEncodingType } from '@digitaldefiance/ecies-lib';
+
+import { decodeLengthEncodedData, lengthEncodeData } from '../src/utils';
 
 describe('utils', () => {
   describe('lengthEncodeData', () => {
@@ -31,7 +32,9 @@ describe('utils', () => {
 
   describe('decodeLengthEncodedData', () => {
     it('should throw on empty buffer', () => {
-      expect(() => decodeLengthEncodedData(Buffer.alloc(0))).toThrow(RangeError);
+      expect(() => decodeLengthEncodedData(Buffer.alloc(0))).toThrow(
+        RangeError
+      );
     });
 
     it('should throw on buffer too short for length type', () => {

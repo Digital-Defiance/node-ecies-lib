@@ -1,8 +1,12 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { randomBytes } from 'crypto';
+
 import { Constants } from '../src/constants';
-import { MultiRecipientProcessor, IMultiRecipient } from '../src/services/multi-recipient-processor';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
+import {
+  IMultiRecipient,
+  MultiRecipientProcessor,
+} from '../src/services/multi-recipient-processor';
 
 describe('MultiRecipientProcessor', () => {
   let processor: MultiRecipientProcessor;
@@ -40,25 +44,40 @@ describe('MultiRecipientProcessor', () => {
   describe('encryptKey / decryptKey', () => {
     it('should encrypt and decrypt symmetric key', async () => {
       const symmetricKey = randomBytes(32);
-      const encryptedKey = await processor.encryptKey(recipient1.publicKey, symmetricKey);
+      const encryptedKey = await processor.encryptKey(
+        recipient1.publicKey,
+        symmetricKey
+      );
 
       // Encrypted key size = 33 (ephemeral pub key) + 64 (encrypted key + iv + tag) = 97
-      expect(encryptedKey.length).toBe(Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE + 33);
+      expect(encryptedKey.length).toBe(
+        Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE + 33
+      );
 
-      const decryptedKey = await processor.decryptKey(recipient1.privateKey, encryptedKey);
+      const decryptedKey = await processor.decryptKey(
+        recipient1.privateKey,
+        encryptedKey
+      );
       expect(decryptedKey).toEqual(symmetricKey);
     });
 
     it('should fail with invalid encrypted key length', async () => {
       const invalidKey = randomBytes(100);
-      await expect(processor.decryptKey(recipient1.privateKey, invalidKey)).rejects.toThrow();
+      await expect(
+        processor.decryptKey(recipient1.privateKey, invalidKey)
+      ).rejects.toThrow();
     });
 
     it('should fail with wrong private key', async () => {
       const symmetricKey = randomBytes(32);
-      const encryptedKey = await processor.encryptKey(recipient1.publicKey, symmetricKey);
+      const encryptedKey = await processor.encryptKey(
+        recipient1.publicKey,
+        symmetricKey
+      );
 
-      await expect(processor.decryptKey(recipient2.privateKey, encryptedKey)).rejects.toThrow();
+      await expect(
+        processor.decryptKey(recipient2.privateKey, encryptedKey)
+      ).rejects.toThrow();
     });
   });
 
@@ -79,7 +98,7 @@ describe('MultiRecipientProcessor', () => {
       const decrypted = await processor.decryptMultipleForRecipient(
         encrypted,
         recipient1.id,
-        recipient1.privateKey,
+        recipient1.privateKey
       );
 
       expect(decrypted).toEqual(message);
@@ -103,21 +122,21 @@ describe('MultiRecipientProcessor', () => {
       const decrypted1 = await processor.decryptMultipleForRecipient(
         encrypted,
         recipient1.id,
-        recipient1.privateKey,
+        recipient1.privateKey
       );
       expect(decrypted1).toEqual(message);
 
       const decrypted2 = await processor.decryptMultipleForRecipient(
         encrypted,
         recipient2.id,
-        recipient2.privateKey,
+        recipient2.privateKey
       );
       expect(decrypted2).toEqual(message);
 
       const decrypted3 = await processor.decryptMultipleForRecipient(
         encrypted,
         recipient3.id,
-        recipient3.privateKey,
+        recipient3.privateKey
       );
       expect(decrypted3).toEqual(message);
     });
@@ -131,7 +150,11 @@ describe('MultiRecipientProcessor', () => {
       const encrypted = await processor.encryptMultiple(recipients, message);
 
       await expect(
-        processor.decryptMultipleForRecipient(encrypted, recipient2.id, recipient2.privateKey),
+        processor.decryptMultipleForRecipient(
+          encrypted,
+          recipient2.id,
+          recipient2.privateKey
+        )
       ).rejects.toThrow();
     });
 
@@ -144,7 +167,11 @@ describe('MultiRecipientProcessor', () => {
       const encrypted = await processor.encryptMultiple(recipients, message);
 
       await expect(
-        processor.decryptMultipleForRecipient(encrypted, recipient1.id, recipient2.privateKey),
+        processor.decryptMultipleForRecipient(
+          encrypted,
+          recipient1.id,
+          recipient2.privateKey
+        )
       ).rejects.toThrow();
     });
 
@@ -159,7 +186,7 @@ describe('MultiRecipientProcessor', () => {
       const decrypted = await processor.decryptMultipleForRecipient(
         encrypted,
         recipient1.id,
-        recipient1.privateKey,
+        recipient1.privateKey
       );
 
       expect(decrypted).toEqual(message);
@@ -177,7 +204,9 @@ describe('MultiRecipientProcessor', () => {
         });
       }
 
-      await expect(processor.encryptMultiple(recipients, message)).rejects.toThrow();
+      await expect(
+        processor.encryptMultiple(recipients, message)
+      ).rejects.toThrow();
     });
 
     it('should handle large messages within limits', async () => {
@@ -212,8 +241,12 @@ describe('MultiRecipientProcessor', () => {
       expect(parsed.recipientKeys).toHaveLength(encrypted.recipientKeys.length);
 
       for (let i = 0; i < parsed.recipientIds.length; i++) {
-        expect(Buffer.from(parsed.recipientIds[i])).toEqual(Buffer.from(encrypted.recipientIds[i]));
-        expect(Buffer.from(parsed.recipientKeys[i])).toEqual(Buffer.from(encrypted.recipientKeys[i]));
+        expect(Buffer.from(parsed.recipientIds[i])).toEqual(
+          Buffer.from(encrypted.recipientIds[i])
+        );
+        expect(Buffer.from(parsed.recipientKeys[i])).toEqual(
+          Buffer.from(encrypted.recipientKeys[i])
+        );
       }
     });
 
@@ -240,7 +273,10 @@ describe('MultiRecipientProcessor', () => {
 
       const encrypted = await processor.encryptMultiple(recipients, message);
       const header = processor.buildHeader(encrypted);
-      const completeMessage = Buffer.concat([header, encrypted.encryptedMessage]);
+      const completeMessage = Buffer.concat([
+        header,
+        encrypted.encryptedMessage,
+      ]);
 
       const parsed = processor.parseMessage(completeMessage);
 
@@ -248,12 +284,12 @@ describe('MultiRecipientProcessor', () => {
       expect(parsed.recipientCount).toBe(encrypted.recipientCount);
       expect(parsed.recipientIds.length).toBe(1);
       expect(parsed.recipientKeys.length).toBe(1);
-      
+
       // Decrypt to verify the parsed message works
       const decrypted = await processor.decryptMultipleForRecipient(
         parsed,
         recipient1.id,
-        recipient1.privateKey,
+        recipient1.privateKey
       );
       expect(decrypted).toEqual(message);
     });
@@ -267,9 +303,17 @@ describe('MultiRecipientProcessor', () => {
         { id: recipient1.id, publicKey: recipient1.publicKey },
       ];
 
-      const encryptedKeys = [await processor.encryptKey(recipient1.publicKey, symmetricKey)];
+      const encryptedKeys = [
+        await processor.encryptKey(recipient1.publicKey, symmetricKey),
+      ];
 
-      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+      const chunk = await processor.encryptChunk(
+        data,
+        recipients,
+        0,
+        false,
+        symmetricKey
+      );
 
       expect(chunk.header.chunkIndex).toBe(0);
       expect(chunk.header.flags).toBe(0);
@@ -278,7 +322,7 @@ describe('MultiRecipientProcessor', () => {
       const decrypted = await processor.decryptChunk(
         chunk.data,
         recipient1.id,
-        recipient1.privateKey,
+        recipient1.privateKey
         // encryptedKeys, // Removed
         // [recipient1.id], // Removed? No, signature is (chunk, id, privKey, senderPubKey?)
       );
@@ -293,7 +337,13 @@ describe('MultiRecipientProcessor', () => {
         { id: recipient1.id, publicKey: recipient1.publicKey },
       ];
 
-      const chunk = await processor.encryptChunk(data, recipients, 5, true, symmetricKey);
+      const chunk = await processor.encryptChunk(
+        data,
+        recipients,
+        5,
+        true,
+        symmetricKey
+      );
 
       expect(chunk.header.chunkIndex).toBe(5);
       expect(chunk.header.flags).toBe(1);
@@ -307,11 +357,17 @@ describe('MultiRecipientProcessor', () => {
       ];
 
       await expect(
-        processor.encryptChunk(data, recipients, -1, false, symmetricKey),
+        processor.encryptChunk(data, recipients, -1, false, symmetricKey)
       ).rejects.toThrow();
 
       await expect(
-        processor.encryptChunk(data, recipients, 0x100000000, false, symmetricKey),
+        processor.encryptChunk(
+          data,
+          recipients,
+          0x100000000,
+          false,
+          symmetricKey
+        )
       ).rejects.toThrow();
     });
 
@@ -322,7 +378,13 @@ describe('MultiRecipientProcessor', () => {
         { id: recipient1.id, publicKey: recipient1.publicKey },
       ];
 
-      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+      const chunk = await processor.encryptChunk(
+        data,
+        recipients,
+        0,
+        false,
+        symmetricKey
+      );
       expect(chunk.data.length).toBeGreaterThan(data.length);
     });
   });
@@ -335,9 +397,9 @@ describe('MultiRecipientProcessor', () => {
 
       expect(size1).toBeGreaterThan(
         Constants.ECIES.MULTIPLE.DATA_LENGTH_SIZE +
-        Constants.ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
-        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE +
-        Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
+          Constants.ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
+          Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE +
+          Constants.ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE
       );
 
       expect(size2).toBeGreaterThan(size1);

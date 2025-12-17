@@ -1,9 +1,10 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { randomBytes } from 'crypto';
+
 import { Constants } from '../src/constants';
+import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService } from '../src/services/ecies/service';
 import { MultiRecipientProcessor } from '../src/services/multi-recipient-processor';
-import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 
 describe('Cross-Platform Compatibility', () => {
   describe('Node ↔ Browser Key Format', () => {
@@ -18,11 +19,13 @@ describe('Cross-Platform Compatibility', () => {
 
     it('should normalize public keys consistently', () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      
+
       const rawKey = randomBytes(64);
       const prefixedKey = Buffer.concat([Buffer.from([0x04]), rawKey]);
 
-      const normalized1 = cryptoCore.normalizePublicKey(Buffer.from(prefixedKey));
+      const normalized1 = cryptoCore.normalizePublicKey(
+        Buffer.from(prefixedKey)
+      );
       // const normalized2 = cryptoCore.normalizePublicKey(Buffer.from(prefixedKey));
 
       // expect(normalized1).toEqual(normalized2);
@@ -38,7 +41,11 @@ describe('Cross-Platform Compatibility', () => {
 
       const mnemonic = ecies.generateNewMnemonic();
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
+      const encrypted = ecies.encryptSimpleOrSingle(
+        false,
+        keyPair.publicKey,
+        message
+      );
 
       expect(encrypted[0]).toBe(1); // Version 1
       expect(encrypted[1]).toBe(1); // CipherSuite 1
@@ -54,8 +61,16 @@ describe('Cross-Platform Compatibility', () => {
 
       const mnemonic = ecies.generateNewMnemonic();
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
-      const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, keyPair.privateKey, encrypted);
+      const encrypted = ecies.encryptSimpleOrSingle(
+        false,
+        keyPair.publicKey,
+        message
+      );
+      const decrypted = ecies.decryptSimpleOrSingleWithHeader(
+        false,
+        keyPair.privateKey,
+        encrypted
+      );
 
       expect(decrypted).toEqual(message);
     });
@@ -66,8 +81,16 @@ describe('Cross-Platform Compatibility', () => {
 
       const mnemonic = ecies.generateNewMnemonic();
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(true, keyPair.publicKey, message);
-      const decrypted = ecies.decryptSimpleOrSingleWithHeader(true, keyPair.privateKey, encrypted);
+      const encrypted = ecies.encryptSimpleOrSingle(
+        true,
+        keyPair.publicKey,
+        message
+      );
+      const decrypted = ecies.decryptSimpleOrSingleWithHeader(
+        true,
+        keyPair.privateKey,
+        encrypted
+      );
 
       expect(decrypted).toEqual(message);
       expect(encrypted[0]).toBe(1); // Version 1
@@ -86,8 +109,14 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair2 = await cryptoCore.generateEphemeralKeyPair();
 
       const recipients = [
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair1.publicKey) },
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair2.publicKey) },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair1.publicKey),
+        },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair2.publicKey),
+        },
       ];
 
       const encrypted = await processor.encryptMultiple(recipients, message);
@@ -106,7 +135,10 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
 
       const recipients = [
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair.publicKey) },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair.publicKey),
+        },
       ];
 
       const encrypted = await processor.encryptMultiple(recipients, message);
@@ -115,7 +147,7 @@ describe('Cross-Platform Compatibility', () => {
       // Offset: Version(1) + Suite(1) + Type(1) + PubKey(33) = 36
       const combinedLength = header.readBigUInt64BE(36);
       // Mask out the recipientIdSize (top 8 bits)
-      const dataLength = Number(combinedLength & 0x00FFFFFFFFFFFFFFn);
+      const dataLength = Number(combinedLength & 0x00ffffffffffffffn);
       const recipientCount = header.readUInt16BE(44);
 
       expect(dataLength).toBe(message.length);
@@ -130,7 +162,10 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
 
       const recipients = [
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair.publicKey) },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair.publicKey),
+        },
       ];
 
       const encrypted = await processor.encryptMultiple(recipients, message);
@@ -154,10 +189,19 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
 
       const recipients = [
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair.publicKey) },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair.publicKey),
+        },
       ];
 
-      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+      const chunk = await processor.encryptChunk(
+        data,
+        recipients,
+        0,
+        false,
+        symmetricKey
+      );
 
       expect(chunk.header.chunkIndex).toBe(0);
       expect(chunk.header.flags).toBe(0);
@@ -172,7 +216,9 @@ describe('Cross-Platform Compatibility', () => {
       const data = Buffer.from('Chunk round-trip test');
       const symmetricKey = randomBytes(32);
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
-      const recipientId = randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE);
+      const recipientId = randomBytes(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE
+      );
 
       const recipients = [
         { id: recipientId, publicKey: Buffer.from(keyPair.publicKey) },
@@ -180,15 +226,21 @@ describe('Cross-Platform Compatibility', () => {
 
       const encryptedKey = await processor.encryptKey(
         Buffer.from(keyPair.publicKey),
-        symmetricKey,
+        symmetricKey
       );
 
-      const chunk = await processor.encryptChunk(data, recipients, 0, false, symmetricKey);
+      const chunk = await processor.encryptChunk(
+        data,
+        recipients,
+        0,
+        false,
+        symmetricKey
+      );
 
       const decrypted = await processor.decryptChunk(
         chunk.data,
         recipientId,
-        Buffer.from(keyPair.privateKey),
+        Buffer.from(keyPair.privateKey)
       );
 
       expect(decrypted.data).toEqual(data);
@@ -204,7 +256,10 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
 
       const recipients = [
-        { id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE), publicKey: Buffer.from(keyPair.publicKey) },
+        {
+          id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+          publicKey: Buffer.from(keyPair.publicKey),
+        },
       ];
 
       const encrypted = await processor.encryptMultiple(recipients, message);
@@ -213,7 +268,7 @@ describe('Cross-Platform Compatibility', () => {
       // Offset: Version(1) + Suite(1) + Type(1) + PubKey(33) = 36
       const combinedLength = header.readBigUInt64BE(36);
       // Mask out the recipientIdSize (top 8 bits)
-      const dataLength = Number(combinedLength & 0x00FFFFFFFFFFFFFFn);
+      const dataLength = Number(combinedLength & 0x00ffffffffffffffn);
       expect(dataLength).toBe(message.length);
 
       // Offset: 36 + 8 = 44
@@ -237,10 +292,18 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
 
       const emptyData = Buffer.alloc(0);
-      expect(() => ecies.encryptSimpleOrSingle(false, keyPair.publicKey, emptyData)).toThrow();
+      expect(() =>
+        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, emptyData)
+      ).toThrow();
 
       const invalidEncrypted = Buffer.alloc(10);
-      expect(() => ecies.decryptSimpleOrSingleWithHeader(false, keyPair.privateKey, invalidEncrypted)).toThrow();
+      expect(() =>
+        ecies.decryptSimpleOrSingleWithHeader(
+          false,
+          keyPair.privateKey,
+          invalidEncrypted
+        )
+      ).toThrow();
     });
 
     it('should validate key formats consistently', async () => {
@@ -248,14 +311,26 @@ describe('Cross-Platform Compatibility', () => {
       const message = Buffer.from('Test');
 
       const invalidPublicKey = Buffer.alloc(32);
-      expect(() => ecies.encryptSimpleOrSingle(false, invalidPublicKey, message)).toThrow();
+      expect(() =>
+        ecies.encryptSimpleOrSingle(false, invalidPublicKey, message)
+      ).toThrow();
 
       const mnemonic = ecies.generateNewMnemonic();
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(false, keyPair.publicKey, message);
+      const encrypted = ecies.encryptSimpleOrSingle(
+        false,
+        keyPair.publicKey,
+        message
+      );
 
       const invalidPrivateKey = Buffer.alloc(16);
-      expect(() => ecies.decryptSimpleOrSingleWithHeader(false, invalidPrivateKey, encrypted)).toThrow();
+      expect(() =>
+        ecies.decryptSimpleOrSingleWithHeader(
+          false,
+          invalidPrivateKey,
+          encrypted
+        )
+      ).toThrow();
     });
   });
 });

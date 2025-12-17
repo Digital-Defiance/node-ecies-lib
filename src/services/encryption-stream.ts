@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   NodeEciesComponentId,
   NodeEciesStringKey,
@@ -10,6 +14,7 @@ import {
   IStreamConfig,
 } from '../interfaces/stream-config';
 import { IStreamProgress } from '../interfaces/stream-progress';
+
 import { ChunkProcessor } from './chunk-processor';
 import { ECIESService } from './ecies/service';
 import { MultiRecipientProcessor } from './multi-recipient-processor';

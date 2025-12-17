@@ -1,4 +1,5 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
+
 import {
   NodeEciesComponentId,
   NodeEciesStringKey,
@@ -77,7 +78,12 @@ describe('Node ECIES i18n Integration', () => {
     testKeys.forEach((key) => {
       it(`should translate ${key} in English`, () => {
         const engine = getNodeEciesI18nEngine();
-        const result = engine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.EN_US);
+        const result = engine.translate(
+          NodeEciesComponentId,
+          key,
+          undefined,
+          LanguageCodes.EN_US
+        );
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThan(0);
@@ -86,15 +92,18 @@ describe('Node ECIES i18n Integration', () => {
 
       it(`should translate ${key} in French`, () => {
         const engine = getNodeEciesI18nEngine();
-        const result = engine.translate(NodeEciesComponentId, key, undefined, LanguageCodes.FR);
+        const result = engine.translate(
+          NodeEciesComponentId,
+          key,
+          undefined,
+          LanguageCodes.FR
+        );
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
         expect(result.length).toBeGreaterThan(0);
       });
     });
   });
-
-
 
   describe('Language support', () => {
     const supportedLanguages = [

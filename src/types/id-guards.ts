@@ -71,20 +71,40 @@ export function convertId<T extends 'Buffer' | 'Uint8Array' | 'string'>(
   toType: T
 ): T extends 'Buffer' ? Buffer : T extends 'Uint8Array' ? Uint8Array : string {
   if (toType === 'Buffer') {
-    return toBuffer(id) as any;
+    return toBuffer(id) as T extends 'Buffer'
+      ? Buffer
+      : T extends 'Uint8Array'
+      ? Uint8Array
+      : string;
   }
   if (toType === 'Uint8Array') {
-    return toUint8Array(id) as any;
+    return toUint8Array(id) as T extends 'Buffer'
+      ? Buffer
+      : T extends 'Uint8Array'
+      ? Uint8Array
+      : string;
   }
   if (toType === 'string') {
     if (typeof id === 'string') {
-      return id as any;
+      return id as T extends 'Buffer'
+        ? Buffer
+        : T extends 'Uint8Array'
+        ? Uint8Array
+        : string;
     }
     if (isBuffer(id)) {
-      return id.toString('hex') as any;
+      return id.toString('hex') as T extends 'Buffer'
+        ? Buffer
+        : T extends 'Uint8Array'
+        ? Uint8Array
+        : string;
     }
     if (isUint8Array(id)) {
-      return Buffer.from(id).toString('hex') as any;
+      return Buffer.from(id).toString('hex') as T extends 'Buffer'
+        ? Buffer
+        : T extends 'Uint8Array'
+        ? Uint8Array
+        : string;
     }
   }
   throw new Error(`Cannot convert ID to type ${toType}`);

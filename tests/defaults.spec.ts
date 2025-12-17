@@ -1,7 +1,6 @@
 import {
   getNodeRuntimeConfiguration,
   registerNodeRuntimeConfiguration,
-  NODE_RUNTIME_CONFIGURATION_KEY,
 } from '../src/constants';
 
 describe('Node ECIES Runtime Configuration Registry', () => {
@@ -13,9 +12,9 @@ describe('Node ECIES Runtime Configuration Registry', () => {
   });
 
   it('should allow registering and retrieving a custom configuration', () => {
-  registerNodeRuntimeConfiguration({ PBKDF2: { ALGORITHM: 'SHA-512' } });
-  const customConfig = getNodeRuntimeConfiguration();
-  expect(customConfig.PBKDF2.ALGORITHM).toBe('SHA-512');
+    registerNodeRuntimeConfiguration({ PBKDF2: { ALGORITHM: 'SHA-512' } });
+    const customConfig = getNodeRuntimeConfiguration();
+    expect(customConfig.PBKDF2.ALGORITHM).toBe('SHA-512');
   });
 
   it('should deeply freeze the configuration objects', () => {

@@ -1,9 +1,11 @@
 import { NodeEciesStringKey } from '../node-keys';
 
 export const mandarinTranslations: Record<NodeEciesStringKey, string> = {
-  [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]: '长度编码类型无效',
+  [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
+    '长度编码类型无效',
   [NodeEciesStringKey.Error_Member_MissingMemberName]: '需要成员名称',
-  [NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace]: '成员名称不能有前导或尾随空格',
+  [NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace]:
+    '成员名称不能有前导或尾随空格',
   [NodeEciesStringKey.Error_Member_NoWallet]: '没有可用的钱包',
   [NodeEciesStringKey.Error_Member_WalletAlreadyLoaded]: '钱包已加载',
   [NodeEciesStringKey.Error_Member_InvalidMnemonic]: '无效的助记词',
@@ -11,44 +13,67 @@ export const mandarinTranslations: Record<NodeEciesStringKey, string> = {
   [NodeEciesStringKey.Error_Member_MissingEncryptionData]: '缺少加密数据',
   [NodeEciesStringKey.Error_Member_EncryptionDataTooLarge]: '加密数据过大',
   [NodeEciesStringKey.Error_Member_MissingEmail]: '需要电子邮件地址',
-  [NodeEciesStringKey.Error_Member_InvalidEmailWhitespace]: '电子邮件地址不能有前导或尾随空格',
+  [NodeEciesStringKey.Error_Member_InvalidEmailWhitespace]:
+    '电子邮件地址不能有前导或尾随空格',
   [NodeEciesStringKey.Error_InvalidPublicKey]: '收到空或未定义的公钥',
   [NodeEciesStringKey.Error_InvalidPublicKeyFormat]: '无效的公钥格式或长度',
-  [NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize]: '消息长度超过最大允许长度',
-  [NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients]: '无效的加密类型或接收者数量',
+  [NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize]:
+    '消息长度超过最大允许长度',
+  [NodeEciesStringKey.Error_InvalidEncryptionTypeOrNumberOfRecipients]:
+    '无效的加密类型或接收者数量',
   [NodeEciesStringKey.Error_EncryptedDataLengthMismatch]: '加密数据长度不匹配',
-  [NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch]: '临时公钥在规范化后长度不正确',
+  [NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch]:
+    '临时公钥在规范化后长度不正确',
   [NodeEciesStringKey.Error_EncryptedDataIsEmpty]: '加密数据为空',
-  [NodeEciesStringKey.Error_CombinedDataTooShort]: '组合数据太短，无法包含所需组件',
+  [NodeEciesStringKey.Error_CombinedDataTooShort]:
+    '组合数据太短，无法包含所需组件',
   [NodeEciesStringKey.Error_BufferIsTooShort]: '缓冲区太短，无法读取长度类型',
-  [NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue]: '缓冲区太短，无法读取完整的长度值',
-  [NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger]: '长度超过最大安全整数值',
-  [NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength]: '缓冲区太短，无法读取声明的数据长度',
+  [NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue]:
+    '缓冲区太短，无法读取完整的长度值',
+  [NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger]:
+    '长度超过最大安全整数值',
+  [NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength]:
+    '缓冲区太短，无法读取声明的数据长度',
   [NodeEciesStringKey.Error_InvalidChecksumConstants]: '无效的校验和常量',
   [NodeEciesStringKey.Error_InvalidAESKeyLength]: 'AES密钥必须为16、24或32字节',
   [NodeEciesStringKey.Error_CannotEncryptEmptyData]: '无法加密空或未定义的数据',
   [NodeEciesStringKey.Error_CannotDecryptEmptyData]: '无法解密空或未定义的数据',
   [NodeEciesStringKey.Error_InvalidIVLength]: 'IV必须为16字节',
   [NodeEciesStringKey.Error_MessageTooLarge]: '消息超过最大大小2GB',
-  [NodeEciesStringKey.Error_EncryptedSizeExceedsExpected]: '加密数据大小超过预期最大值',
+  [NodeEciesStringKey.Error_EncryptedSizeExceedsExpected]:
+    '加密数据大小超过预期最大值',
   [NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength]: '无效的盐长度',
   [NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength]: '无效的哈希长度',
-  [NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic]: '在生成助记词之前必须设置ECIESService',
+  [NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic]:
+    '在生成助记词之前必须设置ECIESService',
   [NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired]: '需要ECIESService',
-  [NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired]: '需要类型、名称和电子邮件',
-  [NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength]: '无效的公钥：必须为33（压缩）或65（未压缩）字节',
+  [NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired]:
+    '需要类型、名称和电子邮件',
+  [NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength]:
+    '无效的公钥：必须为33（压缩）或65（未压缩）字节',
   [NodeEciesStringKey.Error_Stream_EncryptionCancelled]: '加密已取消',
-  [NodeEciesStringKey.Error_Stream_BufferOverflow]: '缓冲区溢出：源块超过最大大小',
-  [NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired]: '至少需要一个接收者',
-  [NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded]: '最多支持65535个接收者',
-  [NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength]: '无效的接收者公钥：必须为33（压缩）或65（未压缩）字节',
-  [NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength]: '无效的接收者ID：必须为32字节',
-  [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]: '无效的私钥：必须为32字节',
+  [NodeEciesStringKey.Error_Stream_BufferOverflow]:
+    '缓冲区溢出：源块超过最大大小',
+  [NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired]:
+    '至少需要一个接收者',
+  [NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded]:
+    '最多支持65535个接收者',
+  [NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength]:
+    '无效的接收者公钥：必须为33（压缩）或65（未压缩）字节',
+  [NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength]:
+    '无效的接收者ID：必须为32字节',
+  [NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength]:
+    '无效的私钥：必须为32字节',
   [NodeEciesStringKey.Error_Stream_DecryptionCancelled]: '解密已取消',
   [NodeEciesStringKey.Error_Stream_ChunkSequenceError]: '块序列错误',
-  [NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate]: 'Node.js configuration validation failed:\n{failures}',
-  [NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate]: "Invariant 'NodeRecipientIdConsistency' failed:\n  {issues}",
-  [NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate]: 'MEMBER_ID_LENGTH ({actual}) !== idProvider.byteLength ({expected})',
-  [NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate]: 'ECIES.MULTIPLE.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
-  [NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate]: 'ENCRYPTION.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate]:
+    'Node.js configuration validation failed:\n{failures}',
+  [NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate]:
+    "Invariant 'NodeRecipientIdConsistency' failed:\n  {issues}",
+  [NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate]:
+    'MEMBER_ID_LENGTH ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate]:
+    'ECIES.MULTIPLE.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
+  [NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate]:
+    'ENCRYPTION.RECIPIENT_ID_SIZE ({actual}) !== idProvider.byteLength ({expected})',
 };

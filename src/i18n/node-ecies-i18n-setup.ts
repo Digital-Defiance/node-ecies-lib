@@ -1,30 +1,38 @@
 import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
-import { ComponentConfig, EngineConfig, I18nEngine, LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
 import {
-  englishTranslations,
+  ComponentConfig,
+  EngineConfig,
+  I18nEngine,
+  LanguageCodes,
+} from '@digitaldefiance/i18n-lib';
+
+import { NodeEciesComponentId } from './node-keys';
+import {
   britishEnglishTranslations,
+  englishTranslations,
   frenchTranslations,
-  spanishTranslations,
   germanTranslations,
-  mandarinTranslations,
   japaneseTranslations,
+  mandarinTranslations,
+  spanishTranslations,
   ukrainianTranslations,
 } from './translations';
 
+// Note: _nodeEciesI18nEngine is used for internal state management
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let _nodeEciesI18nEngine: I18nEngine | null = null;
 let _componentRegistered = false;
 
 export function getNodeEciesI18nEngine(config?: EngineConfig): I18nEngine {
   // Get base ecies engine (uses 'default' key)
   const baseEngine = getEciesI18nEngine(config);
-  
+
   // Register node-ecies component if not already registered
   if (!_componentRegistered) {
     baseEngine.registerIfNotExists(createNodeEciesComponentConfig());
     _componentRegistered = true;
   }
-  
+
   _nodeEciesI18nEngine = baseEngine;
   return baseEngine;
 }
@@ -38,7 +46,7 @@ export function createNodeEciesComponentConfig(): ComponentConfig {
   return {
     id: NodeEciesComponentId,
     strings: createNodeEciesStrings(),
-    aliases: [ 'NodeEciesStringKey' ],
+    aliases: ['NodeEciesStringKey'],
   };
 }
 

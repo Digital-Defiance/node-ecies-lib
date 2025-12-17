@@ -12,6 +12,7 @@ import {
   MemberErrorType,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
+
 import { getNodeRuntimeConfiguration } from '../../src/constants';
 import { getNodeEciesTranslation } from '../../src/i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../../src/i18n/node-ecies-i18n-setup';

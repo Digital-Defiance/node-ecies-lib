@@ -1,14 +1,12 @@
-import { 
-  ECIESError, 
-  ECIESErrorTypeEnum, 
-  EmailString, 
-  MemberType,
-  EciesVersionEnum,
+import {
   EciesCipherSuiteEnum,
-  EciesEncryptionTypeEnum
+  EciesVersionEnum,
+  EmailString,
+  MemberType,
 } from '@digitaldefiance/ecies-lib';
-import { ECIESService } from '../src/services/ecies/service';
+
 import { Member } from '../src/member';
+import { ECIESService } from '../src/services/ecies/service';
 
 describe('ECIESService - Coverage Tests', () => {
   let service: ECIESService;
@@ -17,14 +15,26 @@ describe('ECIESService - Coverage Tests', () => {
 
   beforeEach(() => {
     service = new ECIESService();
-    member1 = Member.newMember(service, MemberType.User, 'user1', new EmailString('user1@test.com')).member;
-    member2 = Member.newMember(service, MemberType.User, 'user2', new EmailString('user2@test.com')).member;
+    member1 = Member.newMember(
+      service,
+      MemberType.User,
+      'user1',
+      new EmailString('user1@test.com')
+    ).member;
+    member2 = Member.newMember(
+      service,
+      MemberType.User,
+      'user2',
+      new EmailString('user2@test.com')
+    ).member;
   });
 
   describe('encrypt method', () => {
     it('should throw error for multiple encryption type', () => {
       const message = Buffer.from('test');
-      expect(() => service.encrypt('multiple', member1, message)).toThrow(Error);
+      expect(() => service.encrypt('multiple', member1, message)).toThrow(
+        Error
+      );
     });
 
     it('should encrypt with simple mode and single recipient', () => {
@@ -52,26 +62,32 @@ describe('ECIESService - Coverage Tests', () => {
   describe('decryptSingleWithComponents', () => {
     it('should decrypt and return ciphertextLength', () => {
       if (!member1.privateKey) throw new Error('Private key required');
-      
+
       const message = Buffer.from('test message');
-      const encrypted = service.encryptSimpleOrSingle(false, member1.publicKey, message);
-      
+      const encrypted = service.encryptSimpleOrSingle(
+        false,
+        member1.publicKey,
+        message
+      );
+
       const header = service.parseSingleEncryptedHeader(undefined, encrypted);
-      
+
       // Construct AAD
       const versionBuffer = Buffer.alloc(1);
       versionBuffer.writeUint8(EciesVersionEnum.V1);
       const cipherSuiteBuffer = Buffer.alloc(1);
-      cipherSuiteBuffer.writeUint8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256);
+      cipherSuiteBuffer.writeUint8(
+        EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+      );
       const encryptionTypeBuffer = Buffer.alloc(1);
       encryptionTypeBuffer.writeUint8(header.encryptionType);
-      
+
       const aad = Buffer.concat([
         header.preamble ?? Buffer.alloc(0),
         versionBuffer,
         cipherSuiteBuffer,
         encryptionTypeBuffer,
-        header.ephemeralPublicKey
+        header.ephemeralPublicKey,
       ]);
 
       const result = service.decryptSingleWithComponents(
@@ -82,7 +98,7 @@ describe('ECIESService - Coverage Tests', () => {
         encrypted.subarray(header.headerSize),
         aad
       );
-      
+
       expect(result.decrypted).toBeDefined();
       expect(result.ciphertextLength).toBeDefined();
       expect(result.ciphertextLength).toBeGreaterThan(0);

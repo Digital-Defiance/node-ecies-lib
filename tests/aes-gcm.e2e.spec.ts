@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
-import { AESGCMService } from '../src/services/aes-gcm';
+
 import { Constants } from '../src/constants';
+import { AESGCMService } from '../src/services/aes-gcm';
 
 describe('AES-GCM E2E Integration Tests', () => {
   let aesGcmService: AESGCMService;
@@ -13,31 +14,48 @@ describe('AES-GCM E2E Integration Tests', () => {
       const userCredentials = JSON.stringify({
         username: 'testuser@example.com',
         password: 'SecurePassword123!',
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
       const data = Buffer.from(userCredentials);
       const key = randomBytes(32);
 
       const { encrypted, iv, tag } = aesGcmService.encrypt(data, key, true);
-      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(encrypted, tag!);
+      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        encrypted,
+        tag!
+      );
       const decrypted = aesGcmService.decrypt(iv, encryptedWithTag, key, true);
       const decryptedCredentials = decrypted.toString();
 
-      expect(JSON.parse(decryptedCredentials)).toEqual(JSON.parse(userCredentials));
+      expect(JSON.parse(decryptedCredentials)).toEqual(
+        JSON.parse(userCredentials)
+      );
     });
 
     it('should handle file-like data encryption', () => {
-      const fileContent = 'This is a test file content with some sensitive information.\n'.repeat(100);
+      const fileContent =
+        'This is a test file content with some sensitive information.\n'.repeat(
+          100
+        );
       const data = Buffer.from(fileContent);
       const key = randomBytes(32);
 
       const { encrypted, iv, tag } = aesGcmService.encrypt(data, key, true);
-      const combined = aesGcmService.combineIvTagAndEncryptedData(iv, encrypted, tag!);
-      
-      const { iv: extractedIv, encryptedDataWithTag } = 
+      const combined = aesGcmService.combineIvTagAndEncryptedData(
+        iv,
+        encrypted,
+        tag!
+      );
+
+      const { iv: extractedIv, encryptedDataWithTag } =
         aesGcmService.splitEncryptedData(combined, true);
-      
-      const decrypted = aesGcmService.decrypt(extractedIv, encryptedDataWithTag, key, true);
+
+      const decrypted = aesGcmService.decrypt(
+        extractedIv,
+        encryptedDataWithTag,
+        key,
+        true
+      );
       const decryptedContent = decrypted.toString();
 
       expect(decryptedContent).toBe(fileContent);
@@ -48,11 +66,18 @@ describe('AES-GCM E2E Integration Tests', () => {
       for (let i = 0; i < binaryData.length; i++) {
         binaryData[i] = i % 256;
       }
-      
+
       const key = randomBytes(32);
 
-      const { encrypted, iv, tag } = aesGcmService.encrypt(binaryData, key, true);
-      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(encrypted, tag!);
+      const { encrypted, iv, tag } = aesGcmService.encrypt(
+        binaryData,
+        key,
+        true
+      );
+      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        encrypted,
+        tag!
+      );
       const decrypted = aesGcmService.decrypt(iv, encryptedWithTag, key, true);
 
       expect(decrypted).toEqual(binaryData);
@@ -63,7 +88,7 @@ describe('AES-GCM E2E Integration Tests', () => {
     it('should handle multiple users with different keys', () => {
       const message = 'Shared secret message';
       const data = Buffer.from(message);
-      
+
       const user1Key = randomBytes(32);
       const user2Key = randomBytes(32);
       const user3Key = randomBytes(32);
@@ -72,19 +97,50 @@ describe('AES-GCM E2E Integration Tests', () => {
       const user2Encrypted = aesGcmService.encrypt(data, user2Key, true);
       const user3Encrypted = aesGcmService.encrypt(data, user3Key, true);
 
-      const user1EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(user1Encrypted.encrypted, user1Encrypted.tag!);
-      const user2EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(user2Encrypted.encrypted, user2Encrypted.tag!);
-      const user3EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(user3Encrypted.encrypted, user3Encrypted.tag!);
+      const user1EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        user1Encrypted.encrypted,
+        user1Encrypted.tag!
+      );
+      const user2EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        user2Encrypted.encrypted,
+        user2Encrypted.tag!
+      );
+      const user3EncryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        user3Encrypted.encrypted,
+        user3Encrypted.tag!
+      );
 
-      const user1Decrypted = aesGcmService.decrypt(user1Encrypted.iv, user1EncryptedWithTag, user1Key, true);
-      const user2Decrypted = aesGcmService.decrypt(user2Encrypted.iv, user2EncryptedWithTag, user2Key, true);
-      const user3Decrypted = aesGcmService.decrypt(user3Encrypted.iv, user3EncryptedWithTag, user3Key, true);
+      const user1Decrypted = aesGcmService.decrypt(
+        user1Encrypted.iv,
+        user1EncryptedWithTag,
+        user1Key,
+        true
+      );
+      const user2Decrypted = aesGcmService.decrypt(
+        user2Encrypted.iv,
+        user2EncryptedWithTag,
+        user2Key,
+        true
+      );
+      const user3Decrypted = aesGcmService.decrypt(
+        user3Encrypted.iv,
+        user3EncryptedWithTag,
+        user3Key,
+        true
+      );
 
       expect(user1Decrypted.toString()).toBe(message);
       expect(user2Decrypted.toString()).toBe(message);
       expect(user3Decrypted.toString()).toBe(message);
 
-      expect(() => aesGcmService.decrypt(user1Encrypted.iv, user1EncryptedWithTag, user2Key, true)).toThrow();
+      expect(() =>
+        aesGcmService.decrypt(
+          user1Encrypted.iv,
+          user1EncryptedWithTag,
+          user2Key,
+          true
+        )
+      ).toThrow();
     });
   });
 
@@ -94,10 +150,17 @@ describe('AES-GCM E2E Integration Tests', () => {
       const key = randomBytes(32);
 
       const startTime = performance.now();
-      const { encrypted, iv, tag } = aesGcmService.encrypt(largeData, key, true);
+      const { encrypted, iv, tag } = aesGcmService.encrypt(
+        largeData,
+        key,
+        true
+      );
       const encryptTime = performance.now() - startTime;
 
-      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(encrypted, tag!);
+      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        encrypted,
+        tag!
+      );
       const decryptStartTime = performance.now();
       const decrypted = aesGcmService.decrypt(iv, encryptedWithTag, key, true);
       const decryptTime = performance.now() - decryptStartTime;
@@ -115,12 +178,17 @@ describe('AES-GCM E2E Integration Tests', () => {
       const key = randomBytes(32);
 
       const { encrypted, iv, tag } = aesGcmService.encrypt(data, key, true);
-      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(encrypted, tag!);
-      
+      const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
+        encrypted,
+        tag!
+      );
+
       const tamperedEncrypted = Buffer.from(encryptedWithTag);
       tamperedEncrypted[0] ^= 1;
 
-      expect(() => aesGcmService.decrypt(iv, tamperedEncrypted, key, true)).toThrow();
+      expect(() =>
+        aesGcmService.decrypt(iv, tamperedEncrypted, key, true)
+      ).toThrow();
     });
 
     it('should ensure IV uniqueness across multiple encryptions', () => {
@@ -131,7 +199,7 @@ describe('AES-GCM E2E Integration Tests', () => {
       for (let i = 0; i < 100; i++) {
         const { iv } = aesGcmService.encrypt(data, key, false);
         const ivString = iv.toString('hex');
-        
+
         expect(ivs.has(ivString)).toBe(false);
         ivs.add(ivString);
       }

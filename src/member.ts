@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   EmailString,
   IMemberStorageData,
@@ -6,11 +7,21 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { Types } from '@digitaldefiance/mongoose-types';
 import { Wallet } from '@ethereumjs/wallet';
+
+import { Constants } from './constants';
 import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
+import { IBackendMemberOperational } from './interfaces/backend-member-operational';
+import { IEncryptedChunk } from './interfaces/encrypted-chunk';
+import { IMember } from './interfaces/member';
+import { IStreamProgress } from './interfaces/stream-progress';
+import { ECIESService } from './services/ecies/service';
+import { EncryptionStream } from './services/encryption-stream';
+import { SignatureBuffer, toBuffer, toUint8Array } from './types';
 
 /**
  * Custom error classes that work with the plugin i18n system
@@ -21,17 +32,6 @@ export class NodeMemberError extends Error {
     this.name = 'NodeMemberError';
   }
 }
-
-import { IEncryptedChunk } from './interfaces/encrypted-chunk';
-import { IMember } from './interfaces/member';
-import { IStreamProgress } from './interfaces/stream-progress';
-import { ECIESService } from './services/ecies/service';
-import { EncryptionStream } from './services/encryption-stream';
-// Removed: import { ServiceProvider } from './services/service.provider';
-import { Types } from '@digitaldefiance/mongoose-types';
-import { Constants } from './constants';
-import { IBackendMemberOperational } from './interfaces/backend-member-operational';
-import { SignatureBuffer, toBuffer, toUint8Array } from './types';
 
 /**
  * A member of an ECIES interchange

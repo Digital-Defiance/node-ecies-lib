@@ -1,6 +1,7 @@
-import { ECIESService } from '../services/ecies';
-import { IECIESConstants, IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { IECIESConfig, IECIESConstants } from '@digitaldefiance/ecies-lib';
+
 import { Constants } from '../constants';
+import { ECIESService } from '../services/ecies';
 
 export class ECIESBuilder {
   private serviceConfig: Partial<IECIESConfig> = {};

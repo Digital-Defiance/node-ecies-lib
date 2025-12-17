@@ -12,6 +12,7 @@
  */
 
 import { ECIES, EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+
 import { Member } from '../../src/member';
 import { ECIESService as NodeECIESService } from '../../src/services/ecies';
 

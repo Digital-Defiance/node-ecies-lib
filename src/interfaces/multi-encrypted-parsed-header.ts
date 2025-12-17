@@ -1,5 +1,3 @@
-import { Types } from '@digitaldefiance/mongoose-types';
-
 export interface IMultiEncryptedParsedHeader {
   /**
    * The length of the data before encryption

@@ -8,6 +8,7 @@
  */
 
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+
 import { Constants, getNodeRuntimeConfiguration } from '../../src/constants';
 import { Member } from '../../src/member';
 import { ECIESService } from '../../src/services/ecies/service';

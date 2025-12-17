@@ -1,12 +1,18 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
-import { CipherGCMTypes } from 'crypto';
-import { IConstants } from '../interfaces/constants';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+import {
+  CipherGCMTypes,
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+} from 'crypto';
+
+import { Constants } from '../constants';
 import {
   getEciesPluginI18nEngine,
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../i18n';
-import { Constants } from '../constants';
+import { IConstants } from '../interfaces/constants';
 
 export class AESGCMService {
   private readonly algorithmName: string;
@@ -47,7 +53,7 @@ export class AESGCMService {
     data: Buffer,
     key: Buffer,
     authTag: boolean = false,
-    aad?: Buffer,
+    aad?: Buffer
   ): { encrypted: Buffer; iv: Buffer; tag?: Buffer } {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
@@ -56,8 +62,8 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_InvalidAESKeyLength,
-        ),
+          NodeEciesStringKey.Error_InvalidAESKeyLength
+        )
       );
     }
 
@@ -67,19 +73,19 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_CannotEncryptEmptyData,
-        ),
+          NodeEciesStringKey.Error_CannotEncryptEmptyData
+        )
       );
     }
 
     // Security fix 12: Data size validation (max 2GB)
-    if (data.length > 0x7FFFFFFF) {
+    if (data.length > 0x7fffffff) {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_MessageTooLarge,
-        ),
+          NodeEciesStringKey.Error_MessageTooLarge
+        )
       );
     }
 
@@ -113,7 +119,7 @@ export class AESGCMService {
    */
   public combineEncryptedDataAndTag(
     encryptedData: Buffer,
-    authTag: Buffer,
+    authTag: Buffer
   ): Buffer {
     return Buffer.concat([encryptedData, authTag]);
   }
@@ -126,7 +132,7 @@ export class AESGCMService {
    */
   public combineIvAndEncryptedData(
     iv: Buffer,
-    encryptedDataWithTag: Buffer,
+    encryptedDataWithTag: Buffer
   ): Buffer {
     return Buffer.concat([iv, encryptedDataWithTag]);
   }
@@ -141,11 +147,11 @@ export class AESGCMService {
   public combineIvTagAndEncryptedData(
     iv: Buffer,
     encryptedData: Buffer,
-    authTag: Buffer,
+    authTag: Buffer
   ): Buffer {
     const encryptedWithTag = this.combineEncryptedDataAndTag(
       encryptedData,
-      authTag,
+      authTag
     );
     return this.combineIvAndEncryptedData(iv, encryptedWithTag);
   }
@@ -158,7 +164,7 @@ export class AESGCMService {
    */
   public splitEncryptedData(
     combinedData: Buffer,
-    hasAuthTag: boolean = true,
+    hasAuthTag: boolean = true
   ): { iv: Buffer; encryptedDataWithTag: Buffer } {
     const ivLength = this.ivSize;
     const minLength = ivLength + (hasAuthTag ? 16 : 0);
@@ -169,8 +175,8 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_CombinedDataTooShort,
-        ),
+          NodeEciesStringKey.Error_CombinedDataTooShort
+        )
       );
     }
 
@@ -192,8 +198,9 @@ export class AESGCMService {
     iv: Buffer,
     encryptedData: Buffer,
     key: Buffer,
-    authTag: boolean = false,
-    aad?: Buffer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _authTag: boolean = false,
+    aad?: Buffer
   ): Buffer {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
@@ -202,8 +209,8 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_InvalidAESKeyLength,
-        ),
+          NodeEciesStringKey.Error_InvalidAESKeyLength
+        )
       );
     }
 
@@ -213,8 +220,8 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_InvalidIVLength,
-        ),
+          NodeEciesStringKey.Error_InvalidIVLength
+        )
       );
     }
 
@@ -224,25 +231,25 @@ export class AESGCMService {
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_CannotDecryptEmptyData,
-        ),
+          NodeEciesStringKey.Error_CannotDecryptEmptyData
+        )
       );
     }
 
-    if (encryptedData.length > 0x7FFFFFFF) {
+    if (encryptedData.length > 0x7fffffff) {
       const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
         pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_MessageTooLarge,
-        ),
+          NodeEciesStringKey.Error_MessageTooLarge
+        )
       );
     }
 
     const decipher = createDecipheriv(
       this.keyringAlgorithmConfiguration,
       key,
-      iv,
+      iv
     );
 
     if (aad) {

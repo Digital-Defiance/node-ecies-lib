@@ -1,15 +1,17 @@
 import {
-  ECIESError,
-  ECIESErrorTypeEnum,
-  IECIESConstants,
-  SecureBuffer,
-} from '@digitaldefiance/ecies-lib';
-import {
   createCipheriv,
   createDecipheriv,
   createECDH,
   randomBytes,
 } from 'crypto';
+
+import {
+  ECIESError,
+  ECIESErrorTypeEnum,
+  IECIESConstants,
+  SecureBuffer,
+} from '@digitaldefiance/ecies-lib';
+
 import { Constants } from '../constants';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
@@ -20,6 +22,7 @@ import {
   IMultiRecipientChunkHeader,
   IMultiRecipientConstants,
 } from '../interfaces/multi-recipient-chunk';
+
 import { AESGCMService } from './aes-gcm';
 import { EciesCryptoCore } from './ecies/crypto-core';
 import { EciesMultiRecipient } from './ecies/multi-recipient';
@@ -487,7 +490,7 @@ export class MultiRecipientProcessor {
     encryptedData: Buffer
   ): Promise<Buffer> {
     // Extract ephemeral public key
-    const pubKeyLength = this.cryptoCore.consts.PUBLIC_KEY_LENGTH; // 33
+    // const pubKeyLength = this.cryptoCore.consts.PUBLIC_KEY_LENGTH; // 33
 
     const ephemeralPublicKey = encryptedData.subarray(0, 33);
     const encryptedKey = encryptedData.subarray(33);

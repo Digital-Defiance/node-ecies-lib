@@ -7,6 +7,7 @@
  */
 
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+
 import { Member } from '../../src/member';
 import { AESGCMService } from '../../src/services/aes-gcm';
 import { ECIESService } from '../../src/services/ecies/service';

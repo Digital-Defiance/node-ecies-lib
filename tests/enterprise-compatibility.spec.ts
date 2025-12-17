@@ -1,9 +1,9 @@
-
-import { ECIESService } from '../src/services/ecies/service';
-import { getNodeRuntimeConfiguration } from '../src/constants';
+import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomBytes } from 'crypto';
+
+import { getNodeRuntimeConfiguration } from '../src/constants';
+import { ECIESService } from '../src/services/ecies/service';
 
 interface TestVector {
   id: string;
@@ -30,7 +30,10 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
     };
     service = new ECIESService(config);
 
-    const vectorsPath = path.join(__dirname, 'fixtures/enterprise-vectors.json');
+    const vectorsPath = path.join(
+      __dirname,
+      'fixtures/enterprise-vectors.json'
+    );
     if (fs.existsSync(vectorsPath)) {
       vectors = JSON.parse(fs.readFileSync(vectorsPath, 'utf8'));
     } else {
@@ -67,24 +70,20 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
       const mnemonic = service.generateNewMnemonic();
       const { wallet } = service.walletAndSeedFromMnemonic(mnemonic);
       const privateKey = Buffer.from(wallet.getPrivateKey());
-      
+
       for (let i = 0; i < 100; i++) {
         const garbageLength = Math.floor(Math.random() * 1000) + 1;
         const garbage = randomBytes(garbageLength);
-        
+
         expect(() => {
-          service.decryptSimpleOrSingleWithHeader(
-            false,
-            privateKey,
-            garbage
-          );
+          service.decryptSimpleOrSingleWithHeader(false, privateKey, garbage);
         }).toThrow();
       }
     });
 
     it('should handle mutated valid ciphertexts', () => {
       if (vectors.length === 0) return;
-      
+
       const vector = vectors[0];
       const validEncrypted = Buffer.from(vector.encrypted, 'base64');
       const privateKey = Buffer.from(vector.privateKey, 'hex');
@@ -96,18 +95,14 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
         mutated[pos] ^= 0xff; // Flip bits
 
         expect(() => {
-          service.decryptSimpleOrSingleWithHeader(
-            false,
-            privateKey,
-            mutated
-          );
+          service.decryptSimpleOrSingleWithHeader(false, privateKey, mutated);
         }).toThrow();
       }
     });
 
     it('should handle truncated ciphertexts', () => {
       if (vectors.length === 0) return;
-      
+
       const vector = vectors[0];
       const validEncrypted = Buffer.from(vector.encrypted, 'base64');
       const privateKey = Buffer.from(vector.privateKey, 'hex');
@@ -115,13 +110,9 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
       // Try truncating at various lengths
       for (let len = 0; len < validEncrypted.length; len += 5) {
         const truncated = validEncrypted.subarray(0, len);
-        
+
         expect(() => {
-          service.decryptSimpleOrSingleWithHeader(
-            false,
-            privateKey,
-            truncated
-          );
+          service.decryptSimpleOrSingleWithHeader(false, privateKey, truncated);
         }).toThrow();
       }
     });
@@ -141,19 +132,21 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
       ]);
 
       for (let i = 0; i < count; i++) {
-        promises.push((async () => {
-          const encrypted = service.encryptSimpleOrSingle(
-            false,
-            publicKey,
-            message
-          );
-          const decrypted = service.decryptSimpleOrSingleWithHeader(
-            false,
-            privateKey,
-            encrypted
-          );
-          expect(decrypted).toEqual(message);
-        })());
+        promises.push(
+          (async () => {
+            const encrypted = service.encryptSimpleOrSingle(
+              false,
+              publicKey,
+              message
+            );
+            const decrypted = service.decryptSimpleOrSingleWithHeader(
+              false,
+              privateKey,
+              encrypted
+            );
+            expect(decrypted).toEqual(message);
+          })()
+        );
       }
 
       await Promise.all(promises);

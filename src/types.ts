@@ -1,5 +1,6 @@
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { Brand } from 'ts-brand';
+
 import { IKeyPairBufferWithUnEncryptedPrivateKey } from './interfaces/keypair-buffer-with-un-encrypted-private-key';
 import { ISigningKeyPrivateKeyInfo } from './interfaces/signing-key-private-key-info';
 import { ISimpleKeyPairBuffer } from './interfaces/simple-keypair-buffer';

@@ -1,8 +1,9 @@
+import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+
 import { ECIESBuilder } from '../src/builders/ecies-builder';
 import { MemberBuilder } from '../src/builders/member-builder';
-import { ECIESService } from '../src/services/ecies';
 import { Constants } from '../src/constants';
-import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '../src/services/ecies';
 
 describe('ECIESBuilder', () => {
   it('should create builder instance', () => {
@@ -38,7 +39,7 @@ describe('MemberBuilder', () => {
       .withName('Test User')
       .withEmail('test@example.com')
       .build();
-    
+
     expect(result).toBeDefined();
     expect(result.member).toBeDefined();
     expect(result.member.name).toBe('Test User');
@@ -55,7 +56,7 @@ describe('MemberBuilder', () => {
       .withName('Admin User')
       .withEmail(email)
       .build();
-    
+
     expect(result).toBeDefined();
     expect(result.member.email).toEqual(email);
   });
@@ -68,7 +69,7 @@ describe('MemberBuilder', () => {
       .withEmail('system@example.com')
       .withEciesService(ecies)
       .build();
-    
+
     expect(result).toBeDefined();
     expect(result.member).toBeDefined();
   });

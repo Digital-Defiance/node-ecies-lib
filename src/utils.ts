@@ -4,6 +4,7 @@ import {
   getLengthForLengthType,
   LengthEncodingType,
 } from '@digitaldefiance/ecies-lib';
+
 import {
   getEciesPluginI18nEngine,
   getNodeEciesTranslation,
@@ -28,7 +29,7 @@ class LengthEncodingError extends Error {
  */
 export function lengthEncodeData(buffer: Buffer): Buffer {
   const lengthType: LengthEncodingType = getLengthEncodingTypeForLength(
-    buffer.length,
+    buffer.length
   );
   const lengthTypeSize: number = getLengthForLengthType(lengthType);
   const result: Buffer = Buffer.alloc(1 + lengthTypeSize + buffer.length);
@@ -60,12 +61,12 @@ export function decodeLengthEncodedData(buffer: Buffer): {
     throw new RangeError(
       pluginEngine.translate(
         NodeEciesComponentId,
-        NodeEciesStringKey.Error_BufferIsTooShort,
-      ),
+        NodeEciesStringKey.Error_BufferIsTooShort
+      )
     );
   }
   const lengthType: LengthEncodingType = getLengthEncodingTypeFromValue(
-    buffer.readUint8(0),
+    buffer.readUint8(0)
   );
   const lengthTypeSize: number = getLengthForLengthType(lengthType);
 
@@ -73,12 +74,12 @@ export function decodeLengthEncodedData(buffer: Buffer): {
     throw new RangeError(
       pluginEngine.translate(
         NodeEciesComponentId,
-        NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue,
-      ),
+        NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue
+      )
     );
   }
 
-  let length: number | BigInt;
+  let length: number | bigint;
   switch (lengthType) {
     case LengthEncodingType.UInt8:
       length = buffer.readUint8(1);
@@ -95,16 +96,16 @@ export function decodeLengthEncodedData(buffer: Buffer): {
         throw new RangeError(
           pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger,
-          ),
+            NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger
+          )
         );
       }
       break;
     default:
       throw new LengthEncodingError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
-        ),
+          NodeEciesStringKey.Error_LengthError_LengthIsInvalidType
+        )
       );
   }
 
@@ -113,8 +114,8 @@ export function decodeLengthEncodedData(buffer: Buffer): {
     throw new RangeError(
       pluginEngine.translate(
         NodeEciesComponentId,
-        NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength,
-      ),
+        NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength
+      )
     );
   }
   return {

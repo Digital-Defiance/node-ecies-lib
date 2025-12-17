@@ -1,28 +1,41 @@
-import { 
-  InvariantValidator as BaseInvariantValidator,
-  IInvariant 
-} from '@digitaldefiance/ecies-lib';
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { TranslatableGenericError } from '@digitaldefiance/i18n-lib';
-import { IConstants } from '../interfaces/constants';
-import { RecipientIdConsistencyInvariant } from './invariants/recipient-id-consistency';
-import { NodeEciesStringKey, NodeEciesComponentId } from '../i18n/node-keys';
+
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
+import { NodeEciesComponentId, NodeEciesStringKey } from '../i18n/node-keys';
+import { IConstants } from '../interfaces/constants';
+
+import { RecipientIdConsistencyInvariant } from './invariants/recipient-id-consistency';
+
+/**
+ * Base interface for invariants
+ */
+interface IInvariant {
+  name: string;
+  description: string;
+  check(config: IConstants): boolean;
+  errorMessage(config: IConstants): string;
+}
 
 /**
  * Node.js-specific invariant validator.
- * 
+ *
  * Extends the base ecies-lib validator with Node.js-specific invariants.
  * Validates configuration consistency to prevent bugs like the 12 vs 32-byte
  * recipient ID discrepancy.
- * 
+ *
  * @example
  * ```typescript
  * import { InvariantValidator } from '@digitaldefiance/node-ecies-lib';
  * import { MyCustomInvariant } from './my-invariants';
- * 
+ *
  * // Register a custom invariant
  * InvariantValidator.registerInvariant(new MyCustomInvariant());
- * 
+ *
  * // Validate configuration
  * InvariantValidator.validateAll(config); // throws if any invariant fails
  * ```
@@ -39,18 +52,16 @@ export class InvariantValidator {
 
   /**
    * Register a custom invariant to be checked during validation.
-   * 
+   *
    * @param invariant - The invariant to register
    */
   static registerInvariant(invariant: IInvariant): void {
     this.customInvariants.push(invariant);
-    // Also register with base validator for consistency
-    BaseInvariantValidator.registerInvariant(invariant);
   }
 
   /**
    * Unregister a custom invariant by name.
-   * 
+   *
    * @param name - The name of the invariant to unregister
    * @returns true if the invariant was found and removed, false otherwise
    */
@@ -72,29 +83,16 @@ export class InvariantValidator {
 
   /**
    * Validate all registered invariants against a configuration.
-   * 
-   * This checks both:
-   * - Base ecies-lib invariants (via BaseInvariantValidator)
-   * - Node-specific invariants
-   * 
+   *
+   * This checks Node-specific invariants.
+   *
    * @param config - The configuration to validate
    * @throws Error if any invariant check fails
    */
   static validateAll(config: IConstants): void {
     const failures: string[] = [];
 
-    // First, validate base ecies-lib invariants, excluding the one we are replacing
-    const baseInvariants = BaseInvariantValidator.getAllInvariants();
-    for (const invariant of baseInvariants) {
-      if (invariant.name === 'RecipientIdConsistency') {
-        continue;
-      }
-      if (!invariant.check(config)) {
-        failures.push(invariant.errorMessage(config));
-      }
-    }
-
-    // Then validate Node-specific invariants
+    // Validate Node-specific invariants
     for (const invariant of this.getAllInvariants()) {
       if (!invariant.check(config)) {
         failures.push(invariant.errorMessage(config));

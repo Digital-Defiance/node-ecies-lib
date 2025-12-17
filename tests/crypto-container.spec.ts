@@ -1,8 +1,8 @@
+import { Constants } from '../src/constants';
 import { CryptoContainer, CryptoServiceKey } from '../src/lib/crypto-container';
+import { AESGCMService } from '../src/services/aes-gcm';
 import { ECIESService } from '../src/services/ecies';
 import { Pbkdf2Service } from '../src/services/pbkdf2';
-import { AESGCMService } from '../src/services/aes-gcm';
-import { Constants } from '../src/constants';
 
 describe('CryptoContainer', () => {
   it('should create container with default constants', () => {

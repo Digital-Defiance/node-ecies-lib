@@ -1,5 +1,11 @@
-import { EmailString, MemberType, SecureBuffer, SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  MemberType,
+  SecureBuffer,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
+
 import { MockBackendMember } from '../src/test-mocks/mock-backend-member';
 
 describe('MockBackendMember', () => {
@@ -147,7 +153,7 @@ describe('MockBackendMember', () => {
     it('should create multiple members', () => {
       const members = MockBackendMember.createMultiple(3);
       expect(members).toHaveLength(3);
-      members.forEach(m => expect(m).toBeInstanceOf(MockBackendMember));
+      members.forEach((m) => expect(m).toBeInstanceOf(MockBackendMember));
     });
 
     it('should create with private key', () => {

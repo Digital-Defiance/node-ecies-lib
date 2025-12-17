@@ -1,14 +1,15 @@
 import {
-  decodeLengthEncodedData as backendDecodeLengthEncodedData,
-  lengthEncodeData as backendLengthEncodeData,
-} from '../src/utils';
-import {
   arraysEqual,
   decodeLengthEncodedData as frontendDecodeLengthEncodedData,
   lengthEncodeData as frontendLengthEncodeData,
   stringToUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
+
+import {
+  decodeLengthEncodedData as backendDecodeLengthEncodedData,
+  lengthEncodeData as backendLengthEncodeData,
+} from '../src/utils';
 
 describe('Length Encoding Compatibility', () => {
   const testData = [
@@ -56,7 +57,7 @@ describe('Length Encoding Compatibility', () => {
           backendDecodeLengthEncodedData(backendBuffer);
         const backendReEncoded = backendLengthEncodeData(backendDecoded);
         const { data: frontendFinal } = frontendDecodeLengthEncodedData(
-          new Uint8Array(backendReEncoded),
+          new Uint8Array(backendReEncoded)
         );
 
         expect(arraysEqual(data, frontendFinal)).toBe(true);
@@ -66,11 +67,11 @@ describe('Length Encoding Compatibility', () => {
         const backendBuffer = Buffer.from(data);
         const backendEncoded = backendLengthEncodeData(backendBuffer);
         const { data: frontendDecoded } = frontendDecodeLengthEncodedData(
-          new Uint8Array(backendEncoded),
+          new Uint8Array(backendEncoded)
         );
         const frontendReEncoded = frontendLengthEncodeData(frontendDecoded);
         const { data: backendFinal } = backendDecodeLengthEncodedData(
-          Buffer.from(frontendReEncoded),
+          Buffer.from(frontendReEncoded)
         );
 
         expect(arraysEqual(data, new Uint8Array(backendFinal))).toBe(true);

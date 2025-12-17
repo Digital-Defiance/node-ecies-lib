@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   ECIESError,
   ECIESErrorTypeEnum,
@@ -5,8 +6,9 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
-import { createEciesTranslationEngine } from '../../i18n/ecies-i18n-factory';
+
 import { SignatureBuffer, SignatureString } from '../../types';
+
 import { EciesCryptoCore } from './crypto-core';
 
 /**
@@ -44,23 +46,17 @@ export class EciesSignature {
   public verifyMessage(
     publicKey: Buffer,
     data: Buffer,
-    signature: SignatureBuffer,
+    signature: SignatureBuffer
   ): boolean {
     if (signature.length !== 64) {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidSignature,
-        createEciesTranslationEngine(),
-      );
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
     }
 
     // Normalize and validate the public key
     try {
       publicKey = this.cryptoCore.normalizePublicKey(publicKey);
     } catch {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidSenderPublicKey,
-        createEciesTranslationEngine(),
-      );
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidSenderPublicKey);
     }
 
     const hash = sha256(data);
@@ -73,7 +69,7 @@ export class EciesSignature {
    * @returns The signature buffer.
    */
   public signatureStringToSignatureBuffer(
-    signatureString: HexString,
+    signatureString: HexString
   ): SignatureBuffer {
     return Buffer.from(signatureString, 'hex') as SignatureBuffer;
   }
@@ -84,7 +80,7 @@ export class EciesSignature {
    * @returns The signature string.
    */
   public signatureBufferToSignatureString(
-    signatureBuffer: SignatureBuffer,
+    signatureBuffer: SignatureBuffer
   ): SignatureString {
     return signatureBuffer.toString('hex') as SignatureString;
   }

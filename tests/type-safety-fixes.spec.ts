@@ -3,6 +3,7 @@
  * Tests ID type guards, conversions, and cipher type handling
  */
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+
 import { AuthenticatedCipher } from '../src/interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../src/interfaces/authenticated-decipher';
 import {
@@ -86,10 +87,18 @@ describe('Type Safety Fixes', () => {
     });
 
     it('should throw error for unsupported types', () => {
-      expect(() => toBuffer(123 as any)).toThrow();
-      expect(() => toBuffer({} as any)).toThrow();
-      expect(() => toUint8Array(123 as any)).toThrow();
-      expect(() => toUint8Array({} as any)).toThrow();
+      expect(() =>
+        toBuffer(123 as unknown as string | Uint8Array | Buffer)
+      ).toThrow();
+      expect(() =>
+        toBuffer({} as unknown as string | Uint8Array | Buffer)
+      ).toThrow();
+      expect(() =>
+        toUint8Array(123 as unknown as string | Uint8Array | Buffer)
+      ).toThrow();
+      expect(() =>
+        toUint8Array({} as unknown as string | Uint8Array | Buffer)
+      ).toThrow();
     });
   });
 
@@ -135,7 +144,12 @@ describe('Type Safety Fixes', () => {
     });
 
     it('should throw error for invalid target type', () => {
-      expect(() => convertId(testBuffer, 'invalid' as any)).toThrow();
+      expect(() =>
+        convertId(
+          testBuffer,
+          'invalid' as unknown as 'string' | 'buffer' | 'uint8array'
+        )
+      ).toThrow();
     });
   });
 

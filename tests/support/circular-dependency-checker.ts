@@ -2,8 +2,9 @@
  * Circular dependency detection utilities using madge.
  */
 
-import madge from 'madge';
 import { resolve } from 'path';
+
+import madge from 'madge';
 
 export interface CircularDependencyResult {
   hasCircular: boolean;

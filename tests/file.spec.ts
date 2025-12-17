@@ -2,6 +2,7 @@ import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+
 import { EciesFileService } from '../src/services/ecies/file';
 import { ECIESService } from '../src/services/ecies/service';
 

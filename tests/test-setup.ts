@@ -1,7 +1,9 @@
+import { webcrypto } from 'crypto';
+
 import { resetEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import { toThrowType } from '@digitaldefiance/express-suite-test-utils';
 import { I18nEngine, resetCoreI18nEngine } from '@digitaldefiance/i18n-lib';
-import { webcrypto } from 'crypto';
+
 import { resetNodeEciesI18nEngine } from '../src/i18n/node-ecies-i18n-setup';
 
 // Extend expect with custom matchers

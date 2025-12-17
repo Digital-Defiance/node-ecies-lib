@@ -1,14 +1,14 @@
-
 import {
+  EmailString,
   ECIESService as FrontendECIESService,
   Member as FrontendMember,
-  EmailString,
-  MemberType,
   IECIESConfig,
+  MemberType,
 } from '@digitaldefiance/ecies-lib';
-import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
-import { Member as BackendMember } from '../src/member';
+
 import { getNodeRuntimeConfiguration } from '../src/constants';
+import { Member as BackendMember } from '../src/member';
+import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 
 describe('Multi-Recipient Cross-Platform Compatibility', () => {
   let frontendService: FrontendECIESService;
@@ -31,7 +31,7 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
 
   it('should encrypt with Backend and decrypt with Frontend (Multi-Recipient)', async () => {
     const message = Buffer.from('Multi-recipient cross-platform test');
-    
+
     // Create recipients using Frontend lib (simulating browser users)
     const recipient1 = FrontendMember.newMember(
       frontendService,
@@ -51,20 +51,24 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     // We need to convert Frontend members to a format Backend accepts
     // Backend expects objects with id (Buffer) and publicKey (Buffer)
     const backendRecipients = [
-      { 
-        id: Buffer.from(recipient1.id), 
-        publicKey: Buffer.from(recipient1.publicKey) 
+      {
+        id: Buffer.from(recipient1.id),
+        publicKey: Buffer.from(recipient1.publicKey),
       },
-      { 
-        id: Buffer.from(recipient2.id), 
-        publicKey: Buffer.from(recipient2.publicKey) 
-      }
+      {
+        id: Buffer.from(recipient2.id),
+        publicKey: Buffer.from(recipient2.publicKey),
+      },
     ];
 
-    const encryptedObj = await backendService.encryptMultiple(backendRecipients as any[], message);
-    
+    const encryptedObj = await backendService.encryptMultiple(
+      backendRecipients as any[],
+      message
+    );
+
     // Serialize to full message (Header + Body)
-    const header = backendService.buildECIESMultipleRecipientHeader(encryptedObj);
+    const header =
+      backendService.buildECIESMultipleRecipientHeader(encryptedObj);
     const fullMessage = Buffer.concat([header, encryptedObj.encryptedMessage]);
 
     // Frontend decrypts
@@ -72,9 +76,9 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     // We need to access the protected multiRecipient component or use a public method if available.
     // Casting to any to access internal component for testing purposes.
     const frontendMulti = (frontendService as any).multiRecipient;
-    
+
     const parsed = frontendMulti.parseMessage(new Uint8Array(fullMessage));
-    
+
     const decrypted1 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
       recipient1.id,
@@ -111,27 +115,33 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     // Frontend encrypts for these backend users
     // Frontend expects { id: Uint8Array, publicKey: Uint8Array }
     const frontendRecipients = [
-      { 
-        id: new Uint8Array(recipient1.id), 
-        publicKey: new Uint8Array(recipient1.publicKey) 
+      {
+        id: new Uint8Array(recipient1.id),
+        publicKey: new Uint8Array(recipient1.publicKey),
       },
-      { 
-        id: new Uint8Array(recipient2.id), 
-        publicKey: new Uint8Array(recipient2.publicKey) 
-      }
+      {
+        id: new Uint8Array(recipient2.id),
+        publicKey: new Uint8Array(recipient2.publicKey),
+      },
     ];
 
-    const encryptedObj = await frontendService.encryptMultiple(frontendRecipients, new Uint8Array(message));
-    
+    const encryptedObj = await frontendService.encryptMultiple(
+      frontendRecipients,
+      new Uint8Array(message)
+    );
+
     // Serialize to full message (Header + Body)
     const frontendMulti = (frontendService as any).multiRecipient;
     const header = frontendMulti.buildHeader(encryptedObj);
-    const fullMessage = Buffer.concat([Buffer.from(header), Buffer.from(encryptedObj.encryptedMessage)]);
+    const fullMessage = Buffer.concat([
+      Buffer.from(header),
+      Buffer.from(encryptedObj.encryptedMessage),
+    ]);
 
     // Backend decrypts
     // Backend Member.decryptData only supports Single/Simple. We must use the service directly.
     const parsed = backendService.parseMultiEncryptedBuffer(fullMessage);
-    
+
     const decrypted1 = backendService.decryptMultipleECIEForRecipient(
       parsed,
       recipient1

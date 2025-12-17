@@ -3,6 +3,7 @@ import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+
 import { ECIESService } from '../src/services/ecies';
 import { EciesFileService } from '../src/services/ecies/file';
 

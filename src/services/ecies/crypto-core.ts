@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { createHash, hkdfSync } from 'crypto';
+
 import {
   ECIESError,
   ECIESErrorTypeEnum,
@@ -9,16 +13,15 @@ import {
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
-import { createHash, hkdfSync } from 'crypto';
+
+import { Constants } from '../../constants';
 import {
-  createEciesTranslationEngine,
   getEciesPluginI18nEngine,
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../../i18n/ecies-i18n-factory';
 import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import { IWalletSeed } from '../../interfaces/wallet-seed';
-import { Constants } from '../../constants';
 
 /**
  * Core encryption and decryption functions for ECIES
@@ -37,7 +40,7 @@ export class EciesCryptoCore {
 
   constructor(
     config: IECIESConfig,
-    eciesParams: IECIESConstants = Constants.ECIES,
+    eciesParams: IECIESConstants = Constants.ECIES
   ) {
     this._config = config;
     this._consts = eciesParams;
@@ -58,9 +61,9 @@ export class EciesCryptoCore {
         {
           error: pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_InvalidPublicKey,
+            NodeEciesStringKey.Error_InvalidPublicKey
           ),
-        },
+        }
       );
     }
 
@@ -68,27 +71,18 @@ export class EciesCryptoCore {
     // console.log('[normalizePublicKey] Magic:', this._consts.PUBLIC_KEY_MAGIC);
 
     // Check for compressed key (33 bytes, starts with 0x02 or 0x03)
-    if (
-      keyLength === 33 &&
-      (publicKey[0] === 0x02 || publicKey[0] === 0x03)
-    ) {
+    if (keyLength === 33 && (publicKey[0] === 0x02 || publicKey[0] === 0x03)) {
       return publicKey;
     }
 
     // Check for uncompressed key (65 bytes, starts with 0x04)
-    if (
-      keyLength === 65 &&
-      publicKey[0] === 0x04
-    ) {
+    if (keyLength === 65 && publicKey[0] === 0x04) {
       return publicKey;
     }
 
     // Raw key without prefix (64 bytes) - add the 0x04 prefix
     if (keyLength === 64) {
-      return Buffer.concat([
-        Buffer.from([0x04]),
-        publicKey,
-      ]);
+      return Buffer.concat([Buffer.from([0x04]), publicKey]);
     }
 
     // Raw key without prefix (32 bytes) - add the 0x02 prefix (assuming even Y)
@@ -96,11 +90,11 @@ export class EciesCryptoCore {
     // But if we assume it's a raw X coordinate, we might default to 0x02?
     // Actually, RAW_PUBLIC_KEY_LENGTH is 32.
     if (keyLength === this._consts.RAW_PUBLIC_KEY_LENGTH) {
-       // If we only have X, we can't fully reconstruct without knowing Y parity.
-       // But maybe the intention of RAW_PUBLIC_KEY_LENGTH was for uncompressed without prefix (64 bytes)?
-       // The constants say RAW_PUBLIC_KEY_LENGTH = 32.
-       // So it expects X coordinate only.
-       // We can try to prepend 0x02.
+      // If we only have X, we can't fully reconstruct without knowing Y parity.
+      // But maybe the intention of RAW_PUBLIC_KEY_LENGTH was for uncompressed without prefix (64 bytes)?
+      // The constants say RAW_PUBLIC_KEY_LENGTH = 32.
+      // So it expects X coordinate only.
+      // We can try to prepend 0x02.
       return Buffer.concat([
         Buffer.from([this._consts.PUBLIC_KEY_MAGIC]),
         publicKey,
@@ -116,14 +110,14 @@ export class EciesCryptoCore {
       {
         error: pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_InvalidPublicKeyFormat,
+          NodeEciesStringKey.Error_InvalidPublicKeyFormat
         ),
         keyLength: String(keyLength),
         expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
         expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),
         keyPrefix: keyLength > 0 ? String(publicKey[0]) : 'N/A',
         expectedPrefix: String(this._consts.PUBLIC_KEY_MAGIC),
-      },
+      }
     );
   }
 
@@ -154,10 +148,7 @@ export class EciesCryptoCore {
    */
   public walletAndSeedFromMnemonic(mnemonic: SecureString): IWalletSeed {
     if (!mnemonic.value || !validateMnemonic(mnemonic.value)) {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidMnemonic,
-        createEciesTranslationEngine(),
-      );
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic);
     }
 
     const seed = mnemonicToSeedSync(mnemonic.value);
@@ -200,7 +191,7 @@ export class EciesCryptoCore {
    * @returns {ISimpleKeyPairBuffer} The new key pair
    */
   public mnemonicToSimpleKeyPairBuffer(
-    mnemonic: SecureString,
+    mnemonic: SecureString
   ): ISimpleKeyPairBuffer {
     const { seed } = this.walletAndSeedFromMnemonic(mnemonic);
     return this.seedToSimpleKeyPairBuffer(Buffer.from(seed.value));
@@ -221,11 +212,8 @@ export class EciesCryptoCore {
    */
   public getPublicKey(privateKey: Buffer): Buffer {
     // Security fix 2: Private key validation
-    if (privateKey.every(byte => byte === 0)) {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.PrivateKeyNotLoaded,
-        createEciesTranslationEngine(),
-      );
+    if (privateKey.every((byte) => byte === 0)) {
+      throw new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded);
     }
     const publicKey = secp256k1.getPublicKey(privateKey, true);
     return Buffer.from(publicKey);
@@ -253,25 +241,23 @@ export class EciesCryptoCore {
   public computeSharedSecret(privateKey: Buffer, publicKey: Buffer): Buffer {
     // Security fix 1: Public key validation (check normalized key)
     const normalizedKey = this.normalizePublicKey(publicKey);
-    const isAllZeros = normalizedKey.slice(1).every(byte => byte === 0);
+    const isAllZeros = normalizedKey.slice(1).every((byte) => byte === 0);
     if (isAllZeros) {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.InvalidRecipientPublicKey,
-        createEciesTranslationEngine(),
-      );
+      throw new ECIESError(ECIESErrorTypeEnum.InvalidRecipientPublicKey);
     }
 
-    const sharedSecret = secp256k1.getSharedSecret(privateKey, normalizedKey, true);
+    const sharedSecret = secp256k1.getSharedSecret(
+      privateKey,
+      normalizedKey,
+      true
+    );
     const secret = Buffer.from(sharedSecret.slice(1)); // Remove the 0x02/0x03 prefix
-    
+
     // Security fix 3: Shared secret validation
-    if (secret.every(byte => byte === 0)) {
-      throw new ECIESError(
-        ECIESErrorTypeEnum.SecretComputationFailed,
-        createEciesTranslationEngine(),
-      );
+    if (secret.every((byte) => byte === 0)) {
+      throw new ECIESError(ECIESErrorTypeEnum.SecretComputationFailed);
     }
-    
+
     return secret;
   }
 
@@ -308,11 +294,15 @@ export class EciesCryptoCore {
    * @param message The message that was signed
    * @param signature The signature to verify
    */
-  public verify(publicKey: Buffer, message: Buffer, signature: Buffer): boolean {
+  public verify(
+    publicKey: Buffer,
+    message: Buffer,
+    signature: Buffer
+  ): boolean {
     const hash = createHash('sha256').update(message).digest();
     try {
       return secp256k1.verify(signature, hash, publicKey);
-    } catch (e) {
+    } catch {
       return false;
     }
   }

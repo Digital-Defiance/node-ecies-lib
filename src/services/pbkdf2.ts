@@ -1,29 +1,30 @@
-import { PluginI18nEngine, CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
+import { promisify } from 'util';
+
 import {
   IPbkdf2Config,
   IPBkdf2Consts,
   Pbkdf2ErrorType,
 } from '@digitaldefiance/ecies-lib';
-import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';
-import { promisify } from 'util';
-import { IConstants } from '../interfaces/constants';
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+
+import { Constants } from '../constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
 import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
 } from '../i18n/ecies-i18n-factory';
-import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
+import { IConstants } from '../interfaces/constants';
 import { IECIESConsts } from '../interfaces/ecies-consts';
-import { Constants } from '../constants';
+import { IPbkdf2Result } from '../interfaces/pbkdf2-result';
 
 /**
  * Custom PBKDF2 error class that works with the plugin i18n system
  */
 export class NodePbkdf2Error extends Error {
-  constructor(
-    message: string,
-    public readonly type: Pbkdf2ErrorType,
-  ) {
+  constructor(message: string, public readonly type: Pbkdf2ErrorType) {
     super(message);
     this.name = 'NodePbkdf2Error';
   }
@@ -38,7 +39,8 @@ export class NodePbkdf2Error extends Error {
  * - Both synchronous and asynchronous key derivation
  */
 export class Pbkdf2Service<
-  TLanguage extends CoreLanguageCode = CoreLanguageCode,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  TLanguage extends CoreLanguageCode = CoreLanguageCode
 > {
   protected readonly profiles: Record<string, IPbkdf2Config>;
   protected readonly eciesConsts: IECIESConsts;
@@ -47,7 +49,7 @@ export class Pbkdf2Service<
   constructor(
     profiles: Record<string, IPbkdf2Config> = Constants.PBKDF2_PROFILES,
     eciesParams: IECIESConsts = Constants.ECIES,
-    pbkdf2Params: IPBkdf2Consts = Constants.PBKDF2,
+    pbkdf2Params: IPBkdf2Consts = Constants.PBKDF2
   ) {
     this.profiles = profiles;
     this.eciesConsts = eciesParams;
@@ -89,7 +91,7 @@ export class Pbkdf2Service<
     return new Pbkdf2Service(
       constants.PBKDF2_PROFILES,
       constants.ECIES,
-      constants.PBKDF2,
+      constants.PBKDF2
     );
   }
   /**
@@ -102,9 +104,9 @@ export class Pbkdf2Service<
     if (!profileConfig) {
       throw new NodePbkdf2Error(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength
         ),
-        Pbkdf2ErrorType.InvalidProfile,
+        Pbkdf2ErrorType.InvalidProfile
       );
     }
     return {
@@ -127,7 +129,7 @@ export class Pbkdf2Service<
     iterations?: number,
     saltBytes?: number,
     hashBytes?: number,
-    algorithm?: string,
+    algorithm?: string
   ): IPbkdf2Config {
     // larger numbers mean better security, less
     return {
@@ -162,7 +164,7 @@ export class Pbkdf2Service<
     iterations?: number,
     saltBytes?: number,
     keySize?: number,
-    algorithm?: string,
+    algorithm?: string
   ): IPbkdf2Result {
     const config = this.getConfig(iterations, saltBytes, keySize, algorithm);
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
@@ -170,9 +172,9 @@ export class Pbkdf2Service<
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength
         ),
-        Pbkdf2ErrorType.InvalidSaltLength,
+        Pbkdf2ErrorType.InvalidSaltLength
       );
     }
 
@@ -181,15 +183,15 @@ export class Pbkdf2Service<
       saltBytes_,
       config.iterations,
       config.hashBytes,
-      config.algorithm,
+      config.algorithm
     );
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
+          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength
         ),
-        Pbkdf2ErrorType.InvalidHashLength,
+        Pbkdf2ErrorType.InvalidHashLength
       );
     }
 
@@ -217,7 +219,7 @@ export class Pbkdf2Service<
     iterations?: number,
     saltBytes?: number,
     keySize?: number,
-    algorithm?: string,
+    algorithm?: string
   ): Promise<IPbkdf2Result> {
     const config = this.getConfig(iterations, saltBytes, keySize, algorithm);
     const saltBytes_ = salt ?? randomBytes(config.saltBytes);
@@ -225,9 +227,9 @@ export class Pbkdf2Service<
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
+          NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength
         ),
-        Pbkdf2ErrorType.InvalidSaltLength,
+        Pbkdf2ErrorType.InvalidSaltLength
       );
     }
 
@@ -237,15 +239,15 @@ export class Pbkdf2Service<
       saltBytes_,
       config.iterations,
       config.hashBytes,
-      config.algorithm,
+      config.algorithm
     )) as Buffer;
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
+          NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength
         ),
-        Pbkdf2ErrorType.InvalidHashLength,
+        Pbkdf2ErrorType.InvalidHashLength
       );
     }
 
@@ -266,7 +268,7 @@ export class Pbkdf2Service<
   public deriveKeyFromPasswordWithProfile(
     password: Buffer,
     profile: Pbkdf2ProfileEnum,
-    salt?: Buffer,
+    salt?: Buffer
   ): IPbkdf2Result {
     const config = this.getProfileConfig(profile);
     return this.deriveKeyFromPassword(
@@ -275,7 +277,7 @@ export class Pbkdf2Service<
       config.iterations,
       config.saltBytes,
       config.hashBytes,
-      config.algorithm,
+      config.algorithm
     );
   }
 
@@ -289,7 +291,7 @@ export class Pbkdf2Service<
   public async deriveKeyFromPasswordWithProfileAsync(
     password: Buffer,
     profile: Pbkdf2ProfileEnum,
-    salt?: Buffer,
+    salt?: Buffer
   ): Promise<IPbkdf2Result> {
     const config = this.getProfileConfig(profile);
     return this.deriveKeyFromPasswordAsync(
@@ -298,7 +300,7 @@ export class Pbkdf2Service<
       config.iterations,
       config.saltBytes,
       config.hashBytes,
-      config.algorithm,
+      config.algorithm
     );
   }
 }

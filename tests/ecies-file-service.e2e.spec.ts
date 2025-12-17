@@ -11,8 +11,10 @@ import {
 import { Wallet } from '@ethereumjs/wallet';
 import * as fs from 'fs';
 import { ObjectId } from 'mongodb';
+
 import * as os from 'os';
 import * as path from 'path';
+
 import { Member as BackendMember } from '../src/member';
 import { EciesFileService } from '../src/services/ecies/file';
 import { ECIESService } from '../src/services/ecies/service';

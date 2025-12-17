@@ -1,7 +1,6 @@
 import {
   ECIES,
   EmailString,
-  getEciesI18nEngine,
   IECIESConfig,
   InvalidEmailError,
   InvalidEmailErrorType,
@@ -10,14 +9,14 @@ import {
   SecureString,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { getNodeRuntimeConfiguration } from '../src/constants';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
+
+import { getNodeRuntimeConfiguration } from '../src/constants';
 import { IBackendMemberWithMnemonic } from '../src/interfaces/member-with-mnemonic';
 import { Member, NodeMemberError } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
-import { toThrowType } from '@digitaldefiance/express-suite-test-utils';
-import { spyContains, withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
+import { toThrowType } from './test-setup';
 
 // Extend Jest with custom matchers
 expect.extend({ toThrowType });
@@ -43,19 +42,19 @@ describe('DigitalDefiance ECIES Member', () => {
       eciesService,
       MemberType.User,
       'Alice Smith',
-      new EmailString('alice@example.com'),
+      new EmailString('alice@example.com')
     );
     bob = Member.newMember(
       eciesService,
       MemberType.User,
       'Bob Smith',
-      new EmailString('bob@example.com'),
+      new EmailString('bob@example.com')
     );
     noKeyCharlie = Member.newMember(
       eciesService,
       MemberType.User,
       'Charlie Smith',
-      new EmailString('charlie@example.com'),
+      new EmailString('charlie@example.com')
     );
     noKeyCharlie.member.unloadWalletAndPrivateKey();
   });
@@ -67,13 +66,13 @@ describe('DigitalDefiance ECIES Member', () => {
       const verified = alice.member.verify(signature, message);
       expect(verified).toBeTruthy();
       expect(
-        alice.member.verify(signature, Buffer.from('hello worldx')),
+        alice.member.verify(signature, Buffer.from('hello worldx'))
       ).toBeFalsy();
     });
 
     it('should fail to sign when there is no signing key', () => {
       expect(() =>
-        noKeyCharlie.member.sign(Buffer.from(faker.lorem.sentence())),
+        noKeyCharlie.member.sign(Buffer.from(faker.lorem.sentence()))
       ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.MissingPrivateKey);
       });
@@ -84,7 +83,7 @@ describe('DigitalDefiance ECIES Member', () => {
         eciesService,
         MemberType.User,
         'Dwight Smith',
-        new EmailString('dwight@example.com'),
+        new EmailString('dwight@example.com')
       );
       expect(dwight.member.hasPrivateKey).toBeTruthy();
       dwight.member.unloadWalletAndPrivateKey();
@@ -99,8 +98,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           '',
-          new EmailString('alice@example.com'),
-        ),
+          new EmailString('alice@example.com')
+        )
       ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.MissingMemberName);
       });
@@ -112,8 +111,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           'alice ',
-          new EmailString('alice@example.com'),
-        ),
+          new EmailString('alice@example.com')
+        )
       ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
       });
@@ -122,8 +121,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           ' alice',
-          new EmailString('alice@example.com'),
-        ),
+          new EmailString('alice@example.com')
+        )
       ).toThrowType(NodeMemberError, (error: NodeMemberError) => {
         expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
       });
@@ -135,8 +134,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           'alice',
-          new EmailString(''),
-        ),
+          new EmailString('')
+        )
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
         expect(error.type).toBe(InvalidEmailErrorType.Missing);
       });
@@ -148,8 +147,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           'alice',
-          new EmailString(' alice@example.com'),
-        ),
+          new EmailString(' alice@example.com')
+        )
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
         expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       });
@@ -158,8 +157,8 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           'alice',
-          new EmailString('alice@example.com '),
-        ),
+          new EmailString('alice@example.com ')
+        )
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
         expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       });
@@ -171,7 +170,7 @@ describe('DigitalDefiance ECIES Member', () => {
           eciesService,
           MemberType.User,
           'Nope',
-          new EmailString('x!foo'),
+          new EmailString('x!foo')
         );
       }).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
         expect(error.type).toBe(InvalidEmailErrorType.Invalid);
@@ -196,7 +195,7 @@ describe('DigitalDefiance ECIES Member', () => {
         eciesService,
         MemberType.User,
         'Test User',
-        new EmailString('test@example.com'),
+        new EmailString('test@example.com')
       );
     });
     it('should generate valid BIP39 mnemonic and derive wallet', () => {
@@ -210,10 +209,10 @@ describe('DigitalDefiance ECIES Member', () => {
         eciesService.walletAndSeedFromMnemonic(mnemonic);
 
       expect(uint8ArrayToHex(wallet.getPrivateKey())).toEqual(
-        uint8ArrayToHex(wallet2.getPrivateKey()),
+        uint8ArrayToHex(wallet2.getPrivateKey())
       );
       expect(uint8ArrayToHex(wallet.getPublicKey())).toEqual(
-        uint8ArrayToHex(wallet2.getPublicKey()),
+        uint8ArrayToHex(wallet2.getPublicKey())
       );
     });
 
@@ -235,7 +234,7 @@ describe('DigitalDefiance ECIES Member', () => {
         eciesService,
         MemberType.User,
         'Test User',
-        new EmailString('test@example.com'),
+        new EmailString('test@example.com')
       );
 
       // Store the original keys
@@ -249,7 +248,7 @@ describe('DigitalDefiance ECIES Member', () => {
         NodeMemberError,
         (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
-        },
+        }
       );
 
       // Generate a new mnemonic (this should fail to load)
@@ -258,7 +257,7 @@ describe('DigitalDefiance ECIES Member', () => {
         NodeMemberError,
         (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.InvalidMnemonic);
-        },
+        }
       );
 
       // The member should still not have a private key
@@ -267,7 +266,7 @@ describe('DigitalDefiance ECIES Member', () => {
         NodeMemberError,
         (error: NodeMemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
-        },
+        }
       );
 
       // Create a new member with same keys to simulate reloading from storage
@@ -276,7 +275,7 @@ describe('DigitalDefiance ECIES Member', () => {
         MemberType.User,
         'Test User',
         new EmailString('test@example.com'),
-        originalPublicKey,
+        originalPublicKey
       );
       // Set the private key using the setter to ensure proper validation
       if (originalPrivateKey) {
@@ -285,10 +284,10 @@ describe('DigitalDefiance ECIES Member', () => {
 
       // Verify ECDH keys match
       expect(reloadedMember.publicKey.toString('hex')).toEqual(
-        originalPublicKey.toString('hex'),
+        originalPublicKey.toString('hex')
       );
       expect(
-        uint8ArrayToHex(reloadedMember.privateKey?.value ?? new Uint8Array()),
+        uint8ArrayToHex(reloadedMember.privateKey?.value ?? new Uint8Array())
       ).toEqual(uint8ArrayToHex(originalPrivateKey?.value ?? new Uint8Array()));
     });
 
@@ -297,19 +296,19 @@ describe('DigitalDefiance ECIES Member', () => {
         eciesService,
         MemberType.User,
         'User 2',
-        new EmailString('user2@example.com'),
+        new EmailString('user2@example.com')
       );
 
       // Public keys should be different
       expect(member.member.publicKey.toString('hex')).not.toEqual(
-        member2.member.publicKey.toString('hex'),
+        member2.member.publicKey.toString('hex')
       );
 
       // Private keys should be different
       expect(
-        uint8ArrayToHex(member.member.privateKey?.value ?? new Uint8Array()),
+        uint8ArrayToHex(member.member.privateKey?.value ?? new Uint8Array())
       ).not.toEqual(
-        uint8ArrayToHex(member2.member.privateKey?.value ?? new Uint8Array()),
+        uint8ArrayToHex(member2.member.privateKey?.value ?? new Uint8Array())
       );
     });
   });
@@ -321,7 +320,7 @@ describe('DigitalDefiance ECIES Member', () => {
       const encrypted = eciesService.encryptSimpleOrSingle(
         false,
         alice.member.publicKey,
-        Buffer.from('hello world'),
+        Buffer.from('hello world')
       );
       if (!reloadedMember.privateKey) {
         throw new Error('Private key not loaded');
@@ -329,7 +328,7 @@ describe('DigitalDefiance ECIES Member', () => {
       const decrypted = eciesService.decryptSimpleOrSingleWithHeader(
         false,
         Buffer.from(reloadedMember.privateKey.value),
-        encrypted,
+        encrypted
       );
       expect(decrypted.toString()).toEqual('hello world');
     });

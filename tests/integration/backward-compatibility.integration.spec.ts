@@ -13,6 +13,7 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+
 import { MemberBuilder } from '../../src/builders/member-builder';
 
 describe('Backward Compatibility Integration', () => {

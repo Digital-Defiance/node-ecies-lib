@@ -1,20 +1,20 @@
 /**
  * Integration tests for recipient ID consistency across all constants.
- * 
+ *
  * These tests verify that the 12 vs 32-byte discrepancy bug cannot recur
  * by ensuring all size-related constants stay synchronized with the ID provider.
  */
 
-import { 
-  Constants, 
-  registerNodeRuntimeConfiguration,
-  getNodeRuntimeConfiguration,
-} from '../../src/constants';
 import {
-  ObjectIdProvider,
   GuidV4Provider,
+  ObjectIdProvider,
   UuidProvider,
 } from '@digitaldefiance/ecies-lib';
+
+import {
+  Constants,
+  registerNodeRuntimeConfiguration,
+} from '../../src/constants';
 import { InvariantValidator } from '../../src/lib/invariant-validator';
 
 describe('Recipient ID Consistency Integration Tests', () => {
@@ -26,7 +26,9 @@ describe('Recipient ID Consistency Integration Tests', () => {
         config.idProvider.byteLength
       );
       expect(config.MEMBER_ID_LENGTH).toBe(config.idProvider.byteLength);
-      expect(config.ENCRYPTION.RECIPIENT_ID_SIZE).toBe(config.idProvider.byteLength);
+      expect(config.ENCRYPTION.RECIPIENT_ID_SIZE).toBe(
+        config.idProvider.byteLength
+      );
       expect(config.idProvider.byteLength).toBe(12); // Default is ObjectID
     });
 
@@ -74,7 +76,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
     it('should fail if ENCRYPTION.RECIPIENT_ID_SIZE does not match idProvider', () => {
       // This simulates the original bug where constants were out of sync
       const config = Constants;
-      
+
       // Manually create a bad configuration (simulating the bug)
       const badConfig = {
         ...config,
@@ -91,7 +93,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
     it('should fail if ECIES.MULTIPLE.RECIPIENT_ID_SIZE does not match idProvider', () => {
       const config = Constants;
-      
+
       // Manually create a bad configuration
       const badConfig = {
         ...config,
@@ -111,7 +113,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
     it('should fail if MEMBER_ID_LENGTH does not match idProvider', () => {
       const config = Constants;
-      
+
       // Manually create a bad configuration
       const badConfig = {
         ...config,
@@ -125,7 +127,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
     it('should catch all three mismatches in one validation', () => {
       const config = Constants;
-      
+
       // Manually create a configuration where all three are wrong
       const badConfig = {
         ...config,
@@ -168,9 +170,9 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
     it('should maintain consistency when switching between all provider types', () => {
       const providers = [
-        new ObjectIdProvider(),   // 12 bytes
-        new GuidV4Provider(),      // 16 bytes
-        new UuidProvider(),        // 16 bytes
+        new ObjectIdProvider(), // 12 bytes
+        new GuidV4Provider(), // 16 bytes
+        new UuidProvider(), // 16 bytes
       ];
 
       for (const provider of providers) {
@@ -179,9 +181,11 @@ describe('Recipient ID Consistency Integration Tests', () => {
         });
 
         expect(config.MEMBER_ID_LENGTH).toBe(provider.byteLength);
-        expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(provider.byteLength);
+        expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(
+          provider.byteLength
+        );
         // Note: ENCRYPTION is not part of runtime config
-        
+
         // Validate invariants
         expect(() => {
           InvariantValidator.validateAll(config);
@@ -222,7 +226,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
       InvariantValidator.registerInvariant(customInvariant);
       InvariantValidator.validateAll(Constants);
-      
+
       expect(customCheckCalled).toBe(true);
     });
 
@@ -235,7 +239,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
       };
 
       InvariantValidator.registerInvariant(failingInvariant);
-      
+
       expect(() => {
         InvariantValidator.validateAll(Constants);
       }).toThrow(/Custom failure/);

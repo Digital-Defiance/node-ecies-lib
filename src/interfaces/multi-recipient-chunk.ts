@@ -25,7 +25,10 @@ export interface IMultiRecipientConstants {
   MAX_RECIPIENTS: number;
 }
 
-export const getMultiRecipientConstants = (recipientIdSize: number): IMultiRecipientConstants => ({
+export const getMultiRecipientConstants = (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _recipientIdSize: number
+): IMultiRecipientConstants => ({
   MAGIC: 0x45434945, // 'ECIE'
   VERSION: 1,
   HEADER_SIZE: 64, // Fixed header size before recipient list

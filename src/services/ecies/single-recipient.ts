@@ -1,3 +1,5 @@
+import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+
 import {
   EciesCipherSuiteEnum,
   EciesEncryptionType,
@@ -12,7 +14,7 @@ import {
   UINT32_MAX,
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
-import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+
 import {
   getEciesPluginI18nEngine,
   NodeEciesComponentId,
@@ -21,6 +23,7 @@ import {
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
+
 import { EciesCryptoCore } from './crypto-core';
 
 export class EciesSingleRecipientCore {
@@ -109,7 +112,8 @@ export class EciesSingleRecipientCore {
     // Generate ephemeral ECDH key pair
     // Use cryptoCore to generate keys to ensure compatibility with computeSharedSecret
     const ephemeralPrivateKey = this.cryptoCore.generatePrivateKey();
-    let ephemeralPublicKey = this.cryptoCore.getPublicKey(ephemeralPrivateKey);
+    const ephemeralPublicKey =
+      this.cryptoCore.getPublicKey(ephemeralPrivateKey);
 
     // Compute shared secret
     let sharedSecret: Buffer;
@@ -133,14 +137,15 @@ export class EciesSingleRecipientCore {
       if (error instanceof Error) {
         if (
           'code' in error &&
-          (error as any).code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
+          (error as Error & { code: string }).code ===
+            'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
         ) {
           throw new ECIESError(
             ECIESErrorTypeEnum.InvalidRecipientPublicKey,
             undefined,
             undefined,
             {
-              nodeError: (error as any).code,
+              nodeError: (error as Error & { code: string }).code,
             }
           );
         }

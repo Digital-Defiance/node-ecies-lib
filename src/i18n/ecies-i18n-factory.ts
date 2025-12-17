@@ -1,23 +1,29 @@
+import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import {
   ComponentDefinition,
   ComponentRegistration,
-  createCoreI18nEngine,
-  PluginI18nEngine,
-  LanguageCodes,
   CoreLanguageCode,
-  RegistryConfig,
+  createCoreI18nEngine,
   EngineConfig,
+  I18nEngine,
+  LanguageCodes,
+  PluginI18nEngine,
+  RegistryConfig,
 } from '@digitaldefiance/i18n-lib';
-import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 
-import { NodeEciesStringKey, NodeEciesComponentId } from './node-keys';
-
-// Import translations
+import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
+import {
+  frenchTranslations,
+  germanTranslations,
+  japaneseTranslations,
+  mandarinTranslations,
+  spanishTranslations,
+  ukrainianTranslations,
+} from './translations';
+import { britishEnglishTranslations } from './translations/en-GB';
 import { englishTranslations } from './translations/en-US';
 
-export { NodeEciesStringKey, NodeEciesComponentId };
-import { britishEnglishTranslations } from './translations/en-GB';
-import { frenchTranslations, germanTranslations, japaneseTranslations, mandarinTranslations, spanishTranslations, ukrainianTranslations } from './translations';
+export { NodeEciesComponentId, NodeEciesStringKey };
 
 /**
  * Component definition for Node ECIES strings
@@ -29,11 +35,14 @@ export function createNodeEciesComponentDefinition(): ComponentDefinition<NodeEc
     stringKeys: Object.values(NodeEciesStringKey),
   };
   return NodeEciesComponent;
-};
+}
 
-export function createNodeEciesComponentRegistration(): ComponentRegistration<NodeEciesStringKey, string> {
+export function createNodeEciesComponentRegistration(): ComponentRegistration<
+  NodeEciesStringKey,
+  string
+> {
   const component = createNodeEciesComponentDefinition();
-  
+
   return {
     component,
     strings: {
@@ -58,19 +67,23 @@ let eciesI18nEngineInstance: PluginI18nEngine<CoreLanguageCode> | null = null;
  * Create or get the ECIES I18n engine with proper component registration
  * This replaces the legacy getEciesI18nEngine() function
  */
-export function getEciesPluginI18nEngine(config?: Partial<RegistryConfig<string>>): PluginI18nEngine<CoreLanguageCode> {
+export function getEciesPluginI18nEngine(
+  config?: Partial<RegistryConfig<string>>
+): PluginI18nEngine<CoreLanguageCode> {
   if (!eciesI18nEngineInstance) {
     // Create core engine with system strings
     eciesI18nEngineInstance = createCoreI18nEngine(
       NodeEciesComponentId,
-      config,
+      config
     ) as PluginI18nEngine<CoreLanguageCode>;
 
-    const result = eciesI18nEngineInstance.registerComponent(createNodeEciesComponentRegistration());
+    const result = eciesI18nEngineInstance.registerComponent(
+      createNodeEciesComponentRegistration()
+    );
     if (!result.isValid) {
       console.warn(
         'Node ECIES component registration incomplete:',
-        result.missingKeys,
+        result.missingKeys
       );
     }
   }
@@ -91,21 +104,24 @@ export function resetEciesPluginI18nEngine(): void {
 export function getNodeEciesTranslation(
   key: NodeEciesStringKey,
   variables?: Record<string, string | number>,
-  language?: CoreLanguageCode,
+  language?: CoreLanguageCode
 ): string {
   // Import here to avoid circular dependency
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
   const { getNodeEciesI18nEngine } = require('../i18n/node-ecies-i18n-setup');
-  const engine = getNodeEciesI18nEngine();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+  const engine = getNodeEciesI18nEngine() as I18nEngine;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
   return engine.translate(NodeEciesComponentId, key, variables, language);
 }
 
 /**
  * Get the ECIES PluginI18nEngine for use in node-ecies services
  * Uses the base ecies-lib's engine which has all EciesStringKey translations
- * Cast to any to handle cross-package type compatibility
+ * Cast to unknown to handle cross-package type compatibility
  */
-export function createEciesTranslationEngine(config?: EngineConfig): any {
-  return getEciesI18nEngine(config);
+export function createEciesTranslationEngine(
+  config?: EngineConfig
+): I18nEngine {
+  return getEciesI18nEngine(config) as I18nEngine;
 }
-
-

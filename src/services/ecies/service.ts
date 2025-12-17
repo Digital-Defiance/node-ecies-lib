@@ -19,6 +19,7 @@ import type { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypt
 import type { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
 import type { IWalletSeed } from '../../interfaces/wallet-seed';
 import { SignatureBuffer, SignatureString } from '../../types';
+
 import { EciesCryptoCore } from './crypto-core';
 import { EciesMultiRecipient } from './multi-recipient';
 import { EciesSignature } from './signature';

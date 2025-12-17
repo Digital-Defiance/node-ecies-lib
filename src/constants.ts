@@ -1,3 +1,5 @@
+import { CipherGCMTypes } from 'crypto';
+
 import type {
   IConstants as IBaseConstants,
   IPBkdf2Consts,
@@ -8,7 +10,7 @@ import {
   ObjectIdProvider,
   registerRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
-import { CipherGCMTypes } from 'crypto';
+
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
 import {
   getNodeEciesI18nEngine,

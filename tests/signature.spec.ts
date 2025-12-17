@@ -1,4 +1,5 @@
 import { ECIESError, ECIESErrorTypeEnum } from '@digitaldefiance/ecies-lib';
+
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { EciesSignature } from '../src/services/ecies/signature';
 
@@ -17,8 +18,12 @@ describe('EciesSignature', () => {
       const data = Buffer.from('test data');
       const invalidSignature = Buffer.alloc(32) as any; // Wrong length
 
-      expect(() => signature.verifyMessage(publicKey, data, invalidSignature)).toThrow(ECIESError);
-      expect(() => signature.verifyMessage(publicKey, data, invalidSignature)).toThrow(
+      expect(() =>
+        signature.verifyMessage(publicKey, data, invalidSignature)
+      ).toThrow(ECIESError);
+      expect(() =>
+        signature.verifyMessage(publicKey, data, invalidSignature)
+      ).toThrow(
         expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidSignature })
       );
     });
@@ -28,9 +33,15 @@ describe('EciesSignature', () => {
       const data = Buffer.from('test data');
       const validSignature = Buffer.alloc(64) as any;
 
-      expect(() => signature.verifyMessage(invalidPublicKey, data, validSignature)).toThrow(ECIESError);
-      expect(() => signature.verifyMessage(invalidPublicKey, data, validSignature)).toThrow(
-        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidSenderPublicKey })
+      expect(() =>
+        signature.verifyMessage(invalidPublicKey, data, validSignature)
+      ).toThrow(ECIESError);
+      expect(() =>
+        signature.verifyMessage(invalidPublicKey, data, validSignature)
+      ).toThrow(
+        expect.objectContaining({
+          type: ECIESErrorTypeEnum.InvalidSenderPublicKey,
+        })
       );
     });
   });

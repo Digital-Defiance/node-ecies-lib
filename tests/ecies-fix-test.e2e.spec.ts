@@ -1,7 +1,12 @@
+import {
+  EciesEncryptionTypeEnum,
+  IECIESConfig,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
+
+import { getNodeRuntimeConfiguration } from '../src/constants';
 import { ECIESService } from '../src/services/ecies/service';
 import { EciesSingleRecipientCore } from '../src/services/ecies/single-recipient';
-import { EciesEncryptionTypeEnum, IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
-import { getNodeRuntimeConfiguration } from '../src/constants';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 
@@ -23,7 +28,7 @@ describe('ECIES Fix Verification', () => {
 
     backendService = new ECIESService(config);
     testMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
   });
 
@@ -31,7 +36,7 @@ describe('ECIES Fix Verification', () => {
     it('should correctly parse encrypted data without length mismatch error', () => {
       const testPayload = Buffer.from(
         '0000019907e7a1018f62bc20fd86059d60ef5543f00429aac513207a84b58da3e78a902af2799ba631e24ebc46c8ed72d9ea56461e37ff53e23e66c2b55141f3c44f54a7e38ab55062554f4b2aabbba0adb1995b56997821dae3fb89771d2a06da87c73e7da7a9e601',
-        'hex',
+        'hex'
       );
 
       const { wallet } = backendService.walletAndSeedFromMnemonic(testMnemonic);
@@ -43,14 +48,14 @@ describe('ECIES Fix Verification', () => {
       const encrypted = backendService.encryptSimpleOrSingle(
         false,
         publicKey,
-        testPayload,
+        testPayload
       );
       expect(encrypted.length).toBeGreaterThan(testPayload.length);
 
       const backendSingle = new EciesSingleRecipientCore(config);
       const parsed = backendSingle.parseEncryptedMessage(
         EciesEncryptionTypeEnum.Single,
-        encrypted,
+        encrypted
       );
       expect(parsed.header.dataLength).toBeGreaterThan(0);
       expect(parsed.data.length).toBeGreaterThan(0);
@@ -59,7 +64,7 @@ describe('ECIES Fix Verification', () => {
       const decrypted = backendService.decryptSimpleOrSingleWithHeader(
         false,
         Buffer.from(wallet.getPrivateKey()),
-        encrypted,
+        encrypted
       );
       expect(decrypted).toEqual(testPayload);
     });
@@ -78,11 +83,11 @@ describe('ECIES Fix Verification', () => {
       const simpleEncrypted = backendSingle.encrypt(
         true,
         publicKey,
-        testMessage,
+        testMessage
       );
       const simpleParsed = backendSingle.parseEncryptedMessage(
         EciesEncryptionTypeEnum.Simple,
-        simpleEncrypted,
+        simpleEncrypted
       );
 
       expect(simpleParsed.header.dataLength).toEqual(-1); // Simple mode doesn't store length
@@ -92,11 +97,11 @@ describe('ECIES Fix Verification', () => {
       const singleEncrypted = backendSingle.encrypt(
         false,
         publicKey,
-        testMessage,
+        testMessage
       );
       const singleParsed = backendSingle.parseEncryptedMessage(
         EciesEncryptionTypeEnum.Single,
-        singleEncrypted,
+        singleEncrypted
       );
 
       expect(singleParsed.header.dataLength).toEqual(singleParsed.data.length);

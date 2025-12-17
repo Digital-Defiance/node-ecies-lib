@@ -1,5 +1,7 @@
-import type { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
 import type { CipherGCMTypes } from 'crypto';
+
+import type { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';
+
 import type { IChecksumConsts } from './checksum-consts';
 import type { IEncryptionConsts } from './encryption-consts';
 import type { IKeyringConsts } from './keyring-consts';

@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import {
   EmailString,
   MemberType,
@@ -6,7 +8,6 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
-import { randomBytes } from 'crypto';
 
 import type { IBackendMemberOperational } from '../interfaces/backend-member-operational';
 import { SignatureBuffer } from '../types';
@@ -20,7 +21,7 @@ const createMockWallet = (): Wallet =>
     getAddress: () =>
       Buffer.from(faker.string.hexadecimal({ length: 40 }), 'hex'),
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
-  } as any);
+  } as unknown as Wallet);
 
 export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   private _id: Buffer;
@@ -109,31 +110,46 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
 
   unloadWalletAndPrivateKey(): void {}
 
-  loadWallet(mnemonic: SecureString): void {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  loadWallet(_mnemonic: SecureString): void {}
 
-  loadPrivateKey(privateKey: SecureBuffer): void {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  loadPrivateKey(_privateKey: SecureBuffer): void {}
 
-  sign(data: Buffer): SignatureBuffer {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  sign(_data: Buffer): SignatureBuffer {
     return Buffer.from(
       faker.string.hexadecimal({ length: 128 }),
       'hex'
     ) as SignatureBuffer;
   }
 
-  verify(signature: SignatureBuffer, data: Buffer): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  verify(_signature: SignatureBuffer, _data: Buffer): boolean {
     return true;
   }
 
-  encryptData(data: string | Buffer): Uint8Array {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  encryptData(_data: string | Buffer): Uint8Array {
     return Buffer.from(faker.string.hexadecimal({ length: 256 }), 'hex');
   }
 
-  decryptData(encryptedData: Buffer): Uint8Array {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  decryptData(_encryptedData: Buffer): Uint8Array {
     return Buffer.from(faker.lorem.paragraph());
   }
 
-  async *encryptDataStream(): AsyncGenerator<any, void, unknown> {
-    yield { data: Buffer.from('mock'), header: {} };
+  async *encryptDataStream(): AsyncGenerator<
+    {
+      data: Buffer;
+      header: Record<string, unknown>;
+      index: number;
+      isLast: boolean;
+    },
+    void,
+    unknown
+  > {
+    yield { data: Buffer.from('mock'), header: {}, index: 0, isLast: true };
   }
 
   async *decryptDataStream(): AsyncGenerator<Buffer, void, unknown> {

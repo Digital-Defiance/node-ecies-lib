@@ -1,15 +1,13 @@
+import { Pbkdf2ErrorType, SecureString } from '@digitaldefiance/ecies-lib';
+import { pbkdf2Sync, randomBytes } from 'crypto';
+
 import { Constants as ApiConstants } from '../src/constants';
 import { Pbkdf2ProfileEnum } from '../src/enumerations/pbkdf2-profile';
-import { Pbkdf2Service, NodePbkdf2Error } from '../src/services/pbkdf2';
-import {
-  Pbkdf2ErrorType,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
-import { randomBytes, pbkdf2Sync } from 'crypto';
+import { NodePbkdf2Error, Pbkdf2Service } from '../src/services/pbkdf2';
 
 describe('Pbkdf2Service API E2E', () => {
   let pbkdf2Service: Pbkdf2Service;
-  
+
   // Use shorter timeouts for faster tests but allow for slower CI
   jest.setTimeout(60000);
 
@@ -25,12 +23,12 @@ describe('Pbkdf2Service API E2E', () => {
       const result1 = pbkdf2Service.deriveKeyFromPassword(
         testPassword,
         testSalt,
-        1000,
+        1000
       );
       const result2 = pbkdf2Service.deriveKeyFromPassword(
         testPassword,
         testSalt,
-        1000,
+        1000
       );
 
       expect(result1.hash).toEqual(result2.hash);
@@ -54,7 +52,7 @@ describe('Pbkdf2Service API E2E', () => {
         Buffer.from('short'),
         Buffer.from('medium-length-password'),
         Buffer.from(
-          'very-long-password-with-many-characters-to-test-edge-cases',
+          'very-long-password-with-many-characters-to-test-edge-cases'
         ),
         Buffer.from('unicode-password-世界-🔐-test'),
         Buffer.from('\x00\x01\x02\x03'), // Binary data
@@ -64,7 +62,7 @@ describe('Pbkdf2Service API E2E', () => {
         const result = pbkdf2Service.deriveKeyFromPassword(
           password,
           undefined,
-          1000,
+          1000
         );
 
         expect(result.hash).toBeInstanceOf(Buffer);
@@ -78,7 +76,7 @@ describe('Pbkdf2Service API E2E', () => {
     it('should work with different iteration counts', () => {
       const iterations = [1, 100, 1000, 10000, 50000];
       const results = iterations.map((iter) =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, iter),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, iter)
       );
 
       // All should have different hashes due to different iterations
@@ -104,8 +102,8 @@ describe('Pbkdf2Service API E2E', () => {
           1000,
           32,
           32,
-          algorithm,
-        ),
+          algorithm
+        )
       );
 
       // Different algorithms should produce different hashes
@@ -124,8 +122,8 @@ describe('Pbkdf2Service API E2E', () => {
           testSalt,
           1000,
           32,
-          keySize,
-        ),
+          keySize
+        )
       );
 
       results.forEach((result, index) => {
@@ -143,7 +141,7 @@ describe('Pbkdf2Service API E2E', () => {
           testPassword,
           customSalt,
           1000,
-          saltSize,
+          saltSize
         );
 
         expect(result.salt.length).toBe(saltSize);
@@ -157,12 +155,12 @@ describe('Pbkdf2Service API E2E', () => {
       const syncResult = pbkdf2Service.deriveKeyFromPassword(
         testPassword,
         testSalt,
-        1000,
+        1000
       );
       const asyncResult = await pbkdf2Service.deriveKeyFromPasswordAsync(
         testPassword,
         testSalt,
-        1000,
+        1000
       );
 
       expect(asyncResult.hash).toEqual(syncResult.hash);
@@ -172,11 +170,11 @@ describe('Pbkdf2Service API E2E', () => {
 
     it('should handle concurrent async operations', async () => {
       const passwords = Array.from({ length: 5 }, (_, i) =>
-        Buffer.from(`password-${i}`),
+        Buffer.from(`password-${i}`)
       );
 
       const promises = passwords.map((password) =>
-        pbkdf2Service.deriveKeyFromPasswordAsync(password, undefined, 1000),
+        pbkdf2Service.deriveKeyFromPasswordAsync(password, undefined, 1000)
       );
 
       const results = await Promise.all(promises);
@@ -202,7 +200,7 @@ describe('Pbkdf2Service API E2E', () => {
       const result = await pbkdf2Service.deriveKeyFromPasswordAsync(
         testPassword,
         testSalt,
-        100000, // Higher iterations
+        100000 // Higher iterations
       );
 
       const endTime = Date.now();
@@ -246,7 +244,7 @@ describe('Pbkdf2Service API E2E', () => {
       for (const profile of profiles) {
         const result = pbkdf2Service.deriveKeyFromPasswordWithProfile(
           testPassword,
-          profile,
+          profile
         );
 
         const config = pbkdf2Service.getProfileConfig(profile);
@@ -268,7 +266,7 @@ describe('Pbkdf2Service API E2E', () => {
         const result =
           await pbkdf2Service.deriveKeyFromPasswordWithProfileAsync(
             testPassword,
-            profile,
+            profile
           );
 
         const config = pbkdf2Service.getProfileConfig(profile);
@@ -285,14 +283,14 @@ describe('Pbkdf2Service API E2E', () => {
       const syncResult = pbkdf2Service.deriveKeyFromPasswordWithProfile(
         testPassword,
         Pbkdf2ProfileEnum.TEST_FAST,
-        salt,
+        salt
       );
 
       const asyncResult =
         await pbkdf2Service.deriveKeyFromPasswordWithProfileAsync(
           testPassword,
           Pbkdf2ProfileEnum.TEST_FAST,
-          salt,
+          salt
         );
 
       expect(syncResult.hash).toEqual(asyncResult.hash);
@@ -332,7 +330,7 @@ describe('Pbkdf2Service API E2E', () => {
         iterations,
         32, // saltBytes
         32, // keySize
-        'sha256', // algorithm
+        'sha256' // algorithm
       );
 
       expect(serviceResult.hash).toEqual(directResult);
@@ -343,7 +341,7 @@ describe('Pbkdf2Service API E2E', () => {
     it('should work with key-wrapping profile parameters', () => {
       const result = pbkdf2Service.deriveKeyFromPasswordWithProfile(
         testPassword,
-        Pbkdf2ProfileEnum.KEY_WRAPPING,
+        Pbkdf2ProfileEnum.KEY_WRAPPING
       );
 
       expect(result.salt.length).toBe(ApiConstants.WRAPPED_KEY.SALT_SIZE);
@@ -362,7 +360,7 @@ describe('Pbkdf2Service API E2E', () => {
         ApiConstants.WRAPPED_KEY.MIN_ITERATIONS,
         ApiConstants.WRAPPED_KEY.SALT_SIZE,
         32,
-        'sha256',
+        'sha256'
       );
 
       expect(result.salt).toEqual(salt);
@@ -380,11 +378,11 @@ describe('Pbkdf2Service API E2E', () => {
       const longSalt = Buffer.alloc(33);
 
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, shortSalt),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, shortSalt)
       ).toThrow(NodePbkdf2Error);
 
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, longSalt),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, longSalt)
       ).toThrow(NodePbkdf2Error);
     });
 
@@ -397,43 +395,41 @@ describe('Pbkdf2Service API E2E', () => {
           testPassword,
           salt16,
           1000,
-          16, // saltBytes param
-        ),
+          16 // saltBytes param
+        )
       ).not.toThrow();
 
       // Should fail with default 32-byte config
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, salt16),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, salt16)
       ).toThrow(NodePbkdf2Error);
     });
 
     it('should handle invalid inputs gracefully', () => {
       // Invalid password
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(undefined as unknown as Buffer),
+        pbkdf2Service.deriveKeyFromPassword(undefined as unknown as Buffer)
       ).toThrow();
 
       // Invalid iterations
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, -1),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, -1)
       ).toThrow();
 
       expect(() =>
-        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, 0),
+        pbkdf2Service.deriveKeyFromPassword(testPassword, testSalt, 0)
       ).toThrow();
     });
 
     it('should handle async validation errors', async () => {
       // Invalid password async
       await expect(
-        pbkdf2Service.deriveKeyFromPasswordAsync(
-          undefined as unknown as Buffer,
-        ),
+        pbkdf2Service.deriveKeyFromPasswordAsync(undefined as unknown as Buffer)
       ).rejects.toThrow();
 
       // Invalid iterations async
       await expect(
-        pbkdf2Service.deriveKeyFromPasswordAsync(testPassword, testSalt, -1),
+        pbkdf2Service.deriveKeyFromPasswordAsync(testPassword, testSalt, -1)
       ).rejects.toThrow();
     });
 
@@ -446,7 +442,7 @@ describe('Pbkdf2Service API E2E', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(NodePbkdf2Error);
         expect((error as NodePbkdf2Error).type).toBe(
-          Pbkdf2ErrorType.InvalidSaltLength,
+          Pbkdf2ErrorType.InvalidSaltLength
         );
       }
     });
@@ -459,8 +455,8 @@ describe('Pbkdf2Service API E2E', () => {
         pbkdf2Service.deriveKeyFromPasswordAsync(
           Buffer.from(`password-${i}`),
           undefined,
-          1000, // Low iterations for speed
-        ),
+          1000 // Low iterations for speed
+        )
       );
 
       const startTime = Date.now();
@@ -483,7 +479,7 @@ describe('Pbkdf2Service API E2E', () => {
 
       const result = await pbkdf2Service.deriveKeyFromPasswordWithProfileAsync(
         testPassword,
-        Pbkdf2ProfileEnum.HIGH_SECURITY,
+        Pbkdf2ProfileEnum.HIGH_SECURITY
       );
 
       const endTime = Date.now();
@@ -506,7 +502,7 @@ describe('Pbkdf2Service API E2E', () => {
         await pbkdf2Service.deriveKeyFromPasswordAsync(
           Buffer.from(`password-${i}`),
           undefined,
-          10000,
+          10000
         );
 
         const endTime = Date.now();
@@ -519,7 +515,7 @@ describe('Pbkdf2Service API E2E', () => {
       const variance =
         durations.reduce(
           (acc, duration) => acc + Math.pow(duration - avgDuration, 2),
-          0,
+          0
         ) / durations.length;
 
       // Variance should be reasonable (not too high)
@@ -542,7 +538,7 @@ describe('Pbkdf2Service API E2E', () => {
         const result = pbkdf2Service.deriveKeyFromPassword(
           password,
           salt,
-          testCase.iterations,
+          testCase.iterations
         );
 
         // Results should be deterministic
@@ -565,7 +561,7 @@ describe('Pbkdf2Service API E2E', () => {
         const result = pbkdf2Service.deriveKeyFromPassword(
           password,
           undefined,
-          1000,
+          1000
         );
 
         expect(result.hash).toBeInstanceOf(Buffer);

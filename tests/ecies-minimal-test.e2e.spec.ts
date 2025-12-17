@@ -1,10 +1,11 @@
-import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 import {
   ECIESService as FrontendECIESService,
   IECIESConfig,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+
 import { getNodeRuntimeConfiguration } from '../src/constants';
+import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 
 // https://docs.rs/bip39/latest/src/bip39/lib.rs.html
 
@@ -28,7 +29,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
     frontendService = new FrontendECIESService(config);
     backendService = new BackendECIESService(config);
     testMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
     );
   });
 
@@ -46,7 +47,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const encrypted = backendService.encryptSimpleOrSingle(
         false,
         publicKey,
-        testMessage,
+        testMessage
       );
       expect(encrypted.length).toBeGreaterThan(testMessage.length);
 
@@ -54,7 +55,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const decrypted = await frontendService.decryptSimpleOrSingleWithHeader(
         false,
         new Uint8Array(privateKey),
-        new Uint8Array(encrypted),
+        new Uint8Array(encrypted)
       );
 
       expect(Buffer.from(decrypted)).toEqual(testMessage);
@@ -73,7 +74,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const encrypted = await frontendService.encryptSimpleOrSingle(
         false,
         new Uint8Array(publicKey),
-        new Uint8Array(testMessage),
+        new Uint8Array(testMessage)
       );
       expect(encrypted.length).toBeGreaterThan(testMessage.length);
 
@@ -81,7 +82,7 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const decrypted = backendService.decryptSimpleOrSingleWithHeader(
         false,
         privateKey,
-        Buffer.from(encrypted),
+        Buffer.from(encrypted)
       );
 
       expect(decrypted).toEqual(testMessage);
