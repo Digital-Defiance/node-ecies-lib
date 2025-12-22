@@ -25,7 +25,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
 
           return buffer.equals(backToBuffer);
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
@@ -38,7 +38,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
 
           return Buffer.from(uint8Array).equals(Buffer.from(backToUint8Array));
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
@@ -67,7 +67,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
           // Buffer extends Uint8Array in Node.js, so both will be true
           return isBuffer(buffer) === true && isUint8Array(buffer) === true;
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
@@ -80,7 +80,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
             isUint8Array(uint8Array) === true && isBuffer(uint8Array) === false
           );
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
@@ -94,7 +94,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
           const viaString = toBuffer(convertId(original, 'string'));
           const viaConvertId = convertId(
             convertId(original, 'Uint8Array'),
-            'Buffer'
+            'Buffer',
           ) as Buffer;
 
           return (
@@ -103,7 +103,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
             original.equals(viaConvertId)
           );
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
@@ -126,7 +126,7 @@ describe('ID Type Guards and Converters - Property-Based Tests', () => {
             uint8Array.length === 32 && buffer.equals(toBuffer(uint8Array))
           );
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });

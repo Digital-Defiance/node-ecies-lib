@@ -10,7 +10,7 @@ export class ChunkProcessor {
     publicKey: Buffer,
     chunkIndex: number,
     isLast: boolean,
-    includeChecksums: boolean = false
+    includeChecksums: boolean = false,
   ): Promise<IEncryptedChunk> {
     const encrypted = this.ecies.encryptSimpleOrSingle(false, publicKey, data);
 
@@ -31,7 +31,7 @@ export class ChunkProcessor {
 
   public async decryptChunk(
     chunkData: Buffer,
-    privateKey: Buffer
+    privateKey: Buffer,
   ): Promise<{ data: Buffer; header: { index: number; flags: number } }> {
     // Extract chunk header: 4 bytes index + 1 byte flags
     const index = chunkData.readUInt32BE(0);
@@ -41,7 +41,7 @@ export class ChunkProcessor {
     const decrypted = this.ecies.decryptSimpleOrSingleWithHeader(
       false,
       privateKey,
-      encrypted
+      encrypted,
     );
 
     return {

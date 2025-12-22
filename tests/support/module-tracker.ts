@@ -19,7 +19,7 @@ export interface ModuleTrackingResult {
  */
 export function trackModuleLoads(
   operation: () => void,
-  forbiddenPatterns: RegExp[] = []
+  forbiddenPatterns: RegExp[] = [],
 ): ModuleTrackingResult {
   const loadedModules = new Set<string>();
 
@@ -39,7 +39,7 @@ export function trackModuleLoads(
 
   // Check for forbidden loads
   const forbiddenLoads = Array.from(loadedModules).filter((mod) =>
-    forbiddenPatterns.some((pattern) => pattern.test(mod))
+    forbiddenPatterns.some((pattern) => pattern.test(mod)),
   );
 
   return {

@@ -61,8 +61,8 @@ export class MemberBuilder {
       throw new Error(
         engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic
-        )
+          NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic,
+        ),
       );
     }
     this.mnemonic = this.eciesService.generateNewMnemonic();
@@ -75,16 +75,16 @@ export class MemberBuilder {
       throw new Error(
         engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired
-        )
+          NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired,
+        ),
       );
     }
     if (!this.type || !this.name || !this.email) {
       throw new Error(
         engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired
-        )
+          NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired,
+        ),
       );
     }
 
@@ -94,7 +94,7 @@ export class MemberBuilder {
       this.name,
       this.email,
       this.mnemonic,
-      this.createdBy
+      this.createdBy,
     );
   }
 
@@ -112,7 +112,7 @@ export class MemberBuilder {
     name: string,
     email: EmailString | string,
     forceMnemonic?: SecureString,
-    createdBy?: Buffer
+    createdBy?: Buffer,
   ): IBackendMemberWithMnemonic {
     const service = new ECIESService();
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;
@@ -123,7 +123,7 @@ export class MemberBuilder {
       name,
       emailObj,
       forceMnemonic,
-      createdBy
+      createdBy,
     );
   }
 
@@ -149,7 +149,7 @@ export class MemberBuilder {
     mnemonic: SecureString,
     memberType = MemberType.User,
     name = 'Test User',
-    email: EmailString | string = 'test@example.com'
+    email: EmailString | string = 'test@example.com',
   ): Member {
     const service = new ECIESService();
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;

@@ -29,7 +29,7 @@ describe('Dependency Injection Integration', () => {
         eciesService,
         MemberType.User,
         'Alice',
-        new EmailString('alice@example.com')
+        new EmailString('alice@example.com'),
       );
 
       // Verify member was created
@@ -61,14 +61,14 @@ describe('Dependency Injection Integration', () => {
         eciesService,
         MemberType.User,
         'Alice',
-        new EmailString('alice@example.com')
+        new EmailString('alice@example.com'),
       );
 
       const { member: bob, mnemonic: bobMnemonic } = Member.newMember(
         eciesService,
         MemberType.User,
         'Bob',
-        new EmailString('bob@example.com')
+        new EmailString('bob@example.com'),
       );
 
       // Verify both members work
@@ -101,7 +101,7 @@ describe('Dependency Injection Integration', () => {
       // Create processor with injected service
       const processor = new MultiRecipientProcessor(
         eciesService.core,
-        eciesService.core.consts
+        eciesService.core.consts,
       );
 
       // Verify processor was created
@@ -118,7 +118,7 @@ describe('Dependency Injection Integration', () => {
         eciesService,
         MemberType.User,
         'Charlie',
-        new EmailString('charlie@example.com')
+        new EmailString('charlie@example.com'),
       );
 
       // Verify member works
@@ -142,7 +142,7 @@ describe('Dependency Injection Integration', () => {
         eciesService,
         MemberType.User,
         'David',
-        new EmailString('david@example.com')
+        new EmailString('david@example.com'),
       );
 
       // Serialize to JSON
@@ -183,14 +183,14 @@ describe('Dependency Injection Integration', () => {
         service1,
         MemberType.User,
         'Alice',
-        new EmailString('alice@example.com')
+        new EmailString('alice@example.com'),
       );
 
       const { member: bob, mnemonic: bobMnemonic } = Member.newMember(
         service2,
         MemberType.User,
         'Bob',
-        new EmailString('bob@example.com')
+        new EmailString('bob@example.com'),
       );
 
       // Test cross-service encryption
@@ -220,7 +220,7 @@ describe('Dependency Injection Integration', () => {
           sharedService,
           MemberType.User,
           `User ${i}`,
-          new EmailString(`user${i}@example.com`)
+          new EmailString(`user${i}@example.com`),
         );
         members.push(member);
         mnemonics.push(mnemonic);
@@ -240,7 +240,7 @@ describe('Dependency Injection Integration', () => {
       const message = 'Shared service message';
       const encrypted = await members[0].encryptData(
         message,
-        members[1].publicKey
+        members[1].publicKey,
       );
       const decrypted = await members[1].decryptData(encrypted);
       const decryptedText = decrypted.toString('utf-8');
@@ -274,7 +274,7 @@ describe('Dependency Injection Integration', () => {
         ecies,
         MemberType.User,
         'Sender',
-        new EmailString('sender@example.com')
+        new EmailString('sender@example.com'),
       );
 
       const { member: recipient, mnemonic: recipientMnemonic } =
@@ -282,7 +282,7 @@ describe('Dependency Injection Integration', () => {
           ecies,
           MemberType.User,
           'Recipient',
-          new EmailString('recipient@example.com')
+          new EmailString('recipient@example.com'),
         );
 
       // Test encryption

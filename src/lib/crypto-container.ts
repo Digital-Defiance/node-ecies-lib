@@ -19,11 +19,11 @@ export class CryptoContainer {
   private constructor(config: IConstants) {
     this.services.set(
       CryptoServiceKey.ECIES,
-      new ECIESService(undefined, config.ECIES)
+      new ECIESService(undefined, config.ECIES),
     );
     this.services.set(
       CryptoServiceKey.PBKDF2,
-      new Pbkdf2Service(config.PBKDF2_PROFILES, config.ECIES, config.PBKDF2)
+      new Pbkdf2Service(config.PBKDF2_PROFILES, config.ECIES, config.PBKDF2),
     );
     this.services.set(CryptoServiceKey.AES_GCM, new AESGCMService(config));
   }

@@ -33,7 +33,7 @@ describe('ECIES Simple Fix Test', () => {
     frontendService = new FrontendECIESService(config);
     backendService = new BackendECIESService(config);
     testMnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
     );
   });
 
@@ -47,7 +47,7 @@ describe('ECIES Simple Fix Test', () => {
         MemberType.User,
         'Frontend User',
         email,
-        testMnemonic
+        testMnemonic,
       );
       const frontendMember = frontendResult.member;
 
@@ -56,7 +56,7 @@ describe('ECIES Simple Fix Test', () => {
         MemberType.User,
         'Backend User',
         email,
-        testMnemonic
+        testMnemonic,
       );
       const backendMember = backendResult.member;
 
@@ -67,15 +67,14 @@ describe('ECIES Simple Fix Test', () => {
         // Frontend encrypts, backend decrypts
         const frontendEncrypted = await frontendMember.encryptData(testMessage);
         const backendDecrypted = backendMember.decryptData(
-          Buffer.from(frontendEncrypted)
+          Buffer.from(frontendEncrypted),
         );
         expect(backendDecrypted.toString()).toEqual(testMessage);
 
         // Backend encrypts, frontend decrypts
         const backendEncrypted = backendMember.encryptData(testMessage);
-        const frontendDecrypted = await frontendMember.decryptData(
-          backendEncrypted
-        );
+        const frontendDecrypted =
+          await frontendMember.decryptData(backendEncrypted);
         expect(Buffer.from(frontendDecrypted).toString()).toEqual(testMessage);
 
         // Success message - this is expected output for this specific test

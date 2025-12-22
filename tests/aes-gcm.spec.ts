@@ -51,17 +51,17 @@ describe('AESGCMService', () => {
       const { encrypted, iv, tag } = aesGcmService.encrypt(
         testData,
         key256,
-        true
+        true,
       );
       const encryptedWithTag = aesGcmService.combineEncryptedDataAndTag(
         encrypted,
-        tag!
+        tag!,
       );
       const decrypted = aesGcmService.decrypt(
         iv,
         encryptedWithTag,
         key256,
-        true
+        true,
       );
 
       expect(decrypted).toEqual(testData);
@@ -72,7 +72,7 @@ describe('AESGCMService', () => {
       const wrongKey = randomBytes(32);
 
       expect(() =>
-        aesGcmService.decrypt(iv, encrypted, wrongKey, false)
+        aesGcmService.decrypt(iv, encrypted, wrongKey, false),
       ).toThrow();
     });
   });
@@ -93,7 +93,7 @@ describe('AESGCMService', () => {
 
       const combined = aesGcmService.combineIvAndEncryptedData(
         iv,
-        encryptedData
+        encryptedData,
       );
 
       expect(combined.subarray(0, iv.length)).toEqual(iv);
@@ -108,7 +108,7 @@ describe('AESGCMService', () => {
       const combined = aesGcmService.combineIvTagAndEncryptedData(
         iv,
         encrypted,
-        tag
+        tag,
       );
 
       expect(combined.subarray(0, iv.length)).toEqual(iv);
@@ -119,7 +119,7 @@ describe('AESGCMService', () => {
       const encryptedWithTag = randomBytes(32);
       const combined = aesGcmService.combineIvAndEncryptedData(
         iv,
-        encryptedWithTag
+        encryptedWithTag,
       );
 
       const { iv: splitIv, encryptedDataWithTag } =

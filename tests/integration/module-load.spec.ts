@@ -46,10 +46,10 @@ describe('Module Load Integration Tests', () => {
 
       // Verify specific enum values are defined
       expect(
-        index.NodeEciesStringKey.Error_Member_MissingMemberName
+        index.NodeEciesStringKey.Error_Member_MissingMemberName,
       ).toBeDefined();
       expect(index.NodeEciesStringKey.Error_Member_MissingMemberName).not.toBe(
-        undefined
+        undefined,
       );
 
       // Verify Pbkdf2ProfileEnum enum has values
@@ -77,7 +77,7 @@ describe('Module Load Integration Tests', () => {
           eciesService,
           MemberType.User,
           'Test Member',
-          new EmailString('test@example.com')
+          new EmailString('test@example.com'),
         );
       }).not.toThrow();
 
@@ -108,7 +108,7 @@ describe('Module Load Integration Tests', () => {
       // Should be able to translate a key
       const translation = engine.translate(
         index.NodeEciesComponentId,
-        index.NodeEciesStringKey.Error_Member_MissingMemberName
+        index.NodeEciesStringKey.Error_Member_MissingMemberName,
       );
 
       expect(typeof translation).toBe('string');
@@ -130,7 +130,7 @@ describe('Module Load Integration Tests', () => {
       const translations = require('../../src/i18n/translations/en-US');
       expect(translations.englishTranslations).toBeDefined();
       expect(
-        Object.keys(translations.englishTranslations).length
+        Object.keys(translations.englishTranslations).length,
       ).toBeGreaterThan(0);
     });
 
@@ -195,7 +195,7 @@ describe('Module Load Integration Tests', () => {
         // Verify translations object is defined and has keys
         expect(translations.englishTranslations).toBeDefined();
         expect(
-          Object.keys(translations.englishTranslations).length
+          Object.keys(translations.englishTranslations).length,
         ).toBeGreaterThan(0);
 
         // Verify enum is defined
@@ -231,7 +231,7 @@ describe('Module Load Integration Tests', () => {
           eciesService,
           MemberType.User,
           'Test Member',
-          new EmailString('test@example.com')
+          new EmailString('test@example.com'),
         );
         expect(member).toBeDefined();
         expect(member.member.name).toBe('Test Member');

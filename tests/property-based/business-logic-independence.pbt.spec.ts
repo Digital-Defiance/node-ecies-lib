@@ -48,7 +48,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
             ];
 
             const forbiddenLoads = Array.from(loadedModules).filter((mod) =>
-              forbiddenPatterns.some((pattern) => pattern.test(mod))
+              forbiddenPatterns.some((pattern) => pattern.test(mod)),
             );
 
             expect(forbiddenLoads).toHaveLength(0);
@@ -56,7 +56,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
             Module.prototype.require = originalRequire;
           }
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });
@@ -89,12 +89,12 @@ describe('Property-Based Test: Business Logic Independence', () => {
 
             // Filter for project-relative imports
             const projectImports = importStatements.filter((stmt) =>
-              /from\s+['"]\.[^'"]*['"]/.test(stmt)
+              /from\s+['"]\.[^'"]*['"]/.test(stmt),
             );
 
             // Check each is type-only
             const valueImports = projectImports.filter(
-              (stmt) => !stmt.includes('import type')
+              (stmt) => !stmt.includes('import type'),
             );
 
             // Filter out allowed patterns
@@ -114,7 +114,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
 
             expect(forbiddenValueImports).toHaveLength(0);
           }),
-          { numRuns: interfaceFiles.length }
+          { numRuns: interfaceFiles.length },
         );
       });
     } else {
@@ -181,7 +181,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
 
       // Rule: Services should not create circular dependencies
       const serviceFiles = Object.keys(dependencies).filter((file) =>
-        file.includes('services/')
+        file.includes('services/'),
       );
 
       for (const serviceFile of serviceFiles) {
@@ -194,7 +194,7 @@ describe('Property-Based Test: Business Logic Independence', () => {
 
           if (hasCircular) {
             console.error(
-              `Circular dependency found: ${serviceFile} <-> ${dep}`
+              `Circular dependency found: ${serviceFile} <-> ${dep}`,
             );
           }
           expect(hasCircular).toBe(false);
@@ -228,12 +228,12 @@ describe('Property-Based Test: Business Logic Independence', () => {
       ];
 
       const foundProblematicCycles = circular.filter((cycle) =>
-        problematicPatterns.some((pattern) => pattern(cycle))
+        problematicPatterns.some((pattern) => pattern(cycle)),
       );
 
       if (foundProblematicCycles.length > 0) {
         console.error(
-          'Previously identified circular dependencies still exist:'
+          'Previously identified circular dependencies still exist:',
         );
         foundProblematicCycles.forEach((cycle, index) => {
           console.error(`  Cycle ${index + 1}: ${cycle.join(' -> ')}`);

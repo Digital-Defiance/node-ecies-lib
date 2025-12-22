@@ -27,7 +27,7 @@ export interface IMultiRecipientConstants {
 
 export const getMultiRecipientConstants = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _recipientIdSize: number
+  _recipientIdSize: number,
 ): IMultiRecipientConstants => ({
   MAGIC: 0x45434945, // 'ECIE'
   VERSION: 1,

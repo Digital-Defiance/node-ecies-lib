@@ -88,16 +88,16 @@ describe('Type Safety Fixes', () => {
 
     it('should throw error for unsupported types', () => {
       expect(() =>
-        toBuffer(123 as unknown as string | Uint8Array | Buffer)
+        toBuffer(123 as unknown as string | Uint8Array | Buffer),
       ).toThrow();
       expect(() =>
-        toBuffer({} as unknown as string | Uint8Array | Buffer)
+        toBuffer({} as unknown as string | Uint8Array | Buffer),
       ).toThrow();
       expect(() =>
-        toUint8Array(123 as unknown as string | Uint8Array | Buffer)
+        toUint8Array(123 as unknown as string | Uint8Array | Buffer),
       ).toThrow();
       expect(() =>
-        toUint8Array({} as unknown as string | Uint8Array | Buffer)
+        toUint8Array({} as unknown as string | Uint8Array | Buffer),
       ).toThrow();
     });
   });
@@ -147,8 +147,8 @@ describe('Type Safety Fixes', () => {
       expect(() =>
         convertId(
           testBuffer,
-          'invalid' as unknown as 'string' | 'buffer' | 'uint8array'
-        )
+          'invalid' as unknown as 'string' | 'buffer' | 'uint8array',
+        ),
       ).toThrow();
     });
   });
@@ -160,7 +160,7 @@ describe('Type Safety Fixes', () => {
       const cipher = createCipheriv(
         'aes-256-gcm',
         key,
-        iv
+        iv,
       ) as AuthenticatedCipher;
 
       expect(cipher).toBeDefined();
@@ -176,7 +176,7 @@ describe('Type Safety Fixes', () => {
       const decipher = createDecipheriv(
         'aes-256-gcm',
         key,
-        iv
+        iv,
       ) as AuthenticatedDecipher;
 
       expect(decipher).toBeDefined();
@@ -194,7 +194,7 @@ describe('Type Safety Fixes', () => {
       const cipher = createCipheriv(
         'aes-256-gcm',
         key,
-        iv
+        iv,
       ) as AuthenticatedCipher;
       const encrypted = Buffer.concat([
         cipher.update(plaintext),
@@ -205,7 +205,7 @@ describe('Type Safety Fixes', () => {
       const decipher = createDecipheriv(
         'aes-256-gcm',
         key,
-        iv
+        iv,
       ) as AuthenticatedDecipher;
       decipher.setAuthTag(authTag);
       const decrypted = Buffer.concat([

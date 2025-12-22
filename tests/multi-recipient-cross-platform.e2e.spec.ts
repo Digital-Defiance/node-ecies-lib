@@ -37,14 +37,14 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
       frontendService,
       MemberType.User,
       'Frontend User 1',
-      new EmailString('user1@example.com')
+      new EmailString('user1@example.com'),
     ).member;
 
     const recipient2 = FrontendMember.newMember(
       frontendService,
       MemberType.User,
       'Frontend User 2',
-      new EmailString('user2@example.com')
+      new EmailString('user2@example.com'),
     ).member;
 
     // Backend encrypts for these frontend users
@@ -63,7 +63,7 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
 
     const encryptedObj = await backendService.encryptMultiple(
       backendRecipients as any[],
-      message
+      message,
     );
 
     // Serialize to full message (Header + Body)
@@ -82,14 +82,14 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     const decrypted1 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
       recipient1.id,
-      new Uint8Array(recipient1.privateKey!.value)
+      new Uint8Array(recipient1.privateKey!.value),
     );
     expect(Buffer.from(decrypted1)).toEqual(message);
 
     const decrypted2 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
       recipient2.id,
-      new Uint8Array(recipient2.privateKey!.value)
+      new Uint8Array(recipient2.privateKey!.value),
     );
     expect(Buffer.from(decrypted2)).toEqual(message);
   });
@@ -102,14 +102,14 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
       backendService,
       MemberType.User,
       'Backend User 1',
-      new EmailString('backend1@example.com')
+      new EmailString('backend1@example.com'),
     ).member;
 
     const recipient2 = BackendMember.newMember(
       backendService,
       MemberType.User,
       'Backend User 2',
-      new EmailString('backend2@example.com')
+      new EmailString('backend2@example.com'),
     ).member;
 
     // Frontend encrypts for these backend users
@@ -127,7 +127,7 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
 
     const encryptedObj = await frontendService.encryptMultiple(
       frontendRecipients,
-      new Uint8Array(message)
+      new Uint8Array(message),
     );
 
     // Serialize to full message (Header + Body)
@@ -144,13 +144,13 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
 
     const decrypted1 = backendService.decryptMultipleECIEForRecipient(
       parsed,
-      recipient1
+      recipient1,
     );
     expect(decrypted1).toEqual(message);
 
     const decrypted2 = backendService.decryptMultipleECIEForRecipient(
       parsed,
-      recipient2
+      recipient2,
     );
     expect(decrypted2).toEqual(message);
   });

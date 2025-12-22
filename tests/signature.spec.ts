@@ -19,12 +19,12 @@ describe('EciesSignature', () => {
       const invalidSignature = Buffer.alloc(32) as any; // Wrong length
 
       expect(() =>
-        signature.verifyMessage(publicKey, data, invalidSignature)
+        signature.verifyMessage(publicKey, data, invalidSignature),
       ).toThrow(ECIESError);
       expect(() =>
-        signature.verifyMessage(publicKey, data, invalidSignature)
+        signature.verifyMessage(publicKey, data, invalidSignature),
       ).toThrow(
-        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidSignature })
+        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidSignature }),
       );
     });
 
@@ -34,14 +34,14 @@ describe('EciesSignature', () => {
       const validSignature = Buffer.alloc(64) as any;
 
       expect(() =>
-        signature.verifyMessage(invalidPublicKey, data, validSignature)
+        signature.verifyMessage(invalidPublicKey, data, validSignature),
       ).toThrow(ECIESError);
       expect(() =>
-        signature.verifyMessage(invalidPublicKey, data, validSignature)
+        signature.verifyMessage(invalidPublicKey, data, validSignature),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidSenderPublicKey,
-        })
+        }),
       );
     });
   });

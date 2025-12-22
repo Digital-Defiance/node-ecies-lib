@@ -24,12 +24,12 @@ describe('ECIES Error Translation Integration', () => {
       const errorEn = new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
         undefined,
-        LanguageCodes.EN_US
+        LanguageCodes.EN_US,
       );
       const errorFr = new ECIESError(
         ECIESErrorTypeEnum.InvalidMnemonic,
         undefined,
-        LanguageCodes.FR
+        LanguageCodes.FR,
       );
 
       expect(errorEn.message).toBeDefined();
@@ -50,7 +50,7 @@ describe('ECIES Error Translation Integration', () => {
         ECIESErrorTypeEnum.InvalidDataLength,
         undefined,
         undefined,
-        { expected: '100', actual: '50' }
+        { expected: '100', actual: '50' },
       );
       expect(error.message).toBeDefined();
       expect(error.message.length).toBeGreaterThan(0);
@@ -122,7 +122,7 @@ describe('ECIES Error Translation Integration', () => {
         const error = new ECIESError(
           ECIESErrorTypeEnum.InvalidDataLength,
           undefined,
-          lang
+          lang,
         );
         expect(error.message).toBeDefined();
         expect(error.message.length).toBeGreaterThan(0);
@@ -168,7 +168,7 @@ describe('ECIES Error Translation Integration', () => {
           ECIESErrorTypeEnum.InvalidDataLength,
           undefined,
           undefined,
-          undefined
+          undefined,
         );
       }).not.toThrow();
     });
@@ -179,7 +179,7 @@ describe('ECIES Error Translation Integration', () => {
           ECIESErrorTypeEnum.InvalidDataLength,
           undefined,
           undefined,
-          {}
+          {},
         );
       }).not.toThrow();
     });

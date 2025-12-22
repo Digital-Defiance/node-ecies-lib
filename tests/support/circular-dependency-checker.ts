@@ -21,7 +21,7 @@ export interface CircularDependencyResult {
  */
 export async function checkCircularDependencies(
   entryPoint: string = 'src/index.ts',
-  baseDir: string = process.cwd()
+  baseDir: string = process.cwd(),
 ): Promise<CircularDependencyResult> {
   const fullPath = resolve(baseDir, entryPoint);
 
@@ -78,7 +78,7 @@ export function formatCircularDependencies(circular: string[][]): string {
  */
 export async function assertNoCircularDependencies(
   entryPoint: string = 'src/index.ts',
-  baseDir: string = process.cwd()
+  baseDir: string = process.cwd(),
 ): Promise<void> {
   const result = await checkCircularDependencies(entryPoint, baseDir);
 

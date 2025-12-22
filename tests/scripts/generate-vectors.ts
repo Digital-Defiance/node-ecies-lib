@@ -22,7 +22,7 @@ describe('Generate Vectors', () => {
 
     const service = new ECIESService(config);
     const mnemonic = new SecureString(
-      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
     );
     const { wallet } = service.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = Buffer.from(wallet.getPrivateKey()).toString('hex');
@@ -38,7 +38,7 @@ describe('Generate Vectors', () => {
     const encryptedText = await service.encryptSimpleOrSingle(
       false,
       new Uint8Array(Buffer.from(publicKey, 'hex')),
-      new Uint8Array(Buffer.from(textMessage))
+      new Uint8Array(Buffer.from(textMessage)),
     );
     vectors.push({
       id: 'simple-text',
@@ -54,7 +54,7 @@ describe('Generate Vectors', () => {
     const encryptedUnicode = await service.encryptSimpleOrSingle(
       false,
       new Uint8Array(Buffer.from(publicKey, 'hex')),
-      new Uint8Array(Buffer.from(unicodeMessage))
+      new Uint8Array(Buffer.from(unicodeMessage)),
     );
     vectors.push({
       id: 'unicode-text',
@@ -70,7 +70,7 @@ describe('Generate Vectors', () => {
     const encryptedBinary = await service.encryptSimpleOrSingle(
       false,
       new Uint8Array(Buffer.from(publicKey, 'hex')),
-      new Uint8Array(binaryMessage)
+      new Uint8Array(binaryMessage),
     );
     vectors.push({
       id: 'binary-data',
@@ -86,7 +86,7 @@ describe('Generate Vectors', () => {
     const encryptedLarge = await service.encryptSimpleOrSingle(
       false,
       new Uint8Array(Buffer.from(publicKey, 'hex')),
-      new Uint8Array(largeMessage)
+      new Uint8Array(largeMessage),
     );
     vectors.push({
       id: 'large-data',
@@ -99,7 +99,7 @@ describe('Generate Vectors', () => {
 
     const outputPath = path.join(
       __dirname,
-      '../fixtures/enterprise-vectors.json'
+      '../fixtures/enterprise-vectors.json',
     );
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, JSON.stringify(vectors, null, 2));

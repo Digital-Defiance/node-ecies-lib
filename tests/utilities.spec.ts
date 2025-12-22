@@ -12,12 +12,12 @@ describe('EciesUtilities', () => {
   describe('computeEncryptedLengthFromDataLength', () => {
     it('should throw error for negative data length', () => {
       expect(() =>
-        utilities.computeEncryptedLengthFromDataLength(-1, 'simple')
+        utilities.computeEncryptedLengthFromDataLength(-1, 'simple'),
       ).toThrow(ECIESError);
       expect(() =>
-        utilities.computeEncryptedLengthFromDataLength(-1, 'simple')
+        utilities.computeEncryptedLengthFromDataLength(-1, 'simple'),
       ).toThrow(
-        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidDataLength })
+        expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidDataLength }),
       );
     });
 
@@ -25,25 +25,25 @@ describe('EciesUtilities', () => {
       expect(() =>
         utilities.computeEncryptedLengthFromDataLength(
           100,
-          'invalid' as unknown as EciesEncryptionType
-        )
+          'invalid' as unknown as EciesEncryptionType,
+        ),
       ).toThrow(ECIESError);
       expect(() =>
         utilities.computeEncryptedLengthFromDataLength(
           100,
-          'invalid' as unknown as EciesEncryptionType
-        )
+          'invalid' as unknown as EciesEncryptionType,
+        ),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptionType,
-        })
+        }),
       );
     });
 
     it('should compute length for simple encryption', () => {
       const result = utilities.computeEncryptedLengthFromDataLength(
         100,
-        'simple'
+        'simple',
       );
       expect(result).toBeGreaterThan(100);
     });
@@ -51,7 +51,7 @@ describe('EciesUtilities', () => {
     it('should compute length for single encryption', () => {
       const result = utilities.computeEncryptedLengthFromDataLength(
         100,
-        'single'
+        'single',
       );
       expect(result).toBeGreaterThan(100);
     });
@@ -60,7 +60,7 @@ describe('EciesUtilities', () => {
       const result = utilities.computeEncryptedLengthFromDataLength(
         100,
         'multiple',
-        3
+        3,
       );
       expect(result).toBeGreaterThan(100);
     });
@@ -69,34 +69,34 @@ describe('EciesUtilities', () => {
   describe('computeDecryptedLengthFromEncryptedDataLength', () => {
     it('should throw error for negative encrypted data length', () => {
       expect(() =>
-        utilities.computeDecryptedLengthFromEncryptedDataLength(-1)
+        utilities.computeDecryptedLengthFromEncryptedDataLength(-1),
       ).toThrow(ECIESError);
       expect(() =>
-        utilities.computeDecryptedLengthFromEncryptedDataLength(-1)
+        utilities.computeDecryptedLengthFromEncryptedDataLength(-1),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        })
+        }),
       );
     });
 
     it('should throw error when computed length is negative', () => {
       expect(() =>
-        utilities.computeDecryptedLengthFromEncryptedDataLength(10)
+        utilities.computeDecryptedLengthFromEncryptedDataLength(10),
       ).toThrow(ECIESError);
       expect(() =>
-        utilities.computeDecryptedLengthFromEncryptedDataLength(10)
+        utilities.computeDecryptedLengthFromEncryptedDataLength(10),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        })
+        }),
       );
     });
 
     it('should compute decrypted length with padding', () => {
       const result = utilities.computeDecryptedLengthFromEncryptedDataLength(
         200,
-        10
+        10,
       );
       expect(result).toBeGreaterThan(0);
     });

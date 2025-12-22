@@ -69,7 +69,7 @@ describe('Constants Validation Integration Tests', () => {
     it('should have consistent recipient ID sizes', () => {
       // Verify recipient ID size consistency
       expect(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(
-        Constants.idProvider.byteLength
+        Constants.idProvider.byteLength,
       );
       expect(Constants.MEMBER_ID_LENGTH).toBe(Constants.idProvider.byteLength);
     });
@@ -170,7 +170,7 @@ describe('Constants Validation Integration Tests', () => {
           service,
           MemberType.User,
           'Test Member',
-          new EmailString('test@example.com')
+          new EmailString('test@example.com'),
         );
       }).not.toThrow();
     });
@@ -270,13 +270,13 @@ describe('Constants Validation Integration Tests', () => {
           service,
           MemberType.User,
           'Alice',
-          new EmailString('alice@example.com')
+          new EmailString('alice@example.com'),
         );
         const bob = Member.newMember(
           service,
           MemberType.User,
           'Bob',
-          new EmailString('bob@example.com')
+          new EmailString('bob@example.com'),
         );
 
         expect(alice).toBeDefined();

@@ -65,7 +65,7 @@ export class EciesMultiRecipient {
     receiverPublicKey: Buffer,
     messageSymmetricKey: Buffer,
     ephemeralPrivateKey: Buffer,
-    aad?: Buffer
+    aad?: Buffer,
   ): Buffer {
     // Compute shared secret
     let sharedSecret: Buffer;
@@ -93,7 +93,7 @@ export class EciesMultiRecipient {
             undefined,
             {
               nodeError: error.code,
-            }
+            },
           );
         }
         throw new ECIESError(
@@ -102,7 +102,7 @@ export class EciesMultiRecipient {
           undefined,
           {
             error: error.message,
-          }
+          },
         );
       }
       throw new ECIESError(ECIESErrorTypeEnum.SecretComputationFailed);
@@ -113,7 +113,7 @@ export class EciesMultiRecipient {
       sharedSecret,
       Buffer.alloc(0), // No salt
       Buffer.from('ecies-v2-key-derivation'), // Info
-      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
+      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
     );
 
     const iv = randomBytes(this.cryptoCore.consts.IV_SIZE);
@@ -122,7 +122,7 @@ export class EciesMultiRecipient {
     const cipher = createCipheriv(
       this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symKey,
-      iv
+      iv,
     ) as AuthenticatedCipher;
 
     // Ensure auto padding is enabled
@@ -157,7 +157,7 @@ export class EciesMultiRecipient {
     privateKey: Buffer,
     encryptedKey: Buffer,
     ephemeralPublicKey: Buffer,
-    aad?: Buffer
+    aad?: Buffer,
   ): Buffer {
     if (
       encryptedKey.length !== this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE
@@ -169,17 +169,17 @@ export class EciesMultiRecipient {
         {
           expected: String(this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE),
           actual: String(encryptedKey.length),
-        }
+        },
       );
     }
 
     const iv = encryptedKey.subarray(0, this.cryptoCore.consts.IV_SIZE);
     const authTag = encryptedKey.subarray(
       this.cryptoCore.consts.IV_SIZE,
-      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE
+      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
     );
     const encrypted = encryptedKey.subarray(
-      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE
+      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
     );
 
     // Normalize the public key (ensuring 0x04 prefix)
@@ -196,14 +196,14 @@ export class EciesMultiRecipient {
       sharedSecret,
       Buffer.alloc(0), // No salt
       Buffer.from('ecies-v2-key-derivation'), // Info
-      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
+      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
     );
 
     // Decrypt
     const decipher = createDecipheriv(
       this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symKey,
-      iv
+      iv,
     ) as AuthenticatedDecipher;
 
     decipher.setAuthTag(authTag);
@@ -223,7 +223,7 @@ export class EciesMultiRecipient {
         {
           expected: String(this.cryptoCore.consts.SYMMETRIC.KEY_SIZE),
           actual: String(decryptedMessage.length),
-        }
+        },
       );
     }
     return decryptedMessage;
@@ -242,7 +242,7 @@ export class EciesMultiRecipient {
     recipients: IMember[],
     message: Buffer,
     preamble?: Buffer,
-    senderPrivateKey?: Buffer
+    senderPrivateKey?: Buffer,
   ): IMultiEncryptedMessage {
     if (recipients.length > AppConstants.UINT16_MAX) {
       throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients);
@@ -287,20 +287,20 @@ export class EciesMultiRecipient {
         member.publicKey,
         symmetricKey,
         ephemeralPrivateKey,
-        member.id as Buffer // Use Recipient ID as AAD
+        member.id as Buffer, // Use Recipient ID as AAD
       ),
     }));
 
     const recipientIds = encryptionResults.map(({ id }) => id as Buffer);
     const recipientKeys = encryptionResults.map(
-      ({ encryptedKey }) => encryptedKey
+      ({ encryptedKey }) => encryptedKey,
     );
 
     // Calculate header size
     const headerSize = this.calculateECIESMultipleRecipientOverhead(
       recipients.length,
       false,
-      recipientKeys
+      recipientKeys,
     );
 
     // Build the header to use as AAD for message encryption
@@ -322,7 +322,7 @@ export class EciesMultiRecipient {
     const cipher = createCipheriv(
       this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
-      iv
+      iv,
     ) as AuthenticatedCipher;
 
     cipher.setAAD(headerBytes);
@@ -366,7 +366,7 @@ export class EciesMultiRecipient {
   public decryptMultipleECIEForRecipient(
     encryptedData: IMultiEncryptedMessage,
     recipient: IMember,
-    senderPublicKey?: Buffer
+    senderPublicKey?: Buffer,
   ): Buffer {
     if (recipient.privateKey === undefined) {
       throw new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded);
@@ -374,7 +374,7 @@ export class EciesMultiRecipient {
 
     // Find this recipient's encrypted key
     const recipientIndex: number = encryptedData.recipientIds.findIndex(
-      (id: Buffer): boolean => id.equals(recipient.id as Buffer)
+      (id: Buffer): boolean => id.equals(recipient.id as Buffer),
     );
     if (recipientIndex === -1) {
       throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
@@ -391,7 +391,7 @@ export class EciesMultiRecipient {
       Buffer.from(recipient.privateKey.value),
       encryptedKey,
       encryptedData.ephemeralPublicKey,
-      recipient.id as Buffer // Use Recipient ID as AAD
+      recipient.id as Buffer, // Use Recipient ID as AAD
     );
 
     // Rebuild header to use as AAD
@@ -400,23 +400,23 @@ export class EciesMultiRecipient {
     // Extract the IV and auth tag from the encrypted message
     const iv = encryptedData.encryptedMessage.subarray(
       0,
-      this.cryptoCore.consts.IV_SIZE
+      this.cryptoCore.consts.IV_SIZE,
     );
     const authTag = encryptedData.encryptedMessage.subarray(
       this.cryptoCore.consts.IV_SIZE,
-      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE
+      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
     );
 
     // Extract the encrypted content (no CRC, AES-GCM provides authentication)
     const encrypted = encryptedData.encryptedMessage.subarray(
-      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE
+      this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
     );
 
     // Decrypt the content with the symmetric key
     const decipher = createDecipheriv(
       this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
-      iv
+      iv,
     ) as AuthenticatedDecipher;
 
     decipher.setAuthTag(authTag);
@@ -443,7 +443,7 @@ export class EciesMultiRecipient {
       const isValid = this.cryptoCore.verify(
         senderPublicKey,
         message,
-        signature
+        signature,
       );
       if (!isValid) {
         throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
@@ -465,7 +465,7 @@ export class EciesMultiRecipient {
   public calculateECIESMultipleRecipientOverhead(
     recipientCount: number,
     includeMessageOverhead: boolean,
-    encryptedKeys?: Buffer[]
+    encryptedKeys?: Buffer[],
   ): number {
     if (recipientCount < 1) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidRecipientCount);
@@ -476,7 +476,7 @@ export class EciesMultiRecipient {
     if (encryptedKeys) {
       encryptedKeysSize = encryptedKeys.reduce(
         (total, key) => total + key.length,
-        0
+        0,
       );
     } else {
       // Default assumption: all keys use Simple encryption type (more efficient)
@@ -506,7 +506,7 @@ export class EciesMultiRecipient {
    * @throws EciesError if the number of encrypted keys does not match the number of recipients
    */
   public buildECIESMultipleRecipientHeader(
-    data: IMultiEncryptedMessage
+    data: IMultiEncryptedMessage,
   ): Buffer {
     if (
       data.recipientIds.length > this.cryptoCore.consts.MULTIPLE.MAX_RECIPIENTS
@@ -531,15 +531,15 @@ export class EciesMultiRecipient {
 
     // Create cipher suite buffer
     const cipherSuiteBuffer = Buffer.alloc(
-      this.cryptoCore.consts.CIPHER_SUITE_SIZE
+      this.cryptoCore.consts.CIPHER_SUITE_SIZE,
     );
     cipherSuiteBuffer.writeUInt8(
-      EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+      EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
     );
 
     // Create encryption type buffer
     const encryptionTypeBuffer = Buffer.alloc(
-      this.cryptoCore.consts.ENCRYPTION_TYPE_SIZE
+      this.cryptoCore.consts.ENCRYPTION_TYPE_SIZE,
     );
     encryptionTypeBuffer.writeUInt8(EciesEncryptionTypeEnum.Multiple as number);
 
@@ -555,25 +555,25 @@ export class EciesMultiRecipient {
     const combinedLength = (recipientIdSizeBigInt << 56n) | dataLengthBigInt;
 
     const dataLengthBuffer = Buffer.alloc(
-      this.cryptoCore.consts.MULTIPLE.DATA_LENGTH_SIZE
+      this.cryptoCore.consts.MULTIPLE.DATA_LENGTH_SIZE,
     );
     dataLengthBuffer.writeBigUInt64BE(combinedLength);
 
     // Create recipient count buffer
     const recipientCountBuffer = Buffer.alloc(
-      this.cryptoCore.consts.MULTIPLE.RECIPIENT_COUNT_SIZE
+      this.cryptoCore.consts.MULTIPLE.RECIPIENT_COUNT_SIZE,
     );
     recipientCountBuffer.writeUInt16BE(data.recipientIds.length);
 
     // Create recipients buffer
     const recipientsBuffer = Buffer.alloc(
       data.recipientIds.length *
-        this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE
+        this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE,
     );
     data.recipientIds.forEach((recipientId: Buffer, index: number) => {
       recipientsBuffer.set(
         recipientId,
-        index * this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE
+        index * this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE,
       );
     });
 
@@ -593,10 +593,10 @@ export class EciesMultiRecipient {
           undefined,
           {
             expected: String(
-              this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE
+              this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE,
             ),
             actual: String(encryptedKey.length),
-          }
+          },
         );
       }
     });
@@ -639,7 +639,7 @@ export class EciesMultiRecipient {
         ECIESErrorTypeEnum.InvalidVersion,
         undefined,
         undefined,
-        { version: String(version) }
+        { version: String(version) },
       );
     }
 
@@ -651,7 +651,7 @@ export class EciesMultiRecipient {
         ECIESErrorTypeEnum.InvalidCipherSuite,
         undefined,
         undefined,
-        { cipherSuite: String(cipherSuite) }
+        { cipherSuite: String(cipherSuite) },
       );
     }
 
@@ -663,14 +663,14 @@ export class EciesMultiRecipient {
         ECIESErrorTypeEnum.InvalidEncryptionType,
         undefined,
         undefined,
-        { encryptionType: encryptionType.toString(16) }
+        { encryptionType: encryptionType.toString(16) },
       );
     }
 
     // Read Ephemeral Public Key
     const ephemeralPublicKey = data.subarray(
       offset,
-      offset + this.cryptoCore.consts.PUBLIC_KEY_LENGTH
+      offset + this.cryptoCore.consts.PUBLIC_KEY_LENGTH,
     );
     offset += this.cryptoCore.consts.PUBLIC_KEY_LENGTH;
 
@@ -742,18 +742,18 @@ export class EciesMultiRecipient {
           undefined,
           {
             required: String(
-              this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE
+              this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE,
             ),
             available: String(data.length - offset),
-          }
+          },
         );
       }
 
       recipientKeys.push(
         data.subarray(
           offset,
-          offset + this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE
-        )
+          offset + this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE,
+        ),
       );
       offset += this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE;
     }

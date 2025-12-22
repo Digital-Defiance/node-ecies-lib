@@ -41,7 +41,7 @@ export class EncryptionStream {
     private readonly ecies: ECIESService,
     private readonly config: IStreamConfig = DEFAULT_STREAM_CONFIG,
     processor?: ChunkProcessor,
-    multiRecipientProcessor?: MultiRecipientProcessor
+    multiRecipientProcessor?: MultiRecipientProcessor,
   ) {
     // Use injected dependencies or create defaults
     this.processor = processor ?? new ChunkProcessor(ecies);
@@ -53,14 +53,14 @@ export class EncryptionStream {
   public async *encryptStream(
     source: AsyncIterable<Buffer>,
     publicKey: Buffer,
-    options: IEncryptStreamOptions = {}
+    options: IEncryptStreamOptions = {},
   ): AsyncGenerator<IEncryptedChunk, void, unknown> {
     if (!publicKey || (publicKey.length !== 65 && publicKey.length !== 33)) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength
-        )
+          NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength,
+        ),
       );
     }
 
@@ -81,8 +81,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_EncryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+          ),
         );
       }
 
@@ -90,8 +90,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_BufferOverflow
-          )
+            NodeEciesStringKey.Error_Stream_BufferOverflow,
+          ),
         );
       }
 
@@ -106,8 +106,8 @@ export class EncryptionStream {
           throw new Error(
             this.engine.translate(
               NodeEciesComponentId,
-              NodeEciesStringKey.Error_Stream_EncryptionCancelled
-            )
+              NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+            ),
           );
         }
 
@@ -119,7 +119,7 @@ export class EncryptionStream {
           publicKey,
           chunkIndex++,
           false,
-          includeChecksums
+          includeChecksums,
         );
 
         lastYieldedChunk = encryptedChunk;
@@ -136,8 +136,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_EncryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+          ),
         );
       }
 
@@ -146,7 +146,7 @@ export class EncryptionStream {
         publicKey,
         chunkIndex,
         true,
-        includeChecksums
+        includeChecksums,
       );
 
       yield encryptedChunk;
@@ -164,22 +164,22 @@ export class EncryptionStream {
   public async *encryptStreamMultiple(
     source: AsyncIterable<Buffer>,
     recipients: Array<{ id: Buffer; publicKey: Buffer }>,
-    options: IEncryptStreamOptions = {}
+    options: IEncryptStreamOptions = {},
   ): AsyncGenerator<IMultiRecipientChunk, void, unknown> {
     if (recipients.length === 0) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired
-        )
+          NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired,
+        ),
       );
     }
     if (recipients.length > 65535) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded
-        )
+          NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded,
+        ),
       );
     }
 
@@ -191,8 +191,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength
-          )
+            NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength,
+          ),
         );
       }
       if (
@@ -203,8 +203,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength
-          )
+            NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength,
+          ),
         );
       }
     }
@@ -225,8 +225,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_EncryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+          ),
         );
       }
 
@@ -234,8 +234,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_BufferOverflow
-          )
+            NodeEciesStringKey.Error_Stream_BufferOverflow,
+          ),
         );
       }
 
@@ -250,8 +250,8 @@ export class EncryptionStream {
           throw new Error(
             this.engine.translate(
               NodeEciesComponentId,
-              NodeEciesStringKey.Error_Stream_EncryptionCancelled
-            )
+              NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+            ),
           );
         }
 
@@ -263,7 +263,7 @@ export class EncryptionStream {
           recipients,
           chunkIndex++,
           false,
-          symmetricKey
+          symmetricKey,
         );
 
         yield encryptedChunk;
@@ -279,8 +279,8 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_EncryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_EncryptionCancelled,
+          ),
         );
       }
 
@@ -289,7 +289,7 @@ export class EncryptionStream {
         recipients,
         chunkIndex,
         true,
-        symmetricKey
+        symmetricKey,
       );
 
       yield encryptedChunk;
@@ -303,14 +303,14 @@ export class EncryptionStream {
   public async *decryptStream(
     source: AsyncIterable<Buffer>,
     privateKey: Buffer,
-    options: IDecryptStreamOptions = {}
+    options: IDecryptStreamOptions = {},
   ): AsyncGenerator<Buffer, void, unknown> {
     if (!privateKey || privateKey.length !== 32) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength
-        )
+          NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength,
+        ),
       );
     }
 
@@ -328,22 +328,22 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_DecryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_DecryptionCancelled,
+          ),
         );
       }
 
       const { data, header } = await this.processor.decryptChunk(
         chunkData,
-        privateKey
+        privateKey,
       );
 
       if (header.index !== expectedIndex) {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_ChunkSequenceError
-          )
+            NodeEciesStringKey.Error_Stream_ChunkSequenceError,
+          ),
         );
       }
 
@@ -365,7 +365,7 @@ export class EncryptionStream {
     source: AsyncIterable<Buffer>,
     recipientId: Buffer,
     privateKey: Buffer,
-    options: IDecryptStreamOptions = {}
+    options: IDecryptStreamOptions = {},
   ): AsyncGenerator<Buffer, void, unknown> {
     if (
       !recipientId ||
@@ -374,16 +374,16 @@ export class EncryptionStream {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength
-        )
+          NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength,
+        ),
       );
     }
     if (!privateKey || privateKey.length !== 32) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength
-        )
+          NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength,
+        ),
       );
     }
 
@@ -401,23 +401,23 @@ export class EncryptionStream {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_DecryptionCancelled
-          )
+            NodeEciesStringKey.Error_Stream_DecryptionCancelled,
+          ),
         );
       }
 
       const { data, header } = await this.multiRecipientProcessor.decryptChunk(
         chunkData,
         recipientId,
-        privateKey
+        privateKey,
       );
 
       if (header.chunkIndex !== expectedIndex) {
         throw new Error(
           this.engine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_Stream_ChunkSequenceError
-          )
+            NodeEciesStringKey.Error_Stream_ChunkSequenceError,
+          ),
         );
       }
 

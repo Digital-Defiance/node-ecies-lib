@@ -24,7 +24,7 @@ export class EciesUtilities {
     dataLength: number,
     encryptionMode: EciesEncryptionType,
     recipientCount?: number,
-    constants: IBaseConstants = getNodeRuntimeConfiguration()
+    constants: IBaseConstants = getNodeRuntimeConfiguration(),
   ): number {
     if (dataLength < 0) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
@@ -45,7 +45,7 @@ export class EciesUtilities {
           this.calculateMultipleRecipientOverhead(
             recipientCount ?? 1,
             true,
-            eciesDefaults
+            eciesDefaults,
           )
         );
       default:
@@ -65,7 +65,7 @@ export class EciesUtilities {
   private calculateMultipleRecipientOverhead(
     recipientCount: number,
     includeMessageOverhead: boolean,
-    eciesConstants: IECIESConstants
+    eciesConstants: IECIESConstants,
   ): number {
     if (recipientCount < 1) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidRecipientCount);
@@ -99,7 +99,7 @@ export class EciesUtilities {
   public computeDecryptedLengthFromEncryptedDataLength(
     encryptedDataLength: number,
     padding?: number,
-    constants: IBaseConstants = getNodeRuntimeConfiguration()
+    constants: IBaseConstants = getNodeRuntimeConfiguration(),
   ): number {
     if (encryptedDataLength < 0) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidEncryptedDataLength);
@@ -120,7 +120,7 @@ export class EciesUtilities {
           overhead: String(overhead),
           padding: String(actualPadding),
           computedLength: String(decryptedLength),
-        }
+        },
       );
     }
 

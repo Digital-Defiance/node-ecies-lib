@@ -68,22 +68,22 @@ let eciesI18nEngineInstance: PluginI18nEngine<CoreLanguageCode> | null = null;
  * This replaces the legacy getEciesI18nEngine() function
  */
 export function getEciesPluginI18nEngine(
-  config?: Partial<RegistryConfig<string>>
+  config?: Partial<RegistryConfig<string>>,
 ): PluginI18nEngine<CoreLanguageCode> {
   if (!eciesI18nEngineInstance) {
     // Create core engine with system strings
     eciesI18nEngineInstance = createCoreI18nEngine(
       NodeEciesComponentId,
-      config
+      config,
     ) as PluginI18nEngine<CoreLanguageCode>;
 
     const result = eciesI18nEngineInstance.registerComponent(
-      createNodeEciesComponentRegistration()
+      createNodeEciesComponentRegistration(),
     );
     if (!result.isValid) {
       console.warn(
         'Node ECIES component registration incomplete:',
-        result.missingKeys
+        result.missingKeys,
       );
     }
   }
@@ -104,7 +104,7 @@ export function resetEciesPluginI18nEngine(): void {
 export function getNodeEciesTranslation(
   key: NodeEciesStringKey,
   variables?: Record<string, string | number>,
-  language?: CoreLanguageCode
+  language?: CoreLanguageCode,
 ): string {
   // Import here to avoid circular dependency
   // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
@@ -121,7 +121,7 @@ export function getNodeEciesTranslation(
  * Cast to unknown to handle cross-package type compatibility
  */
 export function createEciesTranslationEngine(
-  config?: EngineConfig
+  config?: EngineConfig,
 ): I18nEngine {
   return getEciesI18nEngine(config) as I18nEngine;
 }

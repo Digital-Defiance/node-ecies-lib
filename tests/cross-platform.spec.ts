@@ -24,7 +24,7 @@ describe('Cross-Platform Compatibility', () => {
       const prefixedKey = Buffer.concat([Buffer.from([0x04]), rawKey]);
 
       const normalized1 = cryptoCore.normalizePublicKey(
-        Buffer.from(prefixedKey)
+        Buffer.from(prefixedKey),
       );
       // const normalized2 = cryptoCore.normalizePublicKey(Buffer.from(prefixedKey));
 
@@ -44,7 +44,7 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
 
       expect(encrypted[0]).toBe(1); // Version 1
@@ -64,12 +64,12 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = ecies.decryptSimpleOrSingleWithHeader(
         false,
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -84,12 +84,12 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         true,
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = ecies.decryptSimpleOrSingleWithHeader(
         true,
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -200,7 +200,7 @@ describe('Cross-Platform Compatibility', () => {
         recipients,
         0,
         false,
-        symmetricKey
+        symmetricKey,
       );
 
       expect(chunk.header.chunkIndex).toBe(0);
@@ -217,7 +217,7 @@ describe('Cross-Platform Compatibility', () => {
       const symmetricKey = randomBytes(32);
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
       const recipientId = randomBytes(
-        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
       );
 
       const recipients = [
@@ -226,7 +226,7 @@ describe('Cross-Platform Compatibility', () => {
 
       const encryptedKey = await processor.encryptKey(
         Buffer.from(keyPair.publicKey),
-        symmetricKey
+        symmetricKey,
       );
 
       const chunk = await processor.encryptChunk(
@@ -234,13 +234,13 @@ describe('Cross-Platform Compatibility', () => {
         recipients,
         0,
         false,
-        symmetricKey
+        symmetricKey,
       );
 
       const decrypted = await processor.decryptChunk(
         chunk.data,
         recipientId,
-        Buffer.from(keyPair.privateKey)
+        Buffer.from(keyPair.privateKey),
       );
 
       expect(decrypted.data).toEqual(data);
@@ -293,7 +293,7 @@ describe('Cross-Platform Compatibility', () => {
 
       const emptyData = Buffer.alloc(0);
       expect(() =>
-        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, emptyData)
+        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, emptyData),
       ).toThrow();
 
       const invalidEncrypted = Buffer.alloc(10);
@@ -301,8 +301,8 @@ describe('Cross-Platform Compatibility', () => {
         ecies.decryptSimpleOrSingleWithHeader(
           false,
           keyPair.privateKey,
-          invalidEncrypted
-        )
+          invalidEncrypted,
+        ),
       ).toThrow();
     });
 
@@ -312,7 +312,7 @@ describe('Cross-Platform Compatibility', () => {
 
       const invalidPublicKey = Buffer.alloc(32);
       expect(() =>
-        ecies.encryptSimpleOrSingle(false, invalidPublicKey, message)
+        ecies.encryptSimpleOrSingle(false, invalidPublicKey, message),
       ).toThrow();
 
       const mnemonic = ecies.generateNewMnemonic();
@@ -320,7 +320,7 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
 
       const invalidPrivateKey = Buffer.alloc(16);
@@ -328,8 +328,8 @@ describe('Cross-Platform Compatibility', () => {
         ecies.decryptSimpleOrSingleWithHeader(
           false,
           invalidPrivateKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow();
     });
   });

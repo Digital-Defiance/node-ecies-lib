@@ -51,12 +51,12 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for invalid encryption type', () => {
       expect(() => singleRecipient.getHeaderSize('invalid' as any)).toThrow(
-        ECIESError
+        ECIESError,
       );
       expect(() => singleRecipient.getHeaderSize('invalid' as any)).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptionType,
-        })
+        }),
       );
     });
   });
@@ -65,7 +65,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for message exceeding max size', () => {
       const hugeMessage = Buffer.alloc(0xffffffff + 1);
       expect(() =>
-        singleRecipient.encrypt(false, publicKey, hugeMessage)
+        singleRecipient.encrypt(false, publicKey, hugeMessage),
       ).toThrow();
     });
 
@@ -74,7 +74,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const message = Buffer.from('test');
         const invalidKey = Buffer.from('invalid');
         expect(() =>
-          singleRecipient.encrypt(false, invalidKey, message)
+          singleRecipient.encrypt(false, invalidKey, message),
         ).toThrow(ECIESError);
       });
     });
@@ -85,7 +85,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const badKey = randomBytes(65);
         badKey[0] = 0x04; // Set prefix but use random data
         expect(() => singleRecipient.encrypt(false, badKey, message)).toThrow(
-          ECIESError
+          ECIESError,
         );
       });
     });
@@ -100,19 +100,19 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Simple,
           encrypted,
-          0
-        )
+          0,
+        ),
       ).toThrow(ECIESError);
       expect(() =>
         singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Simple,
           encrypted,
-          0
-        )
+          0,
+        ),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptionType,
-        })
+        }),
       );
     });
 
@@ -123,7 +123,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       data.writeUInt8(EciesEncryptionTypeEnum.Multiple, 2);
 
       expect(() =>
-        singleRecipient.parseEncryptedMessage(undefined, data, 0)
+        singleRecipient.parseEncryptedMessage(undefined, data, 0),
       ).toThrow(ECIESError);
     });
 
@@ -134,14 +134,14 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       tooShort.writeUInt8(EciesEncryptionTypeEnum.Single, 2);
 
       expect(() =>
-        singleRecipient.parseEncryptedMessage(undefined, tooShort, 0)
+        singleRecipient.parseEncryptedMessage(undefined, tooShort, 0),
       ).toThrow(ECIESError);
       expect(() =>
-        singleRecipient.parseEncryptedMessage(undefined, tooShort, 0)
+        singleRecipient.parseEncryptedMessage(undefined, tooShort, 0),
       ).toThrow(
         expect.objectContaining({
           type: ECIESErrorTypeEnum.InvalidEncryptedDataLength,
-        })
+        }),
       );
     });
 
@@ -154,8 +154,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
           EciesEncryptionTypeEnum.Single,
           encrypted,
           0,
-          { dataLength: 999999 }
-        )
+          { dataLength: 999999 },
+        ),
       ).toThrow(ECIESError);
     });
 
@@ -169,7 +169,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       invalidKey.copy(data, 3);
 
       expect(() =>
-        singleRecipient.parseEncryptedMessage(undefined, data, 0)
+        singleRecipient.parseEncryptedMessage(undefined, data, 0),
       ).toThrow(ECIESError);
     });
 
@@ -188,8 +188,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.decryptWithHeader(
           EciesEncryptionTypeEnum.Single,
           privateKey,
-          corrupted
-        )
+          corrupted,
+        ),
       ).toThrow();
     });
 
@@ -203,8 +203,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Single,
           truncated,
-          0
-        )
+          0,
+        ),
       ).toThrow(ECIESError);
     });
   });
@@ -218,8 +218,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.decryptWithHeader(
           EciesEncryptionTypeEnum.Single,
           privateKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow(ECIESError);
     });
 
@@ -232,17 +232,17 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.decryptWithHeader(
           EciesEncryptionTypeEnum.Single,
           wrongKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow(ECIESError);
       expect(() =>
         singleRecipient.decryptWithHeader(
           EciesEncryptionTypeEnum.Single,
           wrongKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow(
-        expect.objectContaining({ type: ECIESErrorTypeEnum.DecryptionFailed })
+        expect.objectContaining({ type: ECIESErrorTypeEnum.DecryptionFailed }),
       );
     });
   });
@@ -255,7 +255,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       const result = singleRecipient.decryptWithHeaderEx(
         EciesEncryptionTypeEnum.Single,
         privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(result.decrypted).toEqual(message);
@@ -271,8 +271,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         singleRecipient.decryptWithHeaderEx(
           EciesEncryptionTypeEnum.Single,
           wrongKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow(ECIESError);
     });
   });
@@ -284,7 +284,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const encrypted = singleRecipient.encrypt(false, publicKey, message);
         const { header, data } = singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Single,
-          encrypted
+          encrypted,
         );
 
         const invalidAuthTag = Buffer.alloc(8); // Wrong length
@@ -294,7 +294,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         versionBuffer.writeUInt8(EciesVersionEnum.V1);
         const cipherSuiteBuffer = Buffer.alloc(1);
         cipherSuiteBuffer.writeUInt8(
-          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
         );
         const encryptionTypeBuffer = Buffer.alloc(1);
         encryptionTypeBuffer.writeUInt8(header.encryptionType);
@@ -314,8 +314,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
             header.iv,
             invalidAuthTag,
             data,
-            aad
-          )
+            aad,
+          ),
         ).toThrow(ECIESError);
       });
     });
@@ -326,7 +326,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const encrypted = singleRecipient.encrypt(false, publicKey, message);
         const { header, data } = singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Single,
-          encrypted
+          encrypted,
         );
 
         const invalidIV = Buffer.alloc(8); // Wrong length
@@ -336,7 +336,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         versionBuffer.writeUInt8(EciesVersionEnum.V1);
         const cipherSuiteBuffer = Buffer.alloc(1);
         cipherSuiteBuffer.writeUInt8(
-          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
         );
         const encryptionTypeBuffer = Buffer.alloc(1);
         encryptionTypeBuffer.writeUInt8(header.encryptionType);
@@ -356,8 +356,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
             invalidIV,
             header.authTag,
             data,
-            aad
-          )
+            aad,
+          ),
         ).toThrow(ECIESError);
       });
     });
@@ -368,7 +368,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const encrypted = singleRecipient.encrypt(false, publicKey, message);
         const { header } = singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Single,
-          encrypted
+          encrypted,
         );
 
         const emptyData = Buffer.alloc(0);
@@ -378,7 +378,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         versionBuffer.writeUInt8(EciesVersionEnum.V1);
         const cipherSuiteBuffer = Buffer.alloc(1);
         cipherSuiteBuffer.writeUInt8(
-          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
         );
         const encryptionTypeBuffer = Buffer.alloc(1);
         encryptionTypeBuffer.writeUInt8(header.encryptionType);
@@ -398,8 +398,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
             header.iv,
             header.authTag,
             emptyData,
-            aad
-          )
+            aad,
+          ),
         ).toThrow(ECIESError);
       });
     });
@@ -410,7 +410,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const encrypted = singleRecipient.encrypt(false, publicKey, message);
         const { header, data } = singleRecipient.parseEncryptedMessage(
           EciesEncryptionTypeEnum.Single,
-          encrypted
+          encrypted,
         );
 
         const wrongKey = randomBytes(32);
@@ -420,7 +420,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         versionBuffer.writeUInt8(EciesVersionEnum.V1);
         const cipherSuiteBuffer = Buffer.alloc(1);
         cipherSuiteBuffer.writeUInt8(
-          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+          EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
         );
         const encryptionTypeBuffer = Buffer.alloc(1);
         encryptionTypeBuffer.writeUInt8(header.encryptionType);
@@ -440,8 +440,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
             header.iv,
             header.authTag,
             data,
-            aad
-          )
+            aad,
+          ),
         ).toThrow(ECIESError);
       });
     });
@@ -461,8 +461,8 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
             invalidPublicKey,
             iv,
             authTag,
-            data
-          )
+            data,
+          ),
         ).toThrow(ECIESError);
       });
     });

@@ -32,7 +32,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
 
     const vectorsPath = path.join(
       __dirname,
-      'fixtures/enterprise-vectors.json'
+      'fixtures/enterprise-vectors.json',
     );
     if (fs.existsSync(vectorsPath)) {
       vectors = JSON.parse(fs.readFileSync(vectorsPath, 'utf8'));
@@ -57,7 +57,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
         const decrypted = service.decryptSimpleOrSingleWithHeader(
           false,
           privateKey,
-          encrypted
+          encrypted,
         );
 
         expect(decrypted).toEqual(expectedInput);
@@ -137,15 +137,15 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
             const encrypted = service.encryptSimpleOrSingle(
               false,
               publicKey,
-              message
+              message,
             );
             const decrypted = service.decryptSimpleOrSingleWithHeader(
               false,
               privateKey,
-              encrypted
+              encrypted,
             );
             expect(decrypted).toEqual(message);
-          })()
+          })(),
         );
       }
 

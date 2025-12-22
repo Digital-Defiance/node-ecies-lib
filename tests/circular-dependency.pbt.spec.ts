@@ -34,7 +34,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
             'member-error-type',
             'password-login-error-type',
             'pbkdf2-error-type',
-            'secure-storage-error-type'
+            'secure-storage-error-type',
           ),
           (enumFileName) => {
             try {
@@ -70,7 +70,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
               ];
 
               const forbiddenLoads = Array.from(loadedModules).filter((mod) =>
-                forbiddenPatterns.some((pattern) => pattern.test(mod))
+                forbiddenPatterns.some((pattern) => pattern.test(mod)),
               );
 
               // Return true if no forbidden modules were loaded
@@ -79,13 +79,13 @@ describe('Circular Dependency - Property-Based Tests', () => {
               // If we can't load the module, that's a failure
               console.error(
                 `Failed to load enumeration ${enumFileName}:`,
-                error
+                error,
               );
               return false;
             }
-          }
+          },
         ),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });
@@ -127,9 +127,9 @@ describe('Circular Dependency - Property-Based Tests', () => {
             }
 
             return true;
-          }
+          },
         ),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });
@@ -149,7 +149,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
 
       // Get all numeric enum values
       const errorTypes = Object.values(ECIESErrorTypeEnum).filter(
-        (v) => typeof v === 'string'
+        (v) => typeof v === 'string',
       ) as ECIESErrorTypeEnum[];
 
       fc.assert(
@@ -175,7 +175,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
             return false;
           }
         }),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });
@@ -188,14 +188,14 @@ describe('Circular Dependency - Property-Based Tests', () => {
     it('should have no circular dependencies in the module graph', async () => {
       const srcPath = path.resolve(
         __dirname,
-        '../../digitaldefiance-ecies-lib/src/index.ts'
+        '../../digitaldefiance-ecies-lib/src/index.ts',
       );
 
       const result = await madge(srcPath, {
         fileExtensions: ['ts'],
         tsConfig: path.resolve(
           __dirname,
-          '../../digitaldefiance-ecies-lib/tsconfig.json'
+          '../../digitaldefiance-ecies-lib/tsconfig.json',
         ),
       });
 
@@ -204,7 +204,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
       // Filter to only include circular dependencies within the ecies-lib package
       // (exclude external dependencies like i18n-lib)
       const eciesLibCircular = circular.filter((cycle: string[]) =>
-        cycle.some((file) => file.includes('digitaldefiance-ecies-lib/src'))
+        cycle.some((file) => file.includes('digitaldefiance-ecies-lib/src')),
       );
 
       // Should have no circular dependencies within ecies-lib
@@ -214,7 +214,7 @@ describe('Circular Dependency - Property-Based Tests', () => {
       if (eciesLibCircular.length > 0) {
         console.error(
           'Circular dependencies found in ecies-lib:',
-          eciesLibCircular
+          eciesLibCircular,
         );
       }
     }, 30000); // Increase timeout for madge analysis

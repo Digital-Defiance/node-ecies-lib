@@ -107,7 +107,7 @@ export class InvariantValidator {
         NodeEciesStringKey.Error_Invariant_ConfigurationValidationFailedTemplate,
         { failures: failures.join('\n\n') },
         undefined,
-        { invariantCount: failures.length }
+        { invariantCount: failures.length },
       );
     }
   }

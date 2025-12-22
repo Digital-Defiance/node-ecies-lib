@@ -30,7 +30,7 @@ import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
  * in an already established system as it will break all existing checksums.
  */
 export const NODE_RUNTIME_CONFIGURATION_KEY = Symbol.for(
-  'digitaldefiance.node.ecies.defaults'
+  'digitaldefiance.node.ecies.defaults',
 );
 
 /**
@@ -53,7 +53,7 @@ export const NODE_DEFAULTS_OVERRIDES: NodeRuntimeOverrides = Object.freeze({
 
 let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
   NODE_RUNTIME_CONFIGURATION_KEY,
-  NODE_DEFAULTS_OVERRIDES
+  NODE_DEFAULTS_OVERRIDES,
 );
 
 export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
@@ -62,14 +62,14 @@ export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
 
 export function registerNodeRuntimeConfiguration(
   configOrOverrides?: NodeRuntimeOverrides | NodeRuntimeConfiguration,
-  options?: Parameters<typeof registerRuntimeConfiguration>[2]
+  options?: Parameters<typeof registerRuntimeConfiguration>[2],
 ): NodeRuntimeConfiguration {
   // Register configuration through ecies-lib's system
   // This handles auto-sync of idProvider -> MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE
   runtimeDefaults = registerRuntimeConfiguration(
     NODE_RUNTIME_CONFIGURATION_KEY,
     configOrOverrides,
-    options
+    options,
   );
 
   // Note: ENCRYPTION.RECIPIENT_ID_SIZE is set at module initialization
@@ -248,14 +248,14 @@ if (
   throw new Error(
     safeTranslate(
       NodeEciesStringKey.Error_InvalidChecksumConstants,
-      'Invalid checksum constants: SHA3_BUFFER_LENGTH must equal SHA3_DEFAULT_HASH_BITS / 8'
-    )
+      'Invalid checksum constants: SHA3_BUFFER_LENGTH must equal SHA3_DEFAULT_HASH_BITS / 8',
+    ),
   );
 }
 
 if (OBJECT_ID_LENGTH !== 12) {
   console.warn(
     'ObjectID length may have changed, breaking encryption',
-    OBJECT_ID_LENGTH
+    OBJECT_ID_LENGTH,
   );
 }

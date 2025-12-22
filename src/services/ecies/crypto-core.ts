@@ -40,7 +40,7 @@ export class EciesCryptoCore {
 
   constructor(
     config: IECIESConfig,
-    eciesParams: IECIESConstants = Constants.ECIES
+    eciesParams: IECIESConstants = Constants.ECIES,
   ) {
     this._config = config;
     this._consts = eciesParams;
@@ -61,9 +61,9 @@ export class EciesCryptoCore {
         {
           error: pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_InvalidPublicKey
+            NodeEciesStringKey.Error_InvalidPublicKey,
           ),
-        }
+        },
       );
     }
 
@@ -110,14 +110,14 @@ export class EciesCryptoCore {
       {
         error: pluginEngine.translate(
           NodeEciesComponentId,
-          NodeEciesStringKey.Error_InvalidPublicKeyFormat
+          NodeEciesStringKey.Error_InvalidPublicKeyFormat,
         ),
         keyLength: String(keyLength),
         expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
         expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),
         keyPrefix: keyLength > 0 ? String(publicKey[0]) : 'N/A',
         expectedPrefix: String(this._consts.PUBLIC_KEY_MAGIC),
-      }
+      },
     );
   }
 
@@ -191,7 +191,7 @@ export class EciesCryptoCore {
    * @returns {ISimpleKeyPairBuffer} The new key pair
    */
   public mnemonicToSimpleKeyPairBuffer(
-    mnemonic: SecureString
+    mnemonic: SecureString,
   ): ISimpleKeyPairBuffer {
     const { seed } = this.walletAndSeedFromMnemonic(mnemonic);
     return this.seedToSimpleKeyPairBuffer(Buffer.from(seed.value));
@@ -249,7 +249,7 @@ export class EciesCryptoCore {
     const sharedSecret = secp256k1.getSharedSecret(
       privateKey,
       normalizedKey,
-      true
+      true,
     );
     const secret = Buffer.from(sharedSecret.slice(1)); // Remove the 0x02/0x03 prefix
 
@@ -272,7 +272,7 @@ export class EciesCryptoCore {
     sharedSecret: Buffer,
     salt: Buffer = Buffer.alloc(0),
     info: Buffer = Buffer.alloc(0),
-    length: number = 32
+    length: number = 32,
   ): Buffer {
     return Buffer.from(hkdfSync('sha256', sharedSecret, salt, info, length));
   }
@@ -297,7 +297,7 @@ export class EciesCryptoCore {
   public verify(
     publicKey: Buffer,
     message: Buffer,
-    signature: Buffer
+    signature: Buffer,
   ): boolean {
     const hash = createHash('sha256').update(message).digest();
     try {

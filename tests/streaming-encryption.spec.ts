@@ -43,7 +43,7 @@ describe('Streaming Encryption', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of stream.decryptStream(
         decryptSource,
-        privateKey
+        privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -77,7 +77,7 @@ describe('Streaming Encryption', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of stream.decryptStream(
         decryptSource,
-        privateKey
+        privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -114,7 +114,7 @@ describe('Streaming Encryption', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of stream.decryptStream(
         decryptSource,
-        privateKey
+        privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -130,7 +130,7 @@ describe('Streaming Encryption', () => {
         ecies,
         MemberType.User,
         'Alice',
-        new EmailString('alice@example.com')
+        new EmailString('alice@example.com'),
       );
 
       const data = Buffer.from('Secret message');
@@ -163,7 +163,7 @@ describe('Streaming Encryption', () => {
         ecies,
         MemberType.User,
         'Alice',
-        new EmailString('alice@example.com')
+        new EmailString('alice@example.com'),
       );
 
       const data = Buffer.alloc(128 * 1024); // 128KB
@@ -215,7 +215,7 @@ describe('Streaming Encryption', () => {
       const encrypted: Buffer[] = [];
       for await (const chunk of stream.encryptStreamMultiple(
         source,
-        recipients
+        recipients,
       )) {
         encrypted.push(chunk.data);
       }
@@ -286,7 +286,7 @@ describe('Streaming Encryption', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of stream.decryptStream(
         decryptSource,
-        privateKey
+        privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -337,7 +337,7 @@ describe('Streaming Encryption', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of stream.decryptStream(
         decryptSource,
-        privateKey
+        privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -417,7 +417,7 @@ describe('Streaming Encryption', () => {
       await expect(async () => {
         for await (const _chunk of stream.decryptStream(
           decryptSource,
-          invalidKey
+          invalidKey,
         )) {
           // Should throw
         }
@@ -447,7 +447,7 @@ describe('Streaming Encryption', () => {
       await expect(async () => {
         for await (const _chunk of stream.decryptStream(
           decryptSource,
-          privateKey
+          privateKey,
         )) {
           // Should throw
         }

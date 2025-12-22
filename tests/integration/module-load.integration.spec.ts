@@ -74,7 +74,7 @@ describe('Module Load Integration', () => {
       const { member, mnemonic } = MemberBuilder.newMember(
         MemberType.User,
         'Test User',
-        new EmailString('test@example.com')
+        new EmailString('test@example.com'),
       );
 
       expect(member).toBeDefined();
@@ -121,7 +121,7 @@ describe('Module Load Integration', () => {
 
       // Verify no undefined exports
       const undefinedExports = exportNames.filter(
-        (name) => eciesLib[name] === undefined
+        (name) => eciesLib[name] === undefined,
       );
       expect(undefinedExports).toHaveLength(0);
     });

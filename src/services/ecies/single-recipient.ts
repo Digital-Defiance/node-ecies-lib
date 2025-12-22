@@ -65,7 +65,7 @@ export class EciesSingleRecipientCore {
     encryptSimple: boolean,
     receiverPublicKey: Buffer,
     message: Buffer,
-    preamble: Buffer = Buffer.alloc(0)
+    preamble: Buffer = Buffer.alloc(0),
   ): Buffer {
     // Security fix 4: Message size validation
     if (message.length === 0) {
@@ -82,7 +82,7 @@ export class EciesSingleRecipientCore {
     encryptionTypeBuffer.writeUint8(
       EciesEncryptionTypeMap[
         encryptionType as keyof typeof EciesEncryptionTypeMap
-      ] as number
+      ] as number,
     );
 
     const versionBuffer = Buffer.alloc(1);
@@ -90,7 +90,7 @@ export class EciesSingleRecipientCore {
 
     const cipherSuiteBuffer = Buffer.alloc(1);
     cipherSuiteBuffer.writeUint8(
-      EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+      EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
     );
 
     if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
@@ -102,11 +102,11 @@ export class EciesSingleRecipientCore {
         {
           error: pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize
+            NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize,
           ),
           maxLength: String(UINT32_MAX),
           messageLength: String(message.length),
-        }
+        },
       );
     }
     // Generate ephemeral ECDH key pair
@@ -125,13 +125,13 @@ export class EciesSingleRecipientCore {
       // Use cryptoCore to compute shared secret (handles compressed keys better)
       sharedSecret = this.cryptoCore.computeSharedSecret(
         ephemeralPrivateKey,
-        normalizedReceiverPublicKey
+        normalizedReceiverPublicKey,
       );
     } catch (error: unknown) {
       if (process.env.NODE_ENV !== 'test') {
         console.error(
           '[ERROR][encrypt] Failed to compute shared secret:',
-          error
+          error,
         );
       }
       if (error instanceof Error) {
@@ -146,7 +146,7 @@ export class EciesSingleRecipientCore {
             undefined,
             {
               nodeError: (error as Error & { code: string }).code,
-            }
+            },
           );
         }
         throw new ECIESError(
@@ -155,7 +155,7 @@ export class EciesSingleRecipientCore {
           undefined,
           {
             error: error.message,
-          }
+          },
         );
       }
       throw new ECIESError(ECIESErrorTypeEnum.SecretComputationFailed);
@@ -172,14 +172,14 @@ export class EciesSingleRecipientCore {
       sharedSecret,
       Buffer.alloc(0), // No salt
       Buffer.from('ecies-v2-key-derivation'), // Info
-      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
+      this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
     );
 
     // Create cipher with the derived symmetric key
     const cipher = createCipheriv(
       this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symKey,
-      iv
+      iv,
     ) as AuthenticatedCipher;
 
     // Ensure auto padding is enabled
@@ -249,7 +249,7 @@ export class EciesSingleRecipientCore {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    }
+    },
   ): { header: ISingleEncryptedParsedHeader; data: Buffer; remainder: Buffer } {
     let offset = 0;
     const preamble = data.subarray(0, preambleSize);
@@ -263,7 +263,7 @@ export class EciesSingleRecipientCore {
         ECIESErrorTypeEnum.InvalidVersion,
         undefined,
         undefined,
-        { version: String(version) }
+        { version: String(version) },
       );
     }
 
@@ -275,13 +275,13 @@ export class EciesSingleRecipientCore {
         ECIESErrorTypeEnum.InvalidCipherSuite,
         undefined,
         undefined,
-        { cipherSuite: String(cipherSuite) }
+        { cipherSuite: String(cipherSuite) },
       );
     }
 
     // read the encryption type from the first byte after the preamble and version/suite
     const actualEncryptionTypeEnum = ensureEciesEncryptionTypeEnum(
-      data.readUInt8(offset)
+      data.readUInt8(offset),
     );
     // if a type is provided, ensure it matches the actual type
     if (
@@ -295,7 +295,7 @@ export class EciesSingleRecipientCore {
         {
           expected: encryptionTypeToString(encryptionType),
           actual: encryptionTypeToString(actualEncryptionTypeEnum),
-        }
+        },
       );
     }
 
@@ -307,7 +307,7 @@ export class EciesSingleRecipientCore {
         {
           expected: 'single or simple',
           actual: encryptionTypeToString(actualEncryptionTypeEnum),
-        }
+        },
       );
     }
     const includeLengthAndCrc =
@@ -327,7 +327,7 @@ export class EciesSingleRecipientCore {
     // Extract components from the header
     const ephemeralPublicKey = data.subarray(
       offset,
-      offset + this.cryptoCore.consts.PUBLIC_KEY_LENGTH
+      offset + this.cryptoCore.consts.PUBLIC_KEY_LENGTH,
     );
     offset += this.cryptoCore.consts.PUBLIC_KEY_LENGTH;
 
@@ -340,7 +340,7 @@ export class EciesSingleRecipientCore {
 
     const authTag = data.subarray(
       offset,
-      offset + this.cryptoCore.consts.AUTH_TAG_SIZE
+      offset + this.cryptoCore.consts.AUTH_TAG_SIZE,
     );
     offset += this.cryptoCore.consts.AUTH_TAG_SIZE;
 
@@ -348,7 +348,7 @@ export class EciesSingleRecipientCore {
     const dataLengthBuffer = includeLengthAndCrc
       ? data.subarray(
           offset,
-          offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE
+          offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE,
         )
       : Buffer.alloc(0);
     if (includeLengthAndCrc) {
@@ -357,7 +357,7 @@ export class EciesSingleRecipientCore {
 
     const dataLength = includeLengthAndCrc
       ? Number(dataLengthBuffer.readBigUInt64BE(0))
-      : options?.dataLength ?? -1;
+      : (options?.dataLength ?? -1);
 
     if (
       includeLengthAndCrc &&
@@ -372,11 +372,11 @@ export class EciesSingleRecipientCore {
         {
           error: pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_EncryptedDataLengthMismatch
+            NodeEciesStringKey.Error_EncryptedDataLengthMismatch,
           ),
           expected: String(dataLength),
           actual: String(options.dataLength),
-        }
+        },
       );
     }
 
@@ -398,7 +398,7 @@ export class EciesSingleRecipientCore {
         {
           expected: String(dataLength),
           actual: String(encryptedData.length),
-        }
+        },
       );
     }
 
@@ -418,11 +418,11 @@ export class EciesSingleRecipientCore {
         {
           error: pluginEngine.translate(
             NodeEciesComponentId,
-            NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch
+            NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch,
           ),
           expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
           actual: String(normalizedKey.length),
-        }
+        },
       );
     }
 
@@ -434,7 +434,7 @@ export class EciesSingleRecipientCore {
         {
           expected: String(this.cryptoCore.consts.IV_SIZE),
           actual: String(iv.length),
-        }
+        },
       );
     }
 
@@ -446,7 +446,7 @@ export class EciesSingleRecipientCore {
         {
           expected: String(this.cryptoCore.consts.AUTH_TAG_SIZE),
           actual: String(authTag.length),
-        }
+        },
       );
     }
 
@@ -486,7 +486,7 @@ export class EciesSingleRecipientCore {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    }
+    },
   ): Buffer {
     try {
       // Call the extended version and return only the decrypted buffer for backward compatibility
@@ -495,7 +495,7 @@ export class EciesSingleRecipientCore {
         privateKey,
         encryptedData,
         preambleSize,
-        options
+        options,
       );
       return result.decrypted;
     } catch (error) {
@@ -508,7 +508,7 @@ export class EciesSingleRecipientCore {
         undefined,
         {
           error: error instanceof Error ? error.message : String(error),
-        }
+        },
       );
     }
   }
@@ -530,19 +530,19 @@ export class EciesSingleRecipientCore {
     preambleSize: number = 0,
     options?: {
       dataLength?: number;
-    }
+    },
   ): { decrypted: Buffer; consumedBytes: number } {
     try {
       const { data, header } = this.parseEncryptedMessage(
         encryptionType,
         encryptedData,
         preambleSize,
-        options
+        options,
       );
 
       // Normalize the public key (ensuring 0x04 prefix)
       const normalizedKey = this.cryptoCore.normalizePublicKey(
-        header.ephemeralPublicKey
+        header.ephemeralPublicKey,
       );
 
       // Construct AAD
@@ -551,7 +551,7 @@ export class EciesSingleRecipientCore {
 
       const cipherSuiteBuffer = Buffer.alloc(1);
       cipherSuiteBuffer.writeUint8(
-        EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+        EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
       );
 
       const encryptionTypeBuffer = Buffer.alloc(1);
@@ -572,7 +572,7 @@ export class EciesSingleRecipientCore {
         header.iv,
         header.authTag,
         data,
-        aad
+        aad,
       );
 
       return {
@@ -589,7 +589,7 @@ export class EciesSingleRecipientCore {
         undefined,
         {
           error: error instanceof Error ? error.message : String(error),
-        }
+        },
       );
     }
   }
@@ -609,7 +609,7 @@ export class EciesSingleRecipientCore {
     iv: Buffer,
     authTag: Buffer,
     encrypted: Buffer,
-    aad?: Buffer
+    aad?: Buffer,
   ): Buffer {
     try {
       // Ensure the ephemeral public key has the correct format
@@ -621,13 +621,13 @@ export class EciesSingleRecipientCore {
       try {
         sharedSecret = this.cryptoCore.computeSharedSecret(
           privateKey,
-          normalizedEphemeralKey
+          normalizedEphemeralKey,
         );
       } catch (err) {
         if (process.env.NODE_ENV !== 'test') {
           console.error(
             '[ERROR][decrypt] Failed to compute shared secret:',
-            err
+            err,
           );
         }
         throw new ECIESError(
@@ -637,7 +637,7 @@ export class EciesSingleRecipientCore {
           {
             originalError: err instanceof Error ? err.message : String(err),
             stage: 'shared_secret_computation',
-          }
+          },
         );
       }
 
@@ -646,14 +646,14 @@ export class EciesSingleRecipientCore {
         sharedSecret,
         Buffer.alloc(0), // No salt
         Buffer.from('ecies-v2-key-derivation'), // Info
-        this.cryptoCore.consts.SYMMETRIC.KEY_SIZE
+        this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
       );
 
       // Create decipher with shared secret-derived key
       const decipher = createDecipheriv(
         this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
         symKey,
-        iv
+        iv,
       ) as AuthenticatedDecipher;
 
       // Validate the tag and IV
@@ -666,7 +666,7 @@ export class EciesSingleRecipientCore {
             expected: String(this.cryptoCore.consts.AUTH_TAG_SIZE),
             actual: String(authTag.length),
             stage: 'auth_tag_validation',
-          }
+          },
         );
       }
 
@@ -679,7 +679,7 @@ export class EciesSingleRecipientCore {
             expected: String(this.cryptoCore.consts.IV_SIZE),
             actual: String(iv.length),
             stage: 'iv_validation',
-          }
+          },
         );
       }
 
@@ -698,8 +698,8 @@ export class EciesSingleRecipientCore {
           throw new Error(
             pluginEngine.translate(
               NodeEciesComponentId,
-              NodeEciesStringKey.Error_EncryptedDataIsEmpty
-            )
+              NodeEciesStringKey.Error_EncryptedDataIsEmpty,
+            ),
           );
         }
 
@@ -721,7 +721,7 @@ export class EciesSingleRecipientCore {
           {
             error: err instanceof Error ? err.message : String(err),
             stage: 'decipher_operation',
-          }
+          },
         );
       }
     } catch (error) {
@@ -741,7 +741,7 @@ export class EciesSingleRecipientCore {
           ivLength: String(iv.length),
           authTagLength: String(authTag.length),
           encryptedLength: String(encrypted.length),
-        }
+        },
       );
     }
   }

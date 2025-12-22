@@ -46,7 +46,7 @@ export class EciesSignature {
   public verifyMessage(
     publicKey: Buffer,
     data: Buffer,
-    signature: SignatureBuffer
+    signature: SignatureBuffer,
   ): boolean {
     if (signature.length !== 64) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
@@ -69,7 +69,7 @@ export class EciesSignature {
    * @returns The signature buffer.
    */
   public signatureStringToSignatureBuffer(
-    signatureString: HexString
+    signatureString: HexString,
   ): SignatureBuffer {
     return Buffer.from(signatureString, 'hex') as SignatureBuffer;
   }
@@ -80,7 +80,7 @@ export class EciesSignature {
    * @returns The signature string.
    */
   public signatureBufferToSignatureString(
-    signatureBuffer: SignatureBuffer
+    signatureBuffer: SignatureBuffer,
   ): SignatureString {
     return signatureBuffer.toString('hex') as SignatureString;
   }

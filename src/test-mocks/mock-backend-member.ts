@@ -21,7 +21,7 @@ const createMockWallet = (): Wallet =>
     getAddress: () =>
       Buffer.from(faker.string.hexadecimal({ length: 40 }), 'hex'),
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
-  } as unknown as Wallet);
+  }) as unknown as Wallet;
 
 export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   private _id: Buffer;
@@ -49,7 +49,7 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
-    }> = {}
+    }> = {},
   ) {
     this._id = data.id || randomBytes(12);
     this._type = data.type || faker.helpers.enumValue(MemberType);
@@ -120,7 +120,7 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   sign(_data: Buffer): SignatureBuffer {
     return Buffer.from(
       faker.string.hexadecimal({ length: 128 }),
-      'hex'
+      'hex',
     ) as SignatureBuffer;
   }
 
@@ -184,7 +184,7 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
-    }> = {}
+    }> = {},
   ): MockBackendMember {
     return new MockBackendMember(overrides);
   }
@@ -196,7 +196,7 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   static createWithPrivateKey(): MockBackendMember {
     return new MockBackendMember({
       privateKey: new SecureBuffer(
-        Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex')
+        Buffer.from(faker.string.hexadecimal({ length: 64 }), 'hex'),
       ),
       hasPrivateKey: true,
     });

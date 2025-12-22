@@ -24,7 +24,7 @@ describe('Backward Compatibility Integration', () => {
         const { member, mnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Alice',
-          new EmailString('alice@example.com')
+          new EmailString('alice@example.com'),
         );
 
         // Verify member was created
@@ -44,7 +44,7 @@ describe('Backward Compatibility Integration', () => {
         const { member, mnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Bob',
-          'bob@example.com'
+          'bob@example.com',
         );
 
         expect(member).toBeDefined();
@@ -61,7 +61,7 @@ describe('Backward Compatibility Integration', () => {
         const { mnemonic: originalMnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Temp',
-          'temp@example.com'
+          'temp@example.com',
         );
 
         // Create member from mnemonic using legacy method
@@ -69,7 +69,7 @@ describe('Backward Compatibility Integration', () => {
           originalMnemonic,
           MemberType.User,
           'Charlie',
-          new EmailString('charlie@example.com')
+          new EmailString('charlie@example.com'),
         );
 
         expect(member).toBeDefined();
@@ -86,13 +86,13 @@ describe('Backward Compatibility Integration', () => {
         const { mnemonic: originalMnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Temp',
-          'temp@example.com'
+          'temp@example.com',
         );
 
         // Create member with default name and email
         const member = MemberBuilder.fromMnemonic(
           originalMnemonic,
-          MemberType.User
+          MemberType.User,
         );
 
         expect(member).toBeDefined();
@@ -109,7 +109,7 @@ describe('Backward Compatibility Integration', () => {
         const { member: original, mnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'David',
-          'david@example.com'
+          'david@example.com',
         );
 
         // Serialize to JSON
@@ -181,7 +181,7 @@ describe('Backward Compatibility Integration', () => {
         const { mnemonic: existingMnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Temp',
-          'temp@example.com'
+          'temp@example.com',
         );
 
         // Use builder with existing mnemonic
@@ -316,13 +316,13 @@ describe('Backward Compatibility Integration', () => {
           MemberBuilder.newMember(
             MemberType.User,
             'Alice',
-            'alice@example.com'
+            'alice@example.com',
           );
 
         const { member: bob, mnemonic: bobMnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Bob',
-          'bob@example.com'
+          'bob@example.com',
         );
 
         // Test signing
@@ -359,7 +359,7 @@ describe('Backward Compatibility Integration', () => {
           MemberBuilder.newMember(
             MemberType.User,
             'Legacy',
-            'legacy@example.com'
+            'legacy@example.com',
           );
 
         // Create another using builder
@@ -397,7 +397,7 @@ describe('Backward Compatibility Integration', () => {
         const { member, mnemonic } = MemberBuilder.newMember(
           MemberType.User,
           'Test',
-          'test@example.com'
+          'test@example.com',
         );
 
         // Should work together
@@ -419,7 +419,7 @@ describe('Backward Compatibility Integration', () => {
         const { member: m1, mnemonic: mn1 } = MemberBuilder.newMember(
           MemberType.User,
           'User1',
-          'user1@example.com'
+          'user1@example.com',
         );
         expect(m1).toBeDefined();
 
@@ -427,7 +427,7 @@ describe('Backward Compatibility Integration', () => {
         const m2 = MemberBuilder.fromMnemonic(
           mn1,
           'User2',
-          'user2@example.com'
+          'user2@example.com',
         );
         expect(m2).toBeDefined();
 
@@ -485,7 +485,7 @@ describe('Backward Compatibility Integration', () => {
           MemberBuilder.newMember(
             MemberType.User,
             'Invalid',
-            'not-an-email' as any
+            'not-an-email' as any,
           );
         }).toThrow();
       });

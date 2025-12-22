@@ -48,7 +48,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
     const chunks: Buffer[] = [];
     for await (const chunk of nodeStream.encryptStreamMultiple(
       source,
-      recipients
+      recipients,
     )) {
       chunks.push(chunk.data);
     }
@@ -64,7 +64,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
     for await (const chunk of nodeStream.decryptStreamMultiple(
       decryptSource,
       Buffer.from(id1),
-      keyPair1.privateKey
+      keyPair1.privateKey,
     )) {
       decryptedChunks.push(chunk);
     }
@@ -81,7 +81,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
 
     const cryptoCore = new EciesCryptoCore(
       { curveName: 'secp256k1' },
-      config.ECIES
+      config.ECIES,
     );
     // Pass config.ECIES to processor
     const processor = new MultiRecipientProcessor(cryptoCore, config.ECIES);
@@ -100,7 +100,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
     const decrypted = await processor.decryptMultipleForRecipient(
       encrypted,
       Buffer.from(id),
-      Buffer.from(keyPair.privateKey)
+      Buffer.from(keyPair.privateKey),
     );
 
     expect(decrypted).toEqual(message);

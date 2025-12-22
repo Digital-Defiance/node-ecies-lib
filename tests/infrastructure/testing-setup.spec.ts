@@ -21,7 +21,7 @@ describe('Testing Infrastructure', () => {
       const packageDir = require('path').resolve(__dirname, '../..');
       const result = await checkCircularDependencies(
         'src/index.ts',
-        packageDir
+        packageDir,
       );
 
       expect(result).toBeDefined();
@@ -76,7 +76,7 @@ describe('Testing Infrastructure', () => {
       ];
 
       const forbiddenLoads = testModules.filter((mod) =>
-        ENUMERATION_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(mod))
+        ENUMERATION_FORBIDDEN_PATTERNS.some((pattern) => pattern.test(mod)),
       );
 
       expect(forbiddenLoads.length).toBe(4);

@@ -71,7 +71,7 @@ describe('Error Handling Integration Tests', () => {
       } = require('../../src/i18n/ecies-i18n-factory');
       const error = new ErrorClass(
         translate(enums.NodeEciesStringKey.Error_Member_MissingMemberName),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(error).toBeDefined();
@@ -101,7 +101,7 @@ describe('Error Handling Integration Tests', () => {
 
       // Create error
       const error = new index.NodeMemberError(
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(error).toBeDefined();
@@ -118,9 +118,9 @@ describe('Error Handling Integration Tests', () => {
       const { NodeEciesStringKey } = require('../../src/i18n/node-keys');
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(() => {
@@ -133,9 +133,9 @@ describe('Error Handling Integration Tests', () => {
     it('should access error name without circular dependency', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(error.name).toBe('NodeMemberError');
@@ -144,9 +144,9 @@ describe('Error Handling Integration Tests', () => {
     it('should access error type without circular dependency', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(error.type).toBe(MemberErrorType.MissingMemberName);
@@ -155,9 +155,9 @@ describe('Error Handling Integration Tests', () => {
     it('should access error stack without circular dependency', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(error.stack).toBeDefined();
@@ -169,9 +169,9 @@ describe('Error Handling Integration Tests', () => {
     it('should provide translated error messages after full initialization', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
       const message = error.message;
 
@@ -186,15 +186,15 @@ describe('Error Handling Integration Tests', () => {
     it('should match i18n engine translation', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
       const engine = getNodeEciesI18nEngine();
 
       const directTranslation = engine.translate(
         NodeEciesComponentId,
-        NodeEciesStringKey.Error_Member_MissingMemberName
+        NodeEciesStringKey.Error_Member_MissingMemberName,
       );
 
       // Error message should match direct translation
@@ -204,13 +204,13 @@ describe('Error Handling Integration Tests', () => {
     it('should provide different messages for different error types', () => {
       const error1 = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
       const error2 = new NodeMemberError(
         getNodeEciesTranslation(NodeEciesStringKey.Error_Member_NoWallet),
-        MemberErrorType.NoWallet
+        MemberErrorType.NoWallet,
       );
 
       expect(error1.message).not.toBe(error2.message);
@@ -242,7 +242,7 @@ describe('Error Handling Integration Tests', () => {
           eciesService,
           MemberType.User,
           '', // Empty name should trigger error
-          new EmailString('test@example.com')
+          new EmailString('test@example.com'),
         );
       }).toThrow(NodeMemberError);
     });
@@ -252,7 +252,7 @@ describe('Error Handling Integration Tests', () => {
         eciesService,
         MemberType.User,
         'Test Member',
-        new EmailString('test@example.com')
+        new EmailString('test@example.com'),
       );
 
       // Unload wallet
@@ -268,14 +268,14 @@ describe('Error Handling Integration Tests', () => {
       try {
         throw new NodeMemberError(
           getNodeEciesTranslation(
-            NodeEciesStringKey.Error_Member_MissingMemberName
+            NodeEciesStringKey.Error_Member_MissingMemberName,
           ),
-          MemberErrorType.MissingMemberName
+          MemberErrorType.MissingMemberName,
         );
       } catch (error) {
         expect(error).toBeInstanceOf(NodeMemberError);
         expect((error as NodeMemberError).type).toBe(
-          MemberErrorType.MissingMemberName
+          MemberErrorType.MissingMemberName,
         );
       }
     });
@@ -302,9 +302,9 @@ describe('Error Handling Integration Tests', () => {
     it('should not cause circular dependency when accessing error message', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       // Accessing message should not cause circular dependency
@@ -318,9 +318,9 @@ describe('Error Handling Integration Tests', () => {
     it('should handle error serialization without circular dependencies', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       expect(() => {
@@ -339,9 +339,9 @@ describe('Error Handling Integration Tests', () => {
       // Create error
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       // At this point, translation may not have been looked up yet
@@ -354,9 +354,9 @@ describe('Error Handling Integration Tests', () => {
     it('should cache translated message after first access', () => {
       const error = new NodeMemberError(
         getNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName
+          NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
-        MemberErrorType.MissingMemberName
+        MemberErrorType.MissingMemberName,
       );
 
       const message1 = error.message;
@@ -370,21 +370,21 @@ describe('Error Handling Integration Tests', () => {
       const errors = [
         new NodeMemberError(
           getNodeEciesTranslation(
-            NodeEciesStringKey.Error_Member_MissingMemberName
+            NodeEciesStringKey.Error_Member_MissingMemberName,
           ),
-          MemberErrorType.MissingMemberName
+          MemberErrorType.MissingMemberName,
         ),
         new NodeMemberError(
           getNodeEciesTranslation(
-            NodeEciesStringKey.Error_Member_MissingMemberName
+            NodeEciesStringKey.Error_Member_MissingMemberName,
           ),
-          MemberErrorType.NoWallet
+          MemberErrorType.NoWallet,
         ),
         new NodeMemberError(
           getNodeEciesTranslation(
-            NodeEciesStringKey.Error_Member_MissingMemberName
+            NodeEciesStringKey.Error_Member_MissingMemberName,
           ),
-          MemberErrorType.MissingPrivateKey
+          MemberErrorType.MissingPrivateKey,
         ),
       ];
 

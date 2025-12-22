@@ -116,7 +116,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.encryptStream(
           source,
-          Buffer.alloc(0)
+          Buffer.alloc(0),
         )) {
           // Should throw
         }
@@ -132,7 +132,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.encryptStream(
           source,
-          Buffer.alloc(32)
+          Buffer.alloc(32),
         )) {
           // Should throw
         }
@@ -148,7 +148,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.decryptStream(
           source,
-          Buffer.alloc(0)
+          Buffer.alloc(0),
         )) {
           // Should throw
         }
@@ -164,7 +164,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.decryptStream(
           source,
-          Buffer.alloc(33)
+          Buffer.alloc(33),
         )) {
           // Should throw
         }
@@ -216,7 +216,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.encryptStreamMultiple(
           source,
-          recipients
+          recipients,
         )) {
           // Should throw
         }
@@ -239,7 +239,7 @@ describe('Security Fixes - Comprehensive', () => {
       await expect(async () => {
         for await (const chunk of stream.encryptStreamMultiple(
           source,
-          recipients
+          recipients,
         )) {
           // Should throw
         }
@@ -254,7 +254,7 @@ describe('Security Fixes - Comprehensive', () => {
       const zeroKey = Buffer.alloc(65);
 
       expect(() =>
-        ecies.encryptSimpleOrSingle(false, zeroKey, message)
+        ecies.encryptSimpleOrSingle(false, zeroKey, message),
       ).toThrow();
     });
 
@@ -265,12 +265,12 @@ describe('Security Fixes - Comprehensive', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        Buffer.from('Test')
+        Buffer.from('Test'),
       );
       const zeroKey = Buffer.alloc(32);
 
       expect(() =>
-        ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted)
+        ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted),
       ).toThrow();
     });
 
@@ -312,7 +312,7 @@ describe('Security Fixes - Comprehensive', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
       expect(encrypted.length).toBeLessThan(message.length + 1024);
     });
@@ -326,12 +326,12 @@ describe('Security Fixes - Comprehensive', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = ecies.decryptSimpleOrSingleWithHeader(
         false,
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted.length).toBeGreaterThan(0);
@@ -346,7 +346,7 @@ describe('Security Fixes - Comprehensive', () => {
       const encrypted = ecies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
 
       // Truncate to invalid size
@@ -355,8 +355,8 @@ describe('Security Fixes - Comprehensive', () => {
         ecies.decryptSimpleOrSingleWithHeader(
           false,
           keyPair.privateKey,
-          truncated
-        )
+          truncated,
+        ),
       ).toThrow();
     });
 
@@ -366,7 +366,7 @@ describe('Security Fixes - Comprehensive', () => {
 
       const sharedSecret = await cryptoCore.computeSharedSecret(
         Buffer.from(keyPair.privateKey),
-        Buffer.from(keyPair.publicKey)
+        Buffer.from(keyPair.publicKey),
       );
 
       const allZeros = sharedSecret.every((byte) => byte === 0);
@@ -380,7 +380,7 @@ describe('Security Fixes - Comprehensive', () => {
 
       const tooLarge = Buffer.alloc(0x80000000);
       expect(() =>
-        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, tooLarge)
+        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, tooLarge),
       ).toThrow();
     });
 
@@ -394,8 +394,8 @@ describe('Security Fixes - Comprehensive', () => {
         ecies.decryptSimpleOrSingleWithHeader(
           false,
           keyPair.privateKey,
-          tooSmall
-        )
+          tooSmall,
+        ),
       ).toThrow();
     });
 
@@ -427,7 +427,7 @@ describe('Security Fixes - Comprehensive', () => {
       }
 
       await expect(
-        processor.encryptMultiple(recipients, message)
+        processor.encryptMultiple(recipients, message),
       ).rejects.toThrow();
     });
 
@@ -446,7 +446,7 @@ describe('Security Fixes - Comprehensive', () => {
       ];
 
       await expect(
-        processor.encryptChunk(data, recipients, -1, false, symmetricKey)
+        processor.encryptChunk(data, recipients, -1, false, symmetricKey),
       ).rejects.toThrow();
 
       await expect(
@@ -455,8 +455,8 @@ describe('Security Fixes - Comprehensive', () => {
           recipients,
           0x100000000,
           false,
-          symmetricKey
-        )
+          symmetricKey,
+        ),
       ).rejects.toThrow();
     });
 
@@ -468,7 +468,7 @@ describe('Security Fixes - Comprehensive', () => {
       const invalidKey = Buffer.alloc(100);
 
       await expect(
-        processor.decryptKey(Buffer.from(keyPair.privateKey), invalidKey)
+        processor.decryptKey(Buffer.from(keyPair.privateKey), invalidKey),
       ).rejects.toThrow();
     });
   });

@@ -24,7 +24,7 @@ export class ProgressTracker {
       const lastSample = this.recentSamples[this.recentSamples.length - 1];
       const sampleBytes = this.recentSamples.reduce(
         (sum, s) => sum + s.bytes,
-        0
+        0,
       );
       const sampleTime = (lastSample.timestamp - firstSample.timestamp) / 1000;
 

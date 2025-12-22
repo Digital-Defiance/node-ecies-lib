@@ -19,13 +19,13 @@ describe('ECIESService - Coverage Tests', () => {
       service,
       MemberType.User,
       'user1',
-      new EmailString('user1@test.com')
+      new EmailString('user1@test.com'),
     ).member;
     member2 = Member.newMember(
       service,
       MemberType.User,
       'user2',
-      new EmailString('user2@test.com')
+      new EmailString('user2@test.com'),
     ).member;
   });
 
@@ -33,7 +33,7 @@ describe('ECIESService - Coverage Tests', () => {
     it('should throw error for multiple encryption type', () => {
       const message = Buffer.from('test');
       expect(() => service.encrypt('multiple', member1, message)).toThrow(
-        Error
+        Error,
       );
     });
 
@@ -67,7 +67,7 @@ describe('ECIESService - Coverage Tests', () => {
       const encrypted = service.encryptSimpleOrSingle(
         false,
         member1.publicKey,
-        message
+        message,
       );
 
       const header = service.parseSingleEncryptedHeader(undefined, encrypted);
@@ -77,7 +77,7 @@ describe('ECIESService - Coverage Tests', () => {
       versionBuffer.writeUint8(EciesVersionEnum.V1);
       const cipherSuiteBuffer = Buffer.alloc(1);
       cipherSuiteBuffer.writeUint8(
-        EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256
+        EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256,
       );
       const encryptionTypeBuffer = Buffer.alloc(1);
       encryptionTypeBuffer.writeUint8(header.encryptionType);
@@ -96,7 +96,7 @@ describe('ECIESService - Coverage Tests', () => {
         header.iv,
         header.authTag,
         encrypted.subarray(header.headerSize),
-        aad
+        aad,
       );
 
       expect(result.decrypted).toBeDefined();

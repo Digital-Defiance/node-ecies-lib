@@ -22,7 +22,7 @@ describe('Node ECIES i18n Integration', () => {
       const engine = getNodeEciesI18nEngine();
       const result = engine.translate(
         NodeEciesComponentId,
-        NodeEciesStringKey.Error_LengthError_LengthIsInvalidType
+        NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
       );
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
@@ -35,7 +35,7 @@ describe('Node ECIES i18n Integration', () => {
         NodeEciesComponentId,
         NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
         { length: '100' },
-        LanguageCodes.EN_US
+        LanguageCodes.EN_US,
       );
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');
@@ -47,13 +47,13 @@ describe('Node ECIES i18n Integration', () => {
         NodeEciesComponentId,
         NodeEciesStringKey.Error_Member_MissingMemberName,
         undefined,
-        LanguageCodes.EN_US
+        LanguageCodes.EN_US,
       );
       const frResult = engine.translate(
         NodeEciesComponentId,
         NodeEciesStringKey.Error_Member_MissingMemberName,
         undefined,
-        LanguageCodes.FR
+        LanguageCodes.FR,
       );
       expect(enResult).toBeDefined();
       expect(frResult).toBeDefined();
@@ -82,7 +82,7 @@ describe('Node ECIES i18n Integration', () => {
           NodeEciesComponentId,
           key,
           undefined,
-          LanguageCodes.EN_US
+          LanguageCodes.EN_US,
         );
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -96,7 +96,7 @@ describe('Node ECIES i18n Integration', () => {
           NodeEciesComponentId,
           key,
           undefined,
-          LanguageCodes.FR
+          LanguageCodes.FR,
         );
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -124,7 +124,7 @@ describe('Node ECIES i18n Integration', () => {
           NodeEciesComponentId,
           NodeEciesStringKey.Error_Member_MissingMemberName,
           undefined,
-          lang
+          lang,
         );
         expect(result).toBeDefined();
         expect(typeof result).toBe('string');
@@ -140,7 +140,7 @@ describe('Node ECIES i18n Integration', () => {
         NodeEciesComponentId,
         NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
         { length: '100' },
-        LanguageCodes.EN_US
+        LanguageCodes.EN_US,
       );
       expect(result).toBeDefined();
       expect(typeof result).toBe('string');

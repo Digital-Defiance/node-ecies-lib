@@ -16,7 +16,7 @@ import type { IStreamProgress } from './stream-progress';
  * Operational interface for member - defines getters and methods
  */
 export interface IBackendMemberOperational<
-  I extends string | Types.ObjectId | Buffer | Uint8Array
+  I extends string | Types.ObjectId | Buffer | Uint8Array,
 > {
   // Required getters
   get id(): I;
@@ -50,7 +50,7 @@ export interface IBackendMemberOperational<
       recipientPublicKey?: Buffer;
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    }
+    },
   ): AsyncGenerator<IEncryptedChunk, void, unknown>;
 
   decryptDataStream(
@@ -58,7 +58,7 @@ export interface IBackendMemberOperational<
     options?: {
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    }
+    },
   ): AsyncGenerator<Buffer, void, unknown>;
 
   // Private key management
@@ -71,7 +71,6 @@ export interface IBackendMemberOperational<
 /**
  * Extended operational interface for test members
  */
-export interface ITestNodeEciesMemberOperational
-  extends IBackendMemberOperational<Types.ObjectId> {
+export interface ITestNodeEciesMemberOperational extends IBackendMemberOperational<Types.ObjectId> {
   get mnemonic(): SecureString | undefined;
 }

@@ -28,7 +28,7 @@ describe('EciesFileService (Backend)', () => {
 
     // Generate test keys
     const { wallet } = eciesService.walletAndSeedFromMnemonic(
-      eciesService.generateNewMnemonic()
+      eciesService.generateNewMnemonic(),
     );
     userPrivateKey = Buffer.from(wallet.getPrivateKey());
     recipientPublicKey = Buffer.concat([
@@ -61,7 +61,7 @@ describe('EciesFileService (Backend)', () => {
       // Encrypt file
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       expect(encrypted).toBeInstanceOf(Buffer);
       expect(encrypted.length).toBeGreaterThan(testData.length);
@@ -88,7 +88,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       expect(encrypted.length).toBeGreaterThan(testData.length);
 
@@ -107,7 +107,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       fileService.decryptFileToPath(encrypted, outputPath);
 
@@ -127,7 +127,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       fileService.decryptFileToPath(encrypted, outputPath);
 
@@ -145,7 +145,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -162,7 +162,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -179,7 +179,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
 
       // Should be able to decrypt without errors (validates header parsing)
@@ -200,7 +200,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       const decrypted = fileService.decryptFile(encrypted);
 
@@ -233,7 +233,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       const truncated = encrypted.slice(0, 50); // Truncate
 
@@ -251,7 +251,7 @@ describe('EciesFileService (Backend)', () => {
 
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
 
       expect(() => {
@@ -274,7 +274,7 @@ describe('EciesFileService (Backend)', () => {
       const startTime = Date.now();
       const encrypted = fileService.encryptFileFromPath(
         inputPath,
-        recipientPublicKey
+        recipientPublicKey,
       );
       fileService.decryptFileToPath(encrypted, outputPath);
       const endTime = Date.now();

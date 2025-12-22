@@ -23,11 +23,11 @@ describe('Recipient ID Consistency Integration Tests', () => {
       const config = Constants;
 
       expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(
-        config.idProvider.byteLength
+        config.idProvider.byteLength,
       );
       expect(config.MEMBER_ID_LENGTH).toBe(config.idProvider.byteLength);
       expect(config.ENCRYPTION.RECIPIENT_ID_SIZE).toBe(
-        config.idProvider.byteLength
+        config.idProvider.byteLength,
       );
       expect(config.idProvider.byteLength).toBe(12); // Default is ObjectID
     });
@@ -182,7 +182,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
         expect(config.MEMBER_ID_LENGTH).toBe(provider.byteLength);
         expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(
-          provider.byteLength
+          provider.byteLength,
         );
         // Note: ENCRYPTION is not part of runtime config
 

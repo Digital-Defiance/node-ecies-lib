@@ -40,12 +40,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         true, // simple mode
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -59,7 +59,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
 
       // Verify encrypted format structure
@@ -69,7 +69,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         true, // simple mode
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
       expect(decrypted).toEqual(message);
     });
@@ -84,12 +84,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         false, // single mode
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         false, // single mode
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -103,12 +103,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         false, // single mode
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         false, // single mode
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -124,8 +124,8 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
             nodeEcies,
             MemberType.User,
             `Test User ${i}`,
-            new EmailString(`user${i}@test.com`)
-          ).member
+            new EmailString(`user${i}@test.com`),
+          ).member,
       );
 
       const message = Buffer.from([1, 2, 3, 4, 5]);
@@ -136,7 +136,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       for (const member of members) {
         const decrypted = nodeEcies.decryptMultipleECIEForRecipient(
           encrypted,
-          member
+          member,
         );
         expect(decrypted).toEqual(message);
       }
@@ -150,8 +150,8 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
             nodeEcies,
             MemberType.User,
             `Test User ${i}`,
-            new EmailString(`user${i}@test.com`)
-          ).member
+            new EmailString(`user${i}@test.com`),
+          ).member,
       );
 
       const message = Buffer.from([1, 2, 3, 4, 5]);
@@ -162,7 +162,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       for (const member of members) {
         const decrypted = nodeEcies.decryptMultipleECIEForRecipient(
           encrypted,
-          member
+          member,
         );
         expect(decrypted).toEqual(message);
       }
@@ -178,12 +178,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted1 = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
       const encrypted2 = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
 
       // Encrypted data should have consistent structure (but different due to randomness)
@@ -202,12 +202,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
         const encrypted = nodeEcies.encryptSimpleOrSingle(
           true, // simple mode
           keyPair.publicKey,
-          message
+          message,
         );
         const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
           true, // simple mode
           keyPair.privateKey,
-          encrypted
+          encrypted,
         );
         expect(decrypted).toEqual(message);
       }
@@ -250,8 +250,8 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
         nodeEcies.decryptSimpleOrSingleWithHeader(
           true, // simple mode
           keyPair.privateKey,
-          invalidData
-        )
+          invalidData,
+        ),
       ).toThrow();
     });
 
@@ -265,15 +265,15 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair1.publicKey,
-        message
+        message,
       );
 
       expect(() =>
         nodeEcies.decryptSimpleOrSingleWithHeader(
           true, // simple mode
           keyPair2.privateKey,
-          encrypted
-        )
+          encrypted,
+        ),
       ).toThrow();
     });
   });
@@ -289,7 +289,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
 
       // Store encrypted data (simulating older version)
@@ -299,7 +299,7 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         true, // simple mode
         keyPair.privateKey,
-        storedEncrypted
+        storedEncrypted,
       );
       expect(decrypted).toEqual(message);
     });
@@ -320,12 +320,12 @@ describe('Binary Compatibility: ecies-lib ↔ node-ecies-lib', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         true, // simple mode
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         true, // simple mode
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);

@@ -39,19 +39,19 @@ describe('ECIESService', () => {
       eciesService,
       MemberType.User,
       'sender',
-      new EmailString('sender@example.com')
+      new EmailString('sender@example.com'),
     ).member;
     recipient1 = BackendMember.newMember(
       eciesService,
       MemberType.User,
       'recipient1',
-      new EmailString('recipient1@example.com')
+      new EmailString('recipient1@example.com'),
     ).member;
     recipient2 = BackendMember.newMember(
       eciesService,
       MemberType.User,
       'recipient2',
-      new EmailString('recipient2@example.com')
+      new EmailString('recipient2@example.com'),
     ).member;
   });
 
@@ -65,7 +65,7 @@ describe('ECIESService', () => {
 
     it('should throw error for invalid mnemonic', () => {
       expect(() =>
-        service.walletAndSeedFromMnemonic(new SecureString('invalid mnemonic'))
+        service.walletAndSeedFromMnemonic(new SecureString('invalid mnemonic')),
       ).toThrow(ECIESError);
     });
 
@@ -88,12 +88,12 @@ describe('ECIESService', () => {
       const encrypted = service.encryptSimpleOrSingle(
         true, // simple mode
         recipient1.publicKey,
-        message
+        message,
       );
       const decrypted = service.decryptSimpleOrSingleWithHeader(
         true, // simple mode
         Buffer.from(recipient1.privateKey.value),
-        encrypted
+        encrypted,
       );
       expect(decrypted).toEqual(message);
     });
@@ -103,17 +103,17 @@ describe('ECIESService', () => {
         throw new Error('Recipient private key is undefined');
       }
       const message = Buffer.from(
-        'test message with more data for single mode'
+        'test message with more data for single mode',
       );
       const encrypted = service.encryptSimpleOrSingle(
         false, // single mode
         recipient1.publicKey,
-        message
+        message,
       );
       const decrypted = service.decryptSimpleOrSingleWithHeader(
         false, // single mode
         Buffer.from(recipient1.privateKey.value),
-        encrypted
+        encrypted,
       );
       expect(decrypted).toEqual(message);
     });
@@ -127,12 +127,12 @@ describe('ECIESService', () => {
       recipients.forEach((member) => {
         if (!member.privateKey) {
           throw new Error(
-            'Recipient private key is undefined for decryption test'
+            'Recipient private key is undefined for decryption test',
           );
         }
         const decrypted = service.decryptMultipleECIEForRecipient(
           encrypted,
-          member
+          member,
         );
         expect(decrypted).toEqual(message);
       });
@@ -140,17 +140,17 @@ describe('ECIESService', () => {
 
     it('should correctly serialize, parse, and decrypt a multi-recipient message', async () => {
       const message = Buffer.from(
-        'This is a test of the full multi-recipient lifecycle'
+        'This is a test of the full multi-recipient lifecycle',
       );
       const recipients = [recipient1, recipient2];
 
       // 1. Encrypt the message for multiple recipients to get the object representation
       const encryptedObject = await service.encryptMultiple(
         recipients,
-        message
+        message,
       );
       expect(encryptedObject.recipientKeys[0].length).toBe(
-        ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE
+        ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );
 
       // 2. Serialize the object into a single buffer
@@ -175,11 +175,11 @@ describe('ECIESService', () => {
 
       const decryptedForRecipient1 = service.decryptMultipleECIEForRecipient(
         parsedObject,
-        recipient1
+        recipient1,
       );
       const decryptedForRecipient2 = service.decryptMultipleECIEForRecipient(
         parsedObject,
-        recipient2
+        recipient2,
       );
 
       expect(decryptedForRecipient1).toEqual(message);
@@ -191,7 +191,7 @@ describe('ECIESService', () => {
         const message = Buffer.from('test message');
         const invalidPublicKey = randomBytes(ECIES.RAW_PUBLIC_KEY_LENGTH); // Wrong length
         expect(() =>
-          service.encryptSimpleOrSingle(true, invalidPublicKey, message)
+          service.encryptSimpleOrSingle(true, invalidPublicKey, message),
         ).toThrow(ECIESError);
         expect(spies.error).toHaveBeenCalledTimes(1);
       });
@@ -201,7 +201,7 @@ describe('ECIESService', () => {
       const message = Buffer.from('test message');
       const tooManyRecipients = Array(70000).fill(recipient1); // More than uint16 max
       expect(() => service.encryptMultiple(tooManyRecipients, message)).toThrow(
-        ECIESError
+        ECIESError,
       );
     });
   });
@@ -214,12 +214,12 @@ describe('ECIESService', () => {
       const message = Buffer.from('test message');
       const signature = service.signMessage(
         Buffer.from(sender.privateKey.value),
-        message
+        message,
       );
       const isValid = service.verifyMessage(
         sender.publicKey,
         message,
-        signature
+        signature,
       );
       expect(isValid).toBe(true);
     });
@@ -232,12 +232,12 @@ describe('ECIESService', () => {
       const differentMessage = Buffer.from('different message');
       const invalidSignature = service.signMessage(
         Buffer.from(sender.privateKey.value),
-        differentMessage
+        differentMessage,
       );
       const isValid = service.verifyMessage(
         sender.publicKey,
         message,
-        invalidSignature
+        invalidSignature,
       );
       expect(isValid).toBe(false);
     });
@@ -249,7 +249,7 @@ describe('ECIESService', () => {
       const message = Buffer.from('test message');
       const signature = service.signMessage(
         Buffer.from(sender.privateKey.value),
-        message
+        message,
       );
       const signatureString =
         service.signatureBufferToSignatureString(signature);
@@ -264,7 +264,7 @@ describe('ECIESService', () => {
       const dataLength = 1000;
       const result = service.computeEncryptedLengthFromDataLength(
         dataLength,
-        'single'
+        'single',
       );
       expect(result).toBe(dataLength + ECIES.SINGLE.FIXED_OVERHEAD_SIZE);
     });
@@ -277,7 +277,7 @@ describe('ECIESService', () => {
       const decryptedLength =
         service.computeDecryptedLengthFromEncryptedDataLength(
           encryptedLength,
-          padding
+          padding,
         );
 
       expect(decryptedLength).toBe(encryptedLength - overhead - padding);
@@ -285,7 +285,7 @@ describe('ECIESService', () => {
 
     it('should throw error for invalid encrypted data length', () => {
       expect(() =>
-        service.computeDecryptedLengthFromEncryptedDataLength(123, 4096)
+        service.computeDecryptedLengthFromEncryptedDataLength(123, 4096),
       ).toThrow(ECIESError);
     });
   });
@@ -295,25 +295,25 @@ describe('ECIESService', () => {
       const recipientsCount = 5;
       const overhead = service.calculateECIESMultipleRecipientOverhead(
         recipientsCount,
-        false // includeMessageOverhead = false
+        false, // includeMessageOverhead = false
       );
       expect(overhead).toBe(
         ECIES.MULTIPLE.DATA_LENGTH_SIZE +
           ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
           recipientsCount * NodeConstants.OBJECT_ID_LENGTH +
-          recipientsCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE
+          recipientsCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );
     });
 
     it('should build ECIES multiple recipient header correctly', () => {
       const recipientIds = [sender.id, recipient1.id];
       const recipientKeys = recipientIds.map(() =>
-        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE)
+        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE),
       );
       const dataLength = 1000;
       const headerSize = service.calculateECIESMultipleRecipientOverhead(
         recipientIds.length,
-        false
+        false,
       );
 
       const header = service.buildECIESMultipleRecipientHeader({
@@ -328,7 +328,7 @@ describe('ECIESService', () => {
       const expectedHeaderLength =
         service.calculateECIESMultipleRecipientOverhead(
           recipientIds.length,
-          false
+          false,
         );
 
       expect(header.length).toBe(expectedHeaderLength);
@@ -337,12 +337,12 @@ describe('ECIESService', () => {
     it('should parse multi-encrypted header correctly', () => {
       const recipientIds = [sender.id, recipient1.id];
       const recipientKeys = recipientIds.map(() =>
-        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE)
+        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE),
       );
       const dataLength = 1000;
       const headerSize = service.calculateECIESMultipleRecipientOverhead(
         recipientIds.length,
-        false
+        false,
       );
 
       const header = service.buildECIESMultipleRecipientHeader({
@@ -375,7 +375,7 @@ describe('ECIESService', () => {
         ECIESError,
         (error: ECIESError) => {
           expect(error.type).toBe(ECIESErrorTypeEnum.InvalidDataLength);
-        }
+        },
       );
     });
 
@@ -384,7 +384,7 @@ describe('ECIESService', () => {
       const invalidRecipientCount = 0; // Invalid: must be > 0
 
       const minimalHeaderBuffer = Buffer.alloc(
-        ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
+        ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE,
       );
       let offset = 0;
 
@@ -394,7 +394,7 @@ describe('ECIESService', () => {
       minimalHeaderBuffer.writeUInt16BE(invalidRecipientCount, offset);
 
       expect(() =>
-        service.parseMultiEncryptedHeader(minimalHeaderBuffer)
+        service.parseMultiEncryptedHeader(minimalHeaderBuffer),
       ).toThrowType(ECIESError, (error: ECIESError) => {
         expect(error.type).toBe(ECIESErrorTypeEnum.InvalidRecipientCount);
       });

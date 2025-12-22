@@ -25,7 +25,7 @@ describe('Constants Validation', () => {
 
       // Verify the checksum validation that happens during module init
       expect(CHECKSUM.SHA3_BUFFER_LENGTH).toBe(
-        CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8
+        CHECKSUM.SHA3_DEFAULT_HASH_BITS / 8,
       );
     });
 

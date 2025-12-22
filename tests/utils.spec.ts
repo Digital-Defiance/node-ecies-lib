@@ -33,7 +33,7 @@ describe('utils', () => {
   describe('decodeLengthEncodedData', () => {
     it('should throw on empty buffer', () => {
       expect(() => decodeLengthEncodedData(Buffer.alloc(0))).toThrow(
-        RangeError
+        RangeError,
       );
     });
 

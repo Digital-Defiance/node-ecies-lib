@@ -23,12 +23,12 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
       const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
         false,
         keyPair.privateKey,
-        encrypted
+        encrypted,
       );
 
       expect(decrypted).toEqual(message);
@@ -42,7 +42,7 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted = nodeEcies.encryptSimpleOrSingle(
         false,
         keyPair.publicKey,
-        message
+        message,
       );
 
       // Verify structure: version(1) + suite(1) + type(1) + pubkey(33) + iv(12) + tag(16) + length(8) + data
@@ -66,7 +66,7 @@ describe('Cross-Platform Compatibility', () => {
       const chunks: Buffer[] = [];
       for await (const chunk of nodeStream.encryptStream(
         source,
-        keyPair.publicKey
+        keyPair.publicKey,
       )) {
         chunks.push(chunk.data);
 
@@ -103,7 +103,7 @@ describe('Cross-Platform Compatibility', () => {
       for await (const chunk of nodeStream.encryptStream(
         source,
         keyPair.publicKey,
-        { chunkSize: 1024 }
+        { chunkSize: 1024 },
       )) {
         // Read as big-endian (network byte order)
         const indexBE = chunk.data.readUInt32BE(0);
@@ -125,7 +125,7 @@ describe('Cross-Platform Compatibility', () => {
       for await (const chunk of nodeStream.encryptStream(
         source,
         keyPair.publicKey,
-        { chunkSize: 10 }
+        { chunkSize: 10 },
       )) {
         chunks.push(chunk.data);
       }
@@ -152,7 +152,7 @@ describe('Cross-Platform Compatibility', () => {
 
       for await (const chunk of nodeStream.encryptStream(
         source,
-        keyPair.publicKey
+        keyPair.publicKey,
       )) {
         // Verify Buffer can be converted to Uint8Array (browser format)
         const uint8Array = new Uint8Array(chunk.data);
@@ -176,7 +176,7 @@ describe('Cross-Platform Compatibility', () => {
       const encrypted: Buffer[] = [];
       for await (const chunk of nodeStream.encryptStream(
         encryptSource,
-        keyPair.publicKey
+        keyPair.publicKey,
       )) {
         encrypted.push(chunk.data);
       }
@@ -190,7 +190,7 @@ describe('Cross-Platform Compatibility', () => {
       const decrypted: Buffer[] = [];
       for await (const chunk of nodeStream.decryptStream(
         decryptSource,
-        keyPair.privateKey
+        keyPair.privateKey,
       )) {
         decrypted.push(chunk);
       }
@@ -242,7 +242,7 @@ describe('Cross-Platform Compatibility', () => {
 
       for await (const chunk of nodeStream.encryptStreamMultiple(
         source,
-        recipients
+        recipients,
       )) {
         // Verify chunk data is Buffer/Uint8Array compatible
         expect(chunk.data).toBeInstanceOf(Buffer);

@@ -18,7 +18,7 @@ import type { IStreamProgress } from './stream-progress';
  * referencing concrete class implementations.
  */
 export interface IMember<
-  TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer
+  TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer,
 > {
   // Required properties
   readonly id: TID;
@@ -57,7 +57,7 @@ export interface IMember<
       recipientPublicKey?: Buffer;
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    }
+    },
   ): AsyncGenerator<IEncryptedChunk, void, unknown>;
 
   decryptDataStream(
@@ -65,7 +65,7 @@ export interface IMember<
     options?: {
       onProgress?: (progress: IStreamProgress) => void;
       signal?: AbortSignal;
-    }
+    },
   ): AsyncGenerator<Buffer, void, unknown>;
 
   encryptData(data: string | Buffer, recipientPublicKey?: Buffer): Buffer;

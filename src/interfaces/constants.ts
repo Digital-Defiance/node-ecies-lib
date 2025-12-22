@@ -22,8 +22,10 @@ import type { IWrappedKeyConsts } from './wrapped-key-consts';
  * - ECIES: IECIESConstants
  * - And other base constants...
  */
-export interface IConstants
-  extends Omit<IBaseConstants, 'PBKDF2_PROFILES' | 'CHECKSUM'> {
+export interface IConstants extends Omit<
+  IBaseConstants,
+  'PBKDF2_PROFILES' | 'CHECKSUM'
+> {
   /**
    * PBKDF2 configuration profiles (Node.js-specific)
    * Overrides base profiles with Node crypto implementations

@@ -23,7 +23,7 @@ interface IInvariant {
 abstract class BaseInvariant implements IInvariant {
   constructor(
     public readonly name: string,
-    public readonly description: string
+    public readonly description: string,
   ) {}
 
   abstract check(config: IConstants): boolean;
@@ -48,7 +48,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
   constructor() {
     super(
       'NodeRecipientIdConsistency',
-      'All recipient ID size configurations must match the ID provider byte length (including Node-specific ENCRYPTION constant)'
+      'All recipient ID size configurations must match the ID provider byte length (including Node-specific ENCRYPTION constant)',
     );
   }
 
@@ -78,8 +78,8 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
           {
             actual: config.MEMBER_ID_LENGTH,
             expected: config.idProvider.byteLength,
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -92,8 +92,8 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
           {
             actual: config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
             expected: config.idProvider.byteLength,
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -107,8 +107,8 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
             {
               actual: config.ENCRYPTION.RECIPIENT_ID_SIZE,
               expected: config.idProvider.byteLength,
-            }
-          )
+            },
+          ),
         );
       }
     }
@@ -117,7 +117,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
       NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate,
       {
         issues: issues.join('\n  '),
-      }
+      },
     );
   }
 }
