@@ -384,18 +384,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:4.4.19":
-  version: 4.4.19
-  resolution: "@digitaldefiance/ecies-lib@npm:4.4.19"
+"@digitaldefiance/ecies-lib@npm:4.5.0":
+  version: 4.5.0
+  resolution: "@digitaldefiance/ecies-lib@npm:4.5.0"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:3.8.11"
+    "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
     "@scure/bip32": "npm:^2.0.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/4f4102892da9e7738e24e04eb1eb0264f2efe529c437f00855d43558612b743c0071f053893d5c9d200b929580a04dfd399a10ad707d5f41462732bb1842b262
+  peerDependencies:
+    paillier-bigint: ^3.4.1
+  peerDependenciesMeta:
+    paillier-bigint:
+      optional: true
+  checksum: 10c0/28cdc77fe510122d44c983646a759986da95ca902c12375935f090a64ccb825733f0c556ddecf04323d3a333b926acaee64f932fe1caf09d4b310d2b2818d4be
   languageName: node
   linkType: hard
 
@@ -413,14 +418,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:3.8.11":
-  version: 3.8.11
-  resolution: "@digitaldefiance/i18n-lib@npm:3.8.11"
+"@digitaldefiance/i18n-lib@npm:3.8.16":
+  version: 3.8.16
+  resolution: "@digitaldefiance/i18n-lib@npm:3.8.16"
   dependencies:
     currency-codes: "npm:^2.2.0"
+    lru-cache: "npm:^5.1.1"
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/984f69d7be7a94d1b762d0fc4199ad159fca917be7ebe11355d7653cc4d55f1baf930263efffa96ee67c3cd0934a614d8a233494f9661bf75d09a44616fb42a6
+  checksum: 10c0/21288d1fa56bb75cf71b234705c9f3ba0fba1e5a5a8511b1e669dac4960ff92b95bbf3a57e57aa3b6c2061cc5629207843e058efb1474a99ed8b222c6df6202a
   languageName: node
   linkType: hard
 
@@ -428,9 +434,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:4.4.19"
+    "@digitaldefiance/ecies-lib": "npm:4.5.0"
     "@digitaldefiance/express-suite-test-utils": "npm:1.0.12"
-    "@digitaldefiance/i18n-lib": "npm:3.8.11"
+    "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^2.0.1"
@@ -444,6 +450,11 @@ __metadata:
     fast-check: "npm:^4.3.0"
     madge: "npm:^8.0.0"
     ts-brand: "npm:^0.2.0"
+  peerDependencies:
+    paillier-bigint: ^3.4.1
+  peerDependenciesMeta:
+    paillier-bigint:
+      optional: true
   languageName: unknown
   linkType: soft
 

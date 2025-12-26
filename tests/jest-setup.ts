@@ -9,6 +9,12 @@ import { jest } from '@jest/globals';
 // @ts-ignore
 global.jest = jest;
 
+// Add BigInt serialization support for Jest
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 // Mock BigInt constants that @ethereumjs/util expects
 const mockConstants = {
   n: BigInt(

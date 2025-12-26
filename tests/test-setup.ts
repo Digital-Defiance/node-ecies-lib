@@ -6,6 +6,12 @@ import { I18nEngine, resetCoreI18nEngine } from '@digitaldefiance/i18n-lib';
 
 import { resetNodeEciesI18nEngine } from '../src/i18n/node-ecies-i18n-setup';
 
+// Add BigInt serialization support for Jest (must be before any test code runs)
+// @ts-ignore
+BigInt.prototype.toJSON = function () {
+  return this.toString();
+};
+
 // Extend expect with custom matchers
 expect.extend({ toThrowType });
 

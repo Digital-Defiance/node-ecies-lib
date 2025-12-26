@@ -6,6 +6,7 @@ import type {
 } from '@digitaldefiance/ecies-lib';
 import type { Types } from '@digitaldefiance/mongoose-types';
 import type { Wallet } from '@ethereumjs/wallet';
+import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import type { SignatureBuffer } from '../types';
 
@@ -34,8 +35,13 @@ export interface IMember<
   readonly privateKey: SecureBuffer | undefined;
   readonly wallet: Wallet;
 
+  // Optional voting keys (for homomorphic encryption voting systems)
+  readonly votingPublicKey?: PublicKey;
+  readonly votingPrivateKey?: PrivateKey;
+
   // State properties
   readonly hasPrivateKey: boolean;
+  readonly hasVotingPrivateKey: boolean;
 
   // Key management methods
   unloadPrivateKey(): void;
@@ -43,6 +49,11 @@ export interface IMember<
   unloadWalletAndPrivateKey(): void;
   loadWallet(mnemonic: SecureString): void;
   loadPrivateKey(privateKey: SecureBuffer): void;
+  
+  // Voting key management methods (optional, for systems that need voting)
+  loadVotingKeys?(votingPublicKey: PublicKey, votingPrivateKey?: PrivateKey): void;
+  deriveVotingKeys?(options?: import('../services/voting.service').DeriveVotingKeysOptions): void;
+  unloadVotingPrivateKey?(): void;
 
   // Cryptographic methods
   sign(data: Buffer): SignatureBuffer;

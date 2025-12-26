@@ -19,3 +19,7 @@ export { EncryptionStream } from './services/encryption-stream';
 export { MultiRecipientProcessor } from './services/multi-recipient-processor';
 export { Pbkdf2Service } from './services/pbkdf2';
 export { ProgressTracker } from './services/progress-tracker';
+export * from './services/voting.service';
+
+// Re-export Paillier types for voting functionality (optional peer dependency)
+export type { PrivateKey, PublicKey, KeyPair as PaillierKeyPair } from 'paillier-bigint';

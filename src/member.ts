@@ -9,6 +9,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Types } from '@digitaldefiance/mongoose-types';
 import { Wallet } from '@ethereumjs/wallet';
+import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { Constants } from './constants';
 import {
@@ -55,6 +56,10 @@ export class Member<
   private readonly _dateUpdated: Date;
   private _privateKey?: SecureBuffer;
   private _wallet?: Wallet;
+
+  // Optional voting keys for homomorphic encryption voting systems
+  private _votingPublicKey?: PublicKey;
+  private _votingPrivateKey?: PrivateKey;
 
   constructor(
     // Add injected services as parameters
@@ -154,6 +159,66 @@ export class Member<
   // State getters
   public get hasPrivateKey(): boolean {
     return this._privateKey !== undefined;
+  }
+
+  public get votingPublicKey(): PublicKey | undefined {
+    return this._votingPublicKey;
+  }
+
+  public get votingPrivateKey(): PrivateKey | undefined {
+    return this._votingPrivateKey;
+  }
+
+  public get hasVotingPrivateKey(): boolean {
+    return this._votingPrivateKey !== undefined;
+  }
+
+  public loadVotingKeys(
+    votingPublicKey: PublicKey,
+    votingPrivateKey?: PrivateKey,
+  ): void {
+    this._votingPublicKey = votingPublicKey;
+    if (votingPrivateKey) {
+      this._votingPrivateKey = votingPrivateKey;
+    }
+  }
+
+  public unloadVotingPrivateKey(): void {
+    this._votingPrivateKey = undefined;
+  }
+
+  /**
+   * Derive Paillier voting keys from this member's ECDH keys.
+   * This bridges ECDSA/ECDH cryptography to homomorphic encryption for voting.
+   *
+   * @param options - Configuration options for key derivation
+   * @throws Error if private key is not loaded or paillier-bigint is not installed
+   */
+  public deriveVotingKeys(
+    options?: import('./services/voting.service').DeriveVotingKeysOptions,
+  ): void {
+    if (!this._privateKey) {
+      throw new NodeMemberError(
+        getNodeEciesTranslation(
+          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+        ),
+        MemberErrorType.MissingPrivateKey,
+      );
+    }
+
+    // Import deriveVotingKeysFromECDH from voting service
+    const { deriveVotingKeysFromECDH } = require('./services/voting.service');
+
+    // Derive keys using ECDH bridge
+    const keyPair = deriveVotingKeysFromECDH(
+      toUint8Array(this._privateKey.value),
+      toUint8Array(this._publicKey),
+      options,
+    );
+
+    // Load the derived keys
+    this._votingPublicKey = keyPair.publicKey;
+    this._votingPrivateKey = keyPair.privateKey;
   }
 
   public unloadPrivateKey(): void {
