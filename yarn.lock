@@ -384,15 +384,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:4.5.0":
-  version: 4.5.0
-  resolution: "@digitaldefiance/ecies-lib@npm:4.5.0"
+"@digitaldefiance/ecies-lib@npm:4.5.16":
+  version: 4.5.16
+  resolution: "@digitaldefiance/ecies-lib@npm:4.5.16"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
-    "@noble/curves": "npm:^2.0.1"
-    "@noble/hashes": "npm:^2.0.1"
-    "@scure/bip32": "npm:^2.0.0"
+    "@noble/curves": "npm:1.9.0"
+    "@noble/hashes": "npm:1.8.0"
+    "@scure/bip32": "npm:1.7.0"
     bson: "npm:^6.10.4"
     ts-brand: "npm:^0.2.0"
   peerDependencies:
@@ -400,7 +400,7 @@ __metadata:
   peerDependenciesMeta:
     paillier-bigint:
       optional: true
-  checksum: 10c0/28cdc77fe510122d44c983646a759986da95ca902c12375935f090a64ccb825733f0c556ddecf04323d3a333b926acaee64f932fe1caf09d4b310d2b2818d4be
+  checksum: 10c0/d28ca15e7752261afaaf5b6475f9f91f9707d43484fc518bda5bb6535db12610a37b77000a8300faee3c4f21a94f9904f90da5db20d52974b6a16fac3af4b02f
   languageName: node
   linkType: hard
 
@@ -434,7 +434,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:4.5.0"
+    "@digitaldefiance/ecies-lib": "npm:4.5.16"
     "@digitaldefiance/express-suite-test-utils": "npm:1.0.12"
     "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
@@ -762,35 +762,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:2.0.1, @noble/curves@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@noble/curves@npm:2.0.1"
-  dependencies:
-    "@noble/hashes": "npm:2.0.1"
-  checksum: 10c0/e0b329eb9229e862d3b7203e0444bd479e9ecf2d5990181908dad416aab69106717ca696fc7b12ad0eb19d710f58c454646b27ce517a4298ab9abc89a9bdb6ee
-  languageName: node
-  linkType: hard
-
-"@noble/curves@npm:~1.9.0":
-  version: 1.9.7
-  resolution: "@noble/curves@npm:1.9.7"
-  dependencies:
-    "@noble/hashes": "npm:1.8.0"
-  checksum: 10c0/150014751ebe8ca06a8654ca2525108452ea9ee0be23430332769f06808cddabfe84f248b6dbf836916bc869c27c2092957eec62c7506d68a1ed0a624017c2a3
-  languageName: node
-  linkType: hard
-
-"@noble/hashes@npm:1.8.0, @noble/hashes@npm:~1.8.0":
+"@noble/hashes@npm:1.8.0":
   version: 1.8.0
   resolution: "@noble/hashes@npm:1.8.0"
   checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
-  languageName: node
-  linkType: hard
-
-"@noble/hashes@npm:2.0.1, @noble/hashes@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "@noble/hashes@npm:2.0.1"
-  checksum: 10c0/e81769ce21c3b1c80141a3b99bd001f17edea09879aa936692ae39525477386d696101cd573928a304806efb2b9fa751e1dd83241c67d0c84d30091e85c79bdb
   languageName: node
   linkType: hard
 

@@ -5,3 +5,4 @@ export * from './encryption-stream';
 export * from './multi-recipient-processor';
 export * from './pbkdf2';
 export * from './progress-tracker';
+export { VotingService } from './voting.service';

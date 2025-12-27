@@ -29,11 +29,12 @@ export class EciesSignature {
    */
   public signMessage(privateKey: Buffer, data: Buffer): SignatureBuffer {
     const hash = sha256(data);
+    // In v1.9.x, sign() returns a Signature object
     const signature = secp256k1.sign(hash, privateKey, {
-      format: 'compact',
       extraEntropy: false,
     });
-    return Buffer.from(signature) as SignatureBuffer;
+    // Get compact format (64 bytes: r || s)
+    return Buffer.from(signature.toCompactRawBytes()) as SignatureBuffer;
   }
 
   /**

@@ -194,9 +194,9 @@ export class Member<
    * @param options - Configuration options for key derivation
    * @throws Error if private key is not loaded or paillier-bigint is not installed
    */
-  public deriveVotingKeys(
+  public async deriveVotingKeys(
     options?: import('./services/voting.service').DeriveVotingKeysOptions,
-  ): void {
+  ): Promise<void> {
     if (!this._privateKey) {
       throw new NodeMemberError(
         getNodeEciesTranslation(

@@ -10,7 +10,12 @@
  * - State management and lifecycle
  */
 
-import { EmailString, MemberType, SecureBuffer, SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  MemberType,
+  SecureBuffer,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
 import type { Wallet } from '@ethereumjs/wallet';
 import { PrivateKey, PublicKey } from 'paillier-bigint';
 
@@ -163,9 +168,9 @@ describe('Member', () => {
 
     it('should unload wallet', () => {
       expect(member.hasPrivateKey).toBe(true);
-      
+
       member.unloadWallet();
-      
+
       // Wallet getter throws if undefined
       expect(() => member.wallet).toThrow();
     });
@@ -174,7 +179,7 @@ describe('Member', () => {
       member.unloadWalletAndPrivateKey();
       expect(member.hasPrivateKey).toBe(false);
       expect(member.privateKey).toBeUndefined();
-      
+
       // Wallet getter throws if undefined
       expect(() => member.wallet).toThrow();
       expect(member.publicKey).toBeDefined(); // Public key should remain
@@ -359,9 +364,12 @@ describe('Member', () => {
 
       // Collect encrypted chunks
       const encryptedChunks: Buffer[] = [];
-      for await (const encryptedChunk of alice.encryptDataStream(sourceGenerator(), {
-        recipientPublicKey: alice.publicKey,
-      })) {
+      for await (const encryptedChunk of alice.encryptDataStream(
+        sourceGenerator(),
+        {
+          recipientPublicKey: alice.publicKey,
+        },
+      )) {
         encryptedChunks.push(encryptedChunk.data);
       }
 
@@ -375,7 +383,9 @@ describe('Member', () => {
       }
 
       const decryptedChunks: Buffer[] = [];
-      for await (const decryptedChunk of alice.decryptDataStream(encryptedGenerator())) {
+      for await (const decryptedChunk of alice.decryptDataStream(
+        encryptedGenerator(),
+      )) {
         decryptedChunks.push(decryptedChunk);
       }
 
@@ -385,7 +395,10 @@ describe('Member', () => {
     });
 
     it('should support progress callback for encryption', async () => {
-      const chunks = [Buffer.from('A'.repeat(1000)), Buffer.from('B'.repeat(1000))];
+      const chunks = [
+        Buffer.from('A'.repeat(1000)),
+        Buffer.from('B'.repeat(1000)),
+      ];
       let progressCallCount = 0;
 
       async function* sourceGenerator() {
@@ -460,43 +473,46 @@ describe('Member', () => {
       expect(member.hasVotingPrivateKey).toBe(false);
     });
 
-    it('should derive voting keys from ECDH', () => {
+    it('should derive voting keys from ECDH', async () => {
       // TODO: Fix public key format issue - Member uses compressed keys,
       // voting bridge expects uncompressed
       // Use smaller key size for speed in tests
-      member.deriveVotingKeys({ keypairBitLength: 2048, primeTestIterations: 64 });
+      await member.deriveVotingKeys({
+        keypairBitLength: 2048,
+        primeTestIterations: 64,
+      });
 
       expect(member.votingPublicKey).toBeDefined();
       expect(member.votingPrivateKey).toBeDefined();
       expect(member.hasVotingPrivateKey).toBe(true);
     });
 
-    it('should derive consistent voting keys from same ECDH keys', () => {
+    it('should derive consistent voting keys from same ECDH keys', async () => {
       // Use smaller key size for speed in tests
       const options = { keypairBitLength: 2048, primeTestIterations: 64 };
-      member.deriveVotingKeys(options);
+      await member.deriveVotingKeys(options);
       const publicKey1 = member.votingPublicKey;
       const privateKey1 = member.votingPrivateKey;
 
       // Unload and derive again
       member.unloadVotingPrivateKey();
-      member.deriveVotingKeys(options);
+      await member.deriveVotingKeys(options);
       const publicKey2 = member.votingPublicKey;
       const privateKey2 = member.votingPrivateKey;
 
       // Compare using serialization since direct comparison may fail
-      expect(votingService.serializePublicKey(publicKey1!))
-        .toEqual(votingService.serializePublicKey(publicKey2!));
-      expect(votingService.serializePrivateKey(privateKey1!))
-        .toEqual(votingService.serializePrivateKey(privateKey2!));
+      expect(votingService.serializePublicKey(publicKey1!)).toEqual(
+        votingService.serializePublicKey(publicKey2!),
+      );
+      expect(votingService.serializePrivateKey(privateKey1!)).toEqual(
+        votingService.serializePrivateKey(privateKey2!),
+      );
     });
 
-    it('should throw error when deriving voting keys without private key', () => {
+    it('should throw error when deriving voting keys without private key', async () => {
       member.unloadPrivateKey();
 
-      expect(() => {
-        member.deriveVotingKeys();
-      }).toThrow();
+      await expect(member.deriveVotingKeys()).rejects.toThrow();
     });
 
     it('should load voting keys manually', () => {
@@ -524,8 +540,8 @@ describe('Member', () => {
       expect(member.hasVotingPrivateKey).toBe(false);
     });
 
-    it('should unload voting private key', () => {
-      member.deriveVotingKeys();
+    it('should unload voting private key', async () => {
+      await member.deriveVotingKeys();
       const publicKey = member.votingPublicKey;
 
       expect(member.hasVotingPrivateKey).toBe(true);
@@ -537,8 +553,8 @@ describe('Member', () => {
       expect(member.hasVotingPrivateKey).toBe(false);
     });
 
-    it('should support custom key size for voting keys', () => {
-      member.deriveVotingKeys({ keypairBitLength: 2048 });
+    it('should support custom key size for voting keys', async () => {
+      await member.deriveVotingKeys({ keypairBitLength: 2048 });
 
       expect(member.votingPublicKey).toBeDefined();
       expect(member.votingPrivateKey).toBeDefined();
@@ -552,38 +568,38 @@ describe('Member', () => {
       expect(bitLength).toBeLessThanOrEqual(2056); // Allow slight overflow
     });
 
-    it('should support custom Miller-Rabin rounds for voting keys', () => {
+    it('should support custom Miller-Rabin rounds for voting keys', async () => {
       // Should not throw with custom rounds
-      expect(() => {
-        member.deriveVotingKeys({ primeTestIterations: 64 });
-      }).not.toThrow();
+      await expect(
+        member.deriveVotingKeys({ primeTestIterations: 64 }),
+      ).resolves.not.toThrow();
 
       expect(member.votingPublicKey).toBeDefined();
       expect(member.votingPrivateKey).toBeDefined();
     });
 
-    it('should throw error for invalid key size', () => {
-      expect(() => {
-        member.deriveVotingKeys({ keypairBitLength: 1024 });
-      }).toThrow('Key size must be at least 2048 bits');
+    it('should throw error for invalid key size', async () => {
+      await expect(
+        member.deriveVotingKeys({ keypairBitLength: 1024 }),
+      ).rejects.toThrow('Key size must be at least 2048 bits');
     });
 
-    it('should throw error for insufficient Miller-Rabin rounds', () => {
-      expect(() => {
-        member.deriveVotingKeys({ primeTestIterations: 32 });
-      }).toThrow('Must perform at least 64 Miller-Rabin iterations');
+    it('should throw error for insufficient Miller-Rabin rounds', async () => {
+      await expect(
+        member.deriveVotingKeys({ primeTestIterations: 32 }),
+      ).rejects.toThrow('Must perform at least 64 Miller-Rabin iterations');
     });
 
-    it('should throw error for odd key size', () => {
-      expect(() => {
-        member.deriveVotingKeys({ keypairBitLength: 2049 });
-      }).toThrow('Key size must be even');
+    it('should throw error for odd key size', async () => {
+      await expect(
+        member.deriveVotingKeys({ keypairBitLength: 2049 }),
+      ).rejects.toThrow('Key size must be even');
     });
 
     it('should handle prime generation edge cases', () => {
       const seed = Buffer.alloc(64, 0x00); // Use all zeros to make prime generation harder
       const drbg = votingService.createDRBG(seed);
-      
+
       // Test with very small attempts limit and difficult seed
       expect(() => {
         votingService.generateDeterministicPrime(drbg, 1024, 64, 1);
@@ -594,14 +610,14 @@ describe('Member', () => {
   describe('Voting Operations with Paillier', () => {
     let member: Member;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       member = Member.newMember(
         eciesService,
         MemberType.User,
         'Test User',
         new EmailString('test@example.com'),
       ).member;
-      member.deriveVotingKeys();
+      await member.deriveVotingKeys();
     });
 
     it('should encrypt and decrypt with derived voting keys', () => {
@@ -710,7 +726,7 @@ describe('Member', () => {
   });
 
   describe('Integration Tests', () => {
-    it('should support complete workflow: create, sign, encrypt, voting', () => {
+    it('should support complete workflow: create, sign, encrypt, voting', async () => {
       // Create member
       const { member, mnemonic } = Member.newMember(
         eciesService,
@@ -734,7 +750,7 @@ describe('Member', () => {
       expect(decrypted).toEqual(plaintext);
 
       // Derive voting keys
-      member.deriveVotingKeys();
+      await member.deriveVotingKeys();
       expect(member.votingPublicKey).toBeDefined();
       expect(member.votingPrivateKey).toBeDefined();
 
@@ -782,7 +798,9 @@ describe('Member', () => {
       const signature = alice.sign(message);
 
       // Bob verifies Alice's signature
-      expect(bob.verifySignature(message, signature, alice.publicKey)).toBe(true);
+      expect(bob.verifySignature(message, signature, alice.publicKey)).toBe(
+        true,
+      );
     });
   });
 
@@ -819,7 +837,7 @@ describe('Member', () => {
       expect(decrypted).toEqual(largeData);
     });
 
-    it('should maintain state correctly after multiple operations', () => {
+    it('should maintain state correctly after multiple operations', async () => {
       const { member } = Member.newMember(
         eciesService,
         MemberType.User,
@@ -832,7 +850,7 @@ describe('Member', () => {
       expect(member.hasVotingPrivateKey).toBe(false);
 
       // Derive voting keys
-      member.deriveVotingKeys();
+      await member.deriveVotingKeys();
       expect(member.hasPrivateKey).toBe(true);
       expect(member.hasVotingPrivateKey).toBe(true);
 

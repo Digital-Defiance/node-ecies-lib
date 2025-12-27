@@ -49,10 +49,15 @@ export interface IMember<
   unloadWalletAndPrivateKey(): void;
   loadWallet(mnemonic: SecureString): void;
   loadPrivateKey(privateKey: SecureBuffer): void;
-  
+
   // Voting key management methods (optional, for systems that need voting)
-  loadVotingKeys?(votingPublicKey: PublicKey, votingPrivateKey?: PrivateKey): void;
-  deriveVotingKeys?(options?: import('../services/voting.service').DeriveVotingKeysOptions): void;
+  loadVotingKeys?(
+    votingPublicKey: PublicKey,
+    votingPrivateKey?: PrivateKey,
+  ): void;
+  deriveVotingKeys?(
+    options?: import('../services/voting.service').DeriveVotingKeysOptions,
+  ): Promise<void>;
   unloadVotingPrivateKey?(): void;
 
   // Cryptographic methods

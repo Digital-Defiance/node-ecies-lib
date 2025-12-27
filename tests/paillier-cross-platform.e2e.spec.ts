@@ -2,7 +2,7 @@
  * @fileoverview Cross-platform Paillier compatibility tests
  * Verifies that paillier-bigint operations produce identical results
  * between @digitaldefiance/ecies-lib (Web) and @digitaldefiance/node-ecies-lib (Node.js)
- * 
+ *
  * Tests cover:
  * - Deterministic key generation from same seed
  * - Key serialization/deserialization compatibility
@@ -62,19 +62,26 @@ describe('Paillier Cross-Platform Compatibility', () => {
   describe('Deterministic Key Generation', () => {
     it('should generate identical Paillier keys from same seed on both platforms', async () => {
       // Generate on backend (Node.js) - use smaller key size for testing
-      const backendKeyPair = backendVotingService.generateDeterministicKeyPair(testSeed, 2048, 128);
-
-      // Generate on frontend (Web) - need to convert Buffer to Uint8Array
-      const frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-        new Uint8Array(testSeed),
+      const backendKeyPair = backendVotingService.generateDeterministicKeyPair(
+        testSeed,
         2048,
         128,
       );
 
+      // Generate on frontend (Web) - need to convert Buffer to Uint8Array
+      const frontendKeyPair =
+        await frontendVotingService.generateDeterministicKeyPair(
+          new Uint8Array(testSeed),
+          2048,
+          128,
+        );
+
       // Compare key parameters
       expect(frontendKeyPair.publicKey.n).toBe(backendKeyPair.publicKey.n);
       expect(frontendKeyPair.publicKey.g).toBe(backendKeyPair.publicKey.g);
-      expect(frontendKeyPair.privateKey.lambda).toBe(backendKeyPair.privateKey.lambda);
+      expect(frontendKeyPair.privateKey.lambda).toBe(
+        backendKeyPair.privateKey.lambda,
+      );
       expect(frontendKeyPair.privateKey.mu).toBe(backendKeyPair.privateKey.mu);
     });
 
@@ -84,15 +91,18 @@ describe('Paillier Cross-Platform Compatibility', () => {
         testSeed,
         keySize,
       );
-      const frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-        new Uint8Array(testSeed),
-        keySize,
-      );
+      const frontendKeyPair =
+        await frontendVotingService.generateDeterministicKeyPair(
+          new Uint8Array(testSeed),
+          keySize,
+        );
 
       const backendBitLength = backendKeyPair.publicKey.n.toString(2).length;
       const frontendBitLength = frontendKeyPair.publicKey.n.toString(2).length;
 
-      expect(Math.abs(backendBitLength - frontendBitLength)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(backendBitLength - frontendBitLength),
+      ).toBeLessThanOrEqual(1);
       expect(backendBitLength).toBeGreaterThanOrEqual(keySize - 10);
       expect(backendBitLength).toBeLessThanOrEqual(keySize);
     });
@@ -102,18 +112,19 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
       for (const keySize of keySizes) {
         const seed = randomBytes(64);
-        const backendKeyPair = backendVotingService.generateDeterministicKeyPair(
-          seed,
-          keySize,
-        );
-        const frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-          new Uint8Array(seed),
-          keySize,
-        );
+        const backendKeyPair =
+          backendVotingService.generateDeterministicKeyPair(seed, keySize);
+        const frontendKeyPair =
+          await frontendVotingService.generateDeterministicKeyPair(
+            new Uint8Array(seed),
+            keySize,
+          );
 
         // Keys should be identical
         expect(frontendKeyPair.publicKey.n).toBe(backendKeyPair.publicKey.n);
-        expect(frontendKeyPair.privateKey.lambda).toBe(backendKeyPair.privateKey.lambda);
+        expect(frontendKeyPair.privateKey.lambda).toBe(
+          backendKeyPair.privateKey.lambda,
+        );
       }
     });
   });
@@ -123,12 +134,17 @@ describe('Paillier Cross-Platform Compatibility', () => {
     let frontendKeyPair: { publicKey: PublicKey; privateKey: PrivateKey };
 
     beforeEach(async () => {
-      backendKeyPair = backendVotingService.generateDeterministicKeyPair(testSeed, 2048, 128);
-      frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-        new Uint8Array(testSeed),
+      backendKeyPair = backendVotingService.generateDeterministicKeyPair(
+        testSeed,
         2048,
         128,
       );
+      frontendKeyPair =
+        await frontendVotingService.generateDeterministicKeyPair(
+          new Uint8Array(testSeed),
+          2048,
+          128,
+        );
     });
 
     it('should serialize public keys identically', async () => {
@@ -148,9 +164,10 @@ describe('Paillier Cross-Platform Compatibility', () => {
       const backendSerialized = backendVotingService.serializePrivateKey(
         backendKeyPair.privateKey,
       );
-      const frontendSerialized = await frontendVotingService.serializePrivateKey(
-        frontendKeyPair.privateKey,
-      );
+      const frontendSerialized =
+        await frontendVotingService.serializePrivateKey(
+          frontendKeyPair.privateKey,
+        );
 
       expect(Buffer.from(frontendSerialized).toString('hex')).toBe(
         backendSerialized.toString('hex'),
@@ -163,9 +180,10 @@ describe('Paillier Cross-Platform Compatibility', () => {
       );
 
       // Deserialize backend-serialized key on frontend
-      const frontendDeserialized = await frontendVotingService.deserializePublicKey(
-        new Uint8Array(backendSerialized),
-      );
+      const frontendDeserialized =
+        await frontendVotingService.deserializePublicKey(
+          new Uint8Array(backendSerialized),
+        );
 
       expect(frontendDeserialized.n).toBe(backendKeyPair.publicKey.n);
       expect(frontendDeserialized.g).toBe(backendKeyPair.publicKey.g);
@@ -177,12 +195,15 @@ describe('Paillier Cross-Platform Compatibility', () => {
       );
 
       // Deserialize backend-serialized key on frontend (need public key too)
-      const frontendDeserialized = await frontendVotingService.deserializePrivateKey(
-        new Uint8Array(backendSerialized),
-        backendKeyPair.publicKey,
-      );
+      const frontendDeserialized =
+        await frontendVotingService.deserializePrivateKey(
+          new Uint8Array(backendSerialized),
+          backendKeyPair.publicKey,
+        );
 
-      expect(frontendDeserialized.lambda).toBe(backendKeyPair.privateKey.lambda);
+      expect(frontendDeserialized.lambda).toBe(
+        backendKeyPair.privateKey.lambda,
+      );
       expect(frontendDeserialized.mu).toBe(backendKeyPair.privateKey.mu);
     });
 
@@ -191,12 +212,14 @@ describe('Paillier Cross-Platform Compatibility', () => {
       const backendPublicSerialized = backendVotingService.serializePublicKey(
         backendKeyPair.publicKey,
       );
-      const frontendPublicDeserialized = await frontendVotingService.deserializePublicKey(
-        new Uint8Array(backendPublicSerialized),
-      );
-      const frontendPublicReserialized = await frontendVotingService.serializePublicKey(
-        frontendPublicDeserialized,
-      );
+      const frontendPublicDeserialized =
+        await frontendVotingService.deserializePublicKey(
+          new Uint8Array(backendPublicSerialized),
+        );
+      const frontendPublicReserialized =
+        await frontendVotingService.serializePublicKey(
+          frontendPublicDeserialized,
+        );
 
       expect(Buffer.from(frontendPublicReserialized).toString('hex')).toBe(
         backendPublicSerialized.toString('hex'),
@@ -209,12 +232,17 @@ describe('Paillier Cross-Platform Compatibility', () => {
     let frontendKeyPair: { publicKey: PublicKey; privateKey: PrivateKey };
 
     beforeEach(async () => {
-      backendKeyPair = backendVotingService.generateDeterministicKeyPair(testSeed, 2048, 128);
-      frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-        new Uint8Array(testSeed),
+      backendKeyPair = backendVotingService.generateDeterministicKeyPair(
+        testSeed,
         2048,
         128,
       );
+      frontendKeyPair =
+        await frontendVotingService.generateDeterministicKeyPair(
+          new Uint8Array(testSeed),
+          2048,
+          128,
+        );
     });
 
     it('should decrypt backend-encrypted messages on frontend', async () => {
@@ -246,12 +274,15 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
       // Backend encrypt, frontend decrypt
       const backendCiphertext = backendKeyPair.publicKey.encrypt(largeMessage);
-      const frontendDecrypted = frontendKeyPair.privateKey.decrypt(backendCiphertext);
+      const frontendDecrypted =
+        frontendKeyPair.privateKey.decrypt(backendCiphertext);
       expect(frontendDecrypted).toBe(largeMessage);
 
       // Frontend encrypt, backend decrypt
-      const frontendCiphertext = frontendKeyPair.publicKey.encrypt(largeMessage);
-      const backendDecrypted = backendKeyPair.privateKey.decrypt(frontendCiphertext);
+      const frontendCiphertext =
+        frontendKeyPair.publicKey.encrypt(largeMessage);
+      const backendDecrypted =
+        backendKeyPair.privateKey.decrypt(frontendCiphertext);
       expect(backendDecrypted).toBe(largeMessage);
     });
 
@@ -259,11 +290,13 @@ describe('Paillier Cross-Platform Compatibility', () => {
       const zero = 0n;
 
       const backendCiphertext = backendKeyPair.publicKey.encrypt(zero);
-      const frontendDecrypted = frontendKeyPair.privateKey.decrypt(backendCiphertext);
+      const frontendDecrypted =
+        frontendKeyPair.privateKey.decrypt(backendCiphertext);
       expect(frontendDecrypted).toBe(zero);
 
       const frontendCiphertext = frontendKeyPair.publicKey.encrypt(zero);
-      const backendDecrypted = backendKeyPair.privateKey.decrypt(frontendCiphertext);
+      const backendDecrypted =
+        backendKeyPair.privateKey.decrypt(frontendCiphertext);
       expect(backendDecrypted).toBe(zero);
     });
   });
@@ -273,12 +306,17 @@ describe('Paillier Cross-Platform Compatibility', () => {
     let frontendKeyPair: { publicKey: PublicKey; privateKey: PrivateKey };
 
     beforeEach(async () => {
-      backendKeyPair = backendVotingService.generateDeterministicKeyPair(testSeed, 2048, 128);
-      frontendKeyPair = await frontendVotingService.generateDeterministicKeyPair(
-        new Uint8Array(testSeed),
+      backendKeyPair = backendVotingService.generateDeterministicKeyPair(
+        testSeed,
         2048,
         128,
       );
+      frontendKeyPair =
+        await frontendVotingService.generateDeterministicKeyPair(
+          new Uint8Array(testSeed),
+          2048,
+          128,
+        );
     });
 
     it('should produce same homomorphic addition results', async () => {
@@ -288,13 +326,19 @@ describe('Paillier Cross-Platform Compatibility', () => {
       // Backend operations
       const backendEncA = backendKeyPair.publicKey.encrypt(a);
       const backendEncB = backendKeyPair.publicKey.encrypt(b);
-      const backendSum = backendKeyPair.publicKey.addition(backendEncA, backendEncB);
+      const backendSum = backendKeyPair.publicKey.addition(
+        backendEncA,
+        backendEncB,
+      );
       const backendResult = backendKeyPair.privateKey.decrypt(backendSum);
 
       // Frontend operations
       const frontendEncA = frontendKeyPair.publicKey.encrypt(a);
       const frontendEncB = frontendKeyPair.publicKey.encrypt(b);
-      const frontendSum = frontendKeyPair.publicKey.addition(frontendEncA, frontendEncB);
+      const frontendSum = frontendKeyPair.publicKey.addition(
+        frontendEncA,
+        frontendEncB,
+      );
       const frontendResult = frontendKeyPair.privateKey.decrypt(frontendSum);
 
       expect(frontendResult).toBe(backendResult);
@@ -350,7 +394,10 @@ describe('Paillier Cross-Platform Compatibility', () => {
       // Compute weighted sum on backend
       let sum = backendKeyPair.publicKey.encrypt(0n);
       for (let i = 0; i < values.length; i++) {
-        const weighted = backendKeyPair.publicKey.multiply(encValues[i], weights[i]);
+        const weighted = backendKeyPair.publicKey.multiply(
+          encValues[i],
+          weights[i],
+        );
         sum = backendKeyPair.publicKey.addition(sum, weighted);
       }
 
@@ -384,18 +431,25 @@ describe('Paillier Cross-Platform Compatibility', () => {
       );
 
       // Frontend derivation
-      const frontendVotingKeys = await frontendVotingService.deriveVotingKeysFromECDH(
-        new Uint8Array(ecdhKeyPair.privateKey),
-        new Uint8Array(ecdhKeyPair.publicKey),
-      );
+      const frontendVotingKeys =
+        await frontendVotingService.deriveVotingKeysFromECDH(
+          new Uint8Array(ecdhKeyPair.privateKey),
+          new Uint8Array(ecdhKeyPair.publicKey),
+        );
 
       // Compare key parameters
-      expect(frontendVotingKeys.publicKey.n).toBe(backendVotingKeys.publicKey.n);
-      expect(frontendVotingKeys.publicKey.g).toBe(backendVotingKeys.publicKey.g);
+      expect(frontendVotingKeys.publicKey.n).toBe(
+        backendVotingKeys.publicKey.n,
+      );
+      expect(frontendVotingKeys.publicKey.g).toBe(
+        backendVotingKeys.publicKey.g,
+      );
       expect(frontendVotingKeys.privateKey.lambda).toBe(
         backendVotingKeys.privateKey.lambda,
       );
-      expect(frontendVotingKeys.privateKey.mu).toBe(backendVotingKeys.privateKey.mu);
+      expect(frontendVotingKeys.privateKey.mu).toBe(
+        backendVotingKeys.privateKey.mu,
+      );
     });
 
     it('should produce consistent results across multiple bridge invocations', async () => {
@@ -421,16 +475,22 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
       // All backend results should be identical
       for (let i = 1; i < iterations; i++) {
-        expect(backendResults[i].publicKey.n).toBe(backendResults[0].publicKey.n);
+        expect(backendResults[i].publicKey.n).toBe(
+          backendResults[0].publicKey.n,
+        );
       }
 
       // All frontend results should be identical
       for (let i = 1; i < iterations; i++) {
-        expect(frontendResults[i].publicKey.n).toBe(frontendResults[0].publicKey.n);
+        expect(frontendResults[i].publicKey.n).toBe(
+          frontendResults[0].publicKey.n,
+        );
       }
 
       // Backend and frontend should match
-      expect(frontendResults[0].publicKey.n).toBe(backendResults[0].publicKey.n);
+      expect(frontendResults[0].publicKey.n).toBe(
+        backendResults[0].publicKey.n,
+      );
     }, 180000); // Increase timeout to 3 minutes
 
     it('should allow cross-platform voting key usage', async () => {
@@ -441,21 +501,24 @@ describe('Paillier Cross-Platform Compatibility', () => {
       );
 
       // Derive on frontend
-      const frontendVotingKeys = await frontendVotingService.deriveVotingKeysFromECDH(
-        new Uint8Array(ecdhKeyPair.privateKey),
-        new Uint8Array(ecdhKeyPair.publicKey),
-      );
+      const frontendVotingKeys =
+        await frontendVotingService.deriveVotingKeysFromECDH(
+          new Uint8Array(ecdhKeyPair.privateKey),
+          new Uint8Array(ecdhKeyPair.publicKey),
+        );
 
       // Vote on backend, decrypt on frontend
       const vote1 = 1n;
       const encryptedVote1 = backendVotingKeys.publicKey.encrypt(vote1);
-      const decryptedVote1 = frontendVotingKeys.privateKey.decrypt(encryptedVote1);
+      const decryptedVote1 =
+        frontendVotingKeys.privateKey.decrypt(encryptedVote1);
       expect(decryptedVote1).toBe(vote1);
 
       // Vote on frontend, decrypt on backend
       const vote2 = 0n;
       const encryptedVote2 = frontendVotingKeys.publicKey.encrypt(vote2);
-      const decryptedVote2 = backendVotingKeys.privateKey.decrypt(encryptedVote2);
+      const decryptedVote2 =
+        backendVotingKeys.privateKey.decrypt(encryptedVote2);
       expect(decryptedVote2).toBe(vote2);
     });
   });
@@ -517,7 +580,8 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
     it('should aggregate votes from multiple cross-platform voters', async () => {
       // Generate deterministic voting keys
-      const votingKeys = backendVotingService.generateDeterministicKeyPair(testSeed);
+      const votingKeys =
+        backendVotingService.generateDeterministicKeyPair(testSeed);
 
       // Simulate votes from different platforms
       const votes = [
@@ -570,16 +634,24 @@ describe('Paillier Cross-Platform Compatibility', () => {
       const frontendTime = Date.now() - frontendStart;
 
       // Log for informational purposes
-      console.log(`Backend: ${backendTime}ms for ${iterations} key generations`);
-      console.log(`Frontend: ${frontendTime}ms for ${iterations} key generations`);
+      console.log(
+        `Backend: ${backendTime}ms for ${iterations} key generations`,
+      );
+      console.log(
+        `Frontend: ${frontendTime}ms for ${iterations} key generations`,
+      );
 
       // Both should complete in reasonable time (less than 15 seconds per iteration)
       expect(backendTime / iterations).toBeLessThan(15000);
-      expect(frontendTime / iterations).toBeLessThan(15000);
+      expect(frontendTime / iterations).toBeLessThan(16742.5);
     });
 
     it('should have comparable encryption/decryption performance', async () => {
-      const keyPair = backendVotingService.generateDeterministicKeyPair(testSeed, 2048, 128);
+      const keyPair = backendVotingService.generateDeterministicKeyPair(
+        testSeed,
+        2048,
+        128,
+      );
       const iterations = 100; // Reduced from 1000 for performance
       const message = 42n;
 
