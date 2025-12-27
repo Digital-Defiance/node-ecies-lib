@@ -1,36 +1,37 @@
 /**
  * Voting Service for Node.js environments
  * Provides ECIES-to-Paillier key bridge for homomorphic encryption voting systems.
- * 
+ *
  * SECURITY ARCHITECTURE:
  * This service implements a novel but cryptographically sound bridge between
  * ECDSA/ECDH keys and Paillier homomorphic encryption keys. The construction
  * uses only proven cryptographic primitives:
- * 
+ *
  * - ECDH (secp256k1): Shared secret computation
  * - HKDF (RFC 5869): Cryptographically secure key derivation
  * - HMAC-DRBG (NIST SP 800-90A): Deterministic random generation
  * - Miller-Rabin (256 rounds): Primality testing (error < 2^-512)
  * - Paillier (3072-bit): Homomorphic encryption
- * 
+ *
  * SECURITY GUARANTEES:
  * - 128-bit security level (equivalent to 3072-bit RSA)
  * - One-way: Cannot recover ECDH keys from Paillier keys
  * - Deterministic: Enables key recovery from same ECDH source
  * - Collision-resistant: Birthday bound ~2^128 operations
  * - Domain-separated: Cryptographic binding via HKDF info string
- * 
+ *
  * THREAT MODEL:
  * Protected against: factorization attacks, weak primes, small prime attacks
  * Timing attacks: Mitigated via constant-time operations where possible
  * Side-channels: Dependent on underlying crypto library implementation
  * Quantum: Vulnerable to Shor's algorithm (like all RSA-type systems)
- * 
+ *
  * For detailed security analysis, see:
  * docs/SECURITY_ANALYSIS_ECIES_PAILLIER_BRIDGE.md
  */
 
 import { createECDH, createHash, createHmac } from 'crypto';
+
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import type { KeyPair, PrivateKey, PublicKey } from 'paillier-bigint';
 
@@ -60,9 +61,9 @@ export interface DeriveVotingKeysOptions {
 
 /**
  * Miller-Rabin primality test with deterministic witnesses
- * 
+ *
  * SECURITY: With k=256 rounds, probability of false positive is < 2^-512
- * 
+ *
  * @param n - Number to test for primality
  * @param k - Number of rounds (witnesses to test)
  * @returns true if n is probably prime, false if definitely composite
@@ -127,7 +128,7 @@ export function modPow(base: bigint, exp: bigint, mod: bigint): bigint {
  */
 export function modInverse(a: bigint, m: bigint): bigint {
   if (m === 1n) return 0n;
-  
+
   const m0 = m;
   let x0 = 0n;
   let x1 = 1n;
@@ -153,7 +154,7 @@ export function modInverse(a: bigint, m: bigint): bigint {
 export function gcd(a: bigint, b: bigint): bigint {
   a = a < 0n ? -a : a;
   b = b < 0n ? -b : b;
-  
+
   while (b !== 0n) {
     const t = b;
     b = a % b;
@@ -171,12 +172,12 @@ export function lcm(a: bigint, b: bigint): bigint {
 
 /**
  * HKDF implementation following RFC 5869 using Node.js crypto
- * 
+ *
  * SECURITY: This is a cryptographically secure key derivation function.
  * - Provides pseudorandomness indistinguishable from random
  * - One-way: computationally infeasible to recover IKM from OKM
  * - Domain separation via 'info' parameter
- * 
+ *
  * @param secret - The input key material (IKM)
  * @param salt - Optional salt value (non-secret random value)
  * @param info - Context string for domain separation
@@ -192,7 +193,8 @@ export function hkdf(
   hmacAlgorithm: string = 'sha512',
 ): Uint8Array {
   // Step 1: Extract - HKDF-Extract(salt, IKM) -> PRK
-  const actualSalt = salt || Buffer.alloc(createHash(hmacAlgorithm).digest().length);
+  const actualSalt =
+    salt || Buffer.alloc(createHash(hmacAlgorithm).digest().length);
   const prk = createHmac(hmacAlgorithm, actualSalt).update(secret).digest();
 
   // Step 2: Expand - HKDF-Expand(PRK, info, L) -> OKM
@@ -284,9 +286,10 @@ export class SecureDeterministicDRBG {
  * Small prime sieve for quick composite elimination
  */
 const SMALL_PRIMES = [
-  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
-  101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
-  197, 199, 211, 223, 227, 229, 233, 239, 241, 251,
+  2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
+  73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151,
+  157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233,
+  239, 241, 251,
 ];
 
 /**
@@ -308,7 +311,7 @@ export function generateDeterministicPrime(
 
   // Always perform exactly maxAttempts iterations for timing attack mitigation
   let foundPrime: bigint | null = null;
-  
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     // Continue checking even after finding prime to maintain constant timing
     if (foundPrime !== null) {
@@ -316,7 +319,7 @@ export function generateDeterministicPrime(
       drbg.generate(numBytes);
       continue;
     }
-    
+
     // Generate random bytes
     const bytes = drbg.generate(numBytes);
 
@@ -331,7 +334,10 @@ export function generateDeterministicPrime(
     // Quick check against small primes
     let isComposite = false;
     for (const smallPrime of SMALL_PRIMES) {
-      if (candidate % BigInt(smallPrime) === 0n && candidate !== BigInt(smallPrime)) {
+      if (
+        candidate % BigInt(smallPrime) === 0n &&
+        candidate !== BigInt(smallPrime)
+      ) {
         isComposite = true;
         break;
       }
@@ -348,7 +354,7 @@ export function generateDeterministicPrime(
   if (foundPrime === null) {
     throw new Error(`Failed to generate prime after ${maxAttempts} attempts`);
   }
-  
+
   return foundPrime;
 }
 
@@ -375,18 +381,21 @@ export function generateDeterministicKeyPair(
     throw new Error(`Key size must be even, got ${bits}`);
   }
   if (primeTestIterations < 64) {
-    throw new Error(`Must perform at least 64 Miller-Rabin iterations, got ${primeTestIterations}`);
+    throw new Error(
+      `Must perform at least 64 Miller-Rabin iterations, got ${primeTestIterations}`,
+    );
   }
-  
+
   // Load paillier-bigint dynamically (optional peer dependency)
   let PublicKey: typeof import('paillier-bigint').PublicKey;
   let PrivateKey: typeof import('paillier-bigint').PrivateKey;
-  
+
   try {
-    const paillier = require('paillier-bigint');
+    const paillier =
+      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
     PublicKey = paillier.PublicKey;
     PrivateKey = paillier.PrivateKey;
-  } catch (error) {
+  } catch {
     throw new Error(
       'paillier-bigint is required for voting functionality. Install it with: npm install paillier-bigint',
     );
@@ -425,7 +434,9 @@ export function generateDeterministicKeyPair(
   const decrypted = privateKey.decrypt(encrypted);
 
   if (decrypted !== testPlaintext) {
-    throw new Error('Key pair validation failed: test encryption/decryption mismatch');
+    throw new Error(
+      'Key pair validation failed: test encryption/decryption mismatch',
+    );
   }
 
   return { publicKey, privateKey };
@@ -435,18 +446,18 @@ export function generateDeterministicKeyPair(
  * Derive Paillier voting keys from ECDH key pair.
  * This is the core bridge function that connects ECDSA/ECDH keys
  * to homomorphic encryption keys for secure voting systems.
- * 
+ *
  * SECURITY PROPERTIES:
  * - One-way: Computationally infeasible to recover ECDH keys from Paillier keys
  * - Deterministic: Same ECDH keys always produce same Paillier keys (enables key recovery)
  * - Collision-resistant: Different ECDH keys produce different Paillier keys (Birthday bound ~2^128)
  * - Domain-separated: Cryptographically bound to voting purpose via HKDF info="PaillierPrimeGen"
- * 
+ *
  * SECURITY LEVEL: ~128 bits (equivalent to 3072-bit RSA)
  * - ECDH: secp256k1 curve (~128-bit security)
  * - HKDF: SHA-512 (512-bit security against preimage)
  * - Paillier: 3072-bit modulus (NIST recommended for 128-bit security)
- * 
+ *
  * @param ecdhPrivKey - ECDH private key (32 bytes for secp256k1)
  * @param ecdhPubKey - ECDH public key (64 or 65 bytes, with or without 0x04 prefix)
  * @param options - Configuration options
@@ -473,10 +484,12 @@ export function deriveVotingKeysFromECDH(
   if (!ecdhPrivKey || ecdhPrivKey.length === 0) {
     throw new Error('ECDH private key is required');
   }
-  
+
   // Validate private key length (32 bytes for secp256k1)
   if (ecdhPrivKey.length !== 32) {
-    throw new Error(`Invalid ECDH private key length: expected 32 bytes, got ${ecdhPrivKey.length}`);
+    throw new Error(
+      `Invalid ECDH private key length: expected 32 bytes, got ${ecdhPrivKey.length}`,
+    );
   }
 
   if (!ecdhPubKey || ecdhPubKey.length === 0) {
@@ -485,31 +498,31 @@ export function deriveVotingKeysFromECDH(
 
   // Handle both compressed (33 bytes) and uncompressed (65 bytes) public keys
   let fullPubKey: Buffer;
-  
+
   if (ecdhPubKey.length === 33) {
     // Compressed key - need to decompress it
     const ecdh = createECDH(curveName);
     ecdh.setPrivateKey(Buffer.from(ecdhPrivKey));
-    
+
     // Use a temporary ECDH instance to decompress the public key
     const tempEcdh = createECDH(curveName);
     tempEcdh.generateKeys(); // Generate temporary keys
-    
+
     // Import the compressed key and get uncompressed format
     // We'll use the ECDH computeSecret which accepts compressed keys
     fullPubKey = Buffer.from(ecdhPubKey);
-    
-  } else if (ecdhPubKey.length === publicKeyLength && ecdhPubKey[0] === publicKeyMagic) {
+  } else if (
+    ecdhPubKey.length === publicKeyLength &&
+    ecdhPubKey[0] === publicKeyMagic
+  ) {
     // Already uncompressed with 0x04 prefix
     fullPubKey = Buffer.from(ecdhPubKey);
-    
   } else if (ecdhPubKey.length === rawPublicKeyLength) {
     // Uncompressed without prefix - add it
     fullPubKey = Buffer.concat([
       Buffer.from([publicKeyMagic]),
       Buffer.from(ecdhPubKey),
     ]);
-    
   } else {
     throw new Error(
       `Invalid public key length: expected 33 (compressed), 64 (uncompressed raw), or 65 (uncompressed with prefix) bytes, got ${ecdhPubKey.length}`,
@@ -519,7 +532,11 @@ export function deriveVotingKeysFromECDH(
   // Compute shared secret using @noble/secp256k1 (same as frontend implementation)
   // We use @noble/curves to ensure exact compatibility with the browser version
   // which uses the full uncompressed point (65 bytes) as the shared secret
-  const sharedSecret = secp256k1.getSharedSecret(ecdhPrivKey, fullPubKey, false);
+  const sharedSecret = secp256k1.getSharedSecret(
+    ecdhPrivKey,
+    fullPubKey,
+    false,
+  );
 
   // Derive seed using HKDF
   const seed = hkdf(
@@ -531,7 +548,11 @@ export function deriveVotingKeysFromECDH(
   );
 
   // Generate deterministic key pair
-  return generateDeterministicKeyPair(seed, keypairBitLength, primeTestIterations);
+  return generateDeterministicKeyPair(
+    seed,
+    keypairBitLength,
+    primeTestIterations,
+  );
 }
 
 /**
@@ -552,7 +573,7 @@ export class VotingService {
 
   /**
    * Derive Paillier voting keys from ECDH key pair.
-   * 
+   *
    * @param ecdhPrivKey - ECDH private key (32 bytes for secp256k1)
    * @param ecdhPubKey - ECDH public key (64 or 65 bytes)
    * @param options - Configuration options
@@ -623,7 +644,12 @@ export class VotingService {
     primeTestIterations?: number,
     maxAttempts?: number,
   ): bigint {
-    return generateDeterministicPrime(drbg, numBits, primeTestIterations, maxAttempts);
+    return generateDeterministicPrime(
+      drbg,
+      numBits,
+      primeTestIterations,
+      maxAttempts,
+    );
   }
 
   /**
@@ -640,13 +666,16 @@ export class VotingService {
   /**
    * Create a secure deterministic random bit generator
    */
-  public createDRBG(seed: Uint8Array, hmacAlgorithm?: string): SecureDeterministicDRBG {
+  public createDRBG(
+    seed: Uint8Array,
+    hmacAlgorithm?: string,
+  ): SecureDeterministicDRBG {
     return new SecureDeterministicDRBG(seed, hmacAlgorithm);
   }
 
   /**
    * Serialize a Paillier public key to buffer
-   * 
+   *
    * SECURITY: Public keys are safe to share. This serialization
    * format is deterministic and preserves all key information.
    */
@@ -664,21 +693,22 @@ export class VotingService {
    */
   public bufferToVotingPublicKey(buffer: Buffer): PublicKey {
     // Load PublicKey class
-    const { PublicKey } = require('paillier-bigint');
-    
+    const { PublicKey } =
+      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
+
     // Read length prefix
     const length = buffer.readUInt32BE(0);
     // Read hex string
     const nHex = buffer.subarray(4, 4 + length).toString('utf-8');
     const n = BigInt('0x' + nHex);
-    
+
     // g = n + 1 for simplified Paillier
-    return new PublicKey(n, n + 1n);
+    return new PublicKey(n, n + 1n) as PublicKey;
   }
 
   /**
    * Serialize a Paillier private key to buffer
-   * 
+   *
    * SECURITY WARNING: Private keys must be kept secret!
    * - Only serialize for secure storage or transmission
    * - Encrypt serialized keys before storing or transmitting
@@ -689,13 +719,13 @@ export class VotingService {
     // Serialize lambda and mu values
     const lambdaHex = privateKey.lambda.toString(16);
     const muHex = privateKey.mu.toString(16);
-    
+
     const lambdaLengthBuffer = Buffer.alloc(4);
     lambdaLengthBuffer.writeUInt32BE(lambdaHex.length);
-    
+
     const muLengthBuffer = Buffer.alloc(4);
     muLengthBuffer.writeUInt32BE(muHex.length);
-    
+
     return Buffer.concat([
       lambdaLengthBuffer,
       Buffer.from(lambdaHex, 'utf-8'),
@@ -707,21 +737,27 @@ export class VotingService {
   /**
    * Deserialize a Paillier private key from buffer
    */
-  public bufferToVotingPrivateKey(buffer: Buffer, publicKey: PublicKey): PrivateKey {
+  public bufferToVotingPrivateKey(
+    buffer: Buffer,
+    publicKey: PublicKey,
+  ): PrivateKey {
     // Load PrivateKey class
-    const { PrivateKey } = require('paillier-bigint');
-    
+    const { PrivateKey } =
+      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
+
     // Read lambda
     const lambdaLength = buffer.readUInt32BE(0);
     const lambdaHex = buffer.subarray(4, 4 + lambdaLength).toString('utf-8');
     const lambda = BigInt('0x' + lambdaHex);
-    
+
     // Read mu
     const muLength = buffer.readUInt32BE(4 + lambdaLength);
-    const muHex = buffer.subarray(8 + lambdaLength, 8 + lambdaLength + muLength).toString('utf-8');
+    const muHex = buffer
+      .subarray(8 + lambdaLength, 8 + lambdaLength + muLength)
+      .toString('utf-8');
     const mu = BigInt('0x' + muHex);
-    
-    return new PrivateKey(lambda, mu, publicKey);
+
+    return new PrivateKey(lambda, mu, publicKey) as PrivateKey;
   }
 
   // Aliases for cross-platform compatibility tests
@@ -737,7 +773,10 @@ export class VotingService {
     return this.votingPrivateKeyToBuffer(privateKey);
   }
 
-  public deserializePrivateKey(buffer: Buffer | Uint8Array, publicKey: PublicKey): PrivateKey {
+  public deserializePrivateKey(
+    buffer: Buffer | Uint8Array,
+    publicKey: PublicKey,
+  ): PrivateKey {
     return this.bufferToVotingPrivateKey(Buffer.from(buffer), publicKey);
   }
 }

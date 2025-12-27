@@ -18,12 +18,12 @@ import {
   ECIESService as FrontendECIESService,
   MemberType,
   SecureString,
+  EmailString as BackendEmailString,
 } from '@digitaldefiance/ecies-lib';
 import { createECDH, randomBytes } from 'crypto';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { getNodeRuntimeConfiguration } from '../src/constants';
-import { EmailString as BackendEmailString } from '@digitaldefiance/ecies-lib';
 import { Member as BackendMember } from '../src/member';
 import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 import { VotingService as BackendVotingService } from '../src/services/voting.service';

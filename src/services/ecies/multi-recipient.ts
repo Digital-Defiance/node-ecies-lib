@@ -134,8 +134,10 @@ export class EciesMultiRecipient {
     }
 
     // Encrypt the message
-    let encrypted = cipher.update(messageSymmetricKey);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    let encrypted = cipher.update(messageSymmetricKey) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    encrypted = Buffer.concat([encrypted, cipher.final() as Buffer]);
 
     // Get and explicitly set the authentication tag to max tag length for consistency
     const authTag = cipher.getAuthTag();
@@ -173,14 +175,17 @@ export class EciesMultiRecipient {
       );
     }
 
-    const iv = encryptedKey.subarray(0, this.cryptoCore.consts.IV_SIZE);
+    const iv = encryptedKey.subarray(
+      0,
+      this.cryptoCore.consts.IV_SIZE,
+    ) as Buffer;
     const authTag = encryptedKey.subarray(
       this.cryptoCore.consts.IV_SIZE,
       this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
-    );
+    ) as Buffer;
     const encrypted = encryptedKey.subarray(
       this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
-    );
+    ) as Buffer;
 
     // Normalize the public key (ensuring 0x04 prefix)
     const normalizedKey =
@@ -211,8 +216,10 @@ export class EciesMultiRecipient {
       decipher.setAAD(aad);
     }
 
-    const decrypted = decipher.update(encrypted);
-    const final = decipher.final();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const decrypted = decipher.update(encrypted) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const final = decipher.final() as Buffer;
     const decryptedMessage = Buffer.concat([decrypted, final]);
 
     if (decryptedMessage.length !== this.cryptoCore.consts.SYMMETRIC.KEY_SIZE) {
@@ -327,8 +334,10 @@ export class EciesMultiRecipient {
 
     cipher.setAAD(headerBytes);
 
-    const encrypted = cipher.update(messageToEncrypt);
-    const final = cipher.final();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const encrypted = cipher.update(messageToEncrypt) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const final = cipher.final() as Buffer;
     const authTag = cipher.getAuthTag();
 
     const encryptedMessage = Buffer.concat([encrypted, final]);
@@ -422,8 +431,10 @@ export class EciesMultiRecipient {
     decipher.setAuthTag(authTag);
     decipher.setAAD(headerBytes);
 
-    const decrypted = decipher.update(encrypted);
-    const final = decipher.final();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const decrypted = decipher.update(encrypted) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const final = decipher.final() as Buffer;
     const decryptedMessage = Buffer.concat([decrypted, final]);
 
     // The decrypted message should match the original data length

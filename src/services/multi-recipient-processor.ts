@@ -225,19 +225,21 @@ export class MultiRecipientProcessor {
 
     cipher.setAAD(headerBytes);
 
-    const encrypted = cipher.update(dataToEncrypt);
-    const final = cipher.final();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const encrypted = cipher.update(dataToEncrypt) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const final = cipher.final() as Buffer;
     const authTag = cipher.getAuthTag();
 
     // Write IV
-    iv.copy(chunk, offset);
+    (iv as Buffer).copy(chunk, offset);
     offset += 12;
 
     // Write encrypted data
-    encrypted.copy(chunk, offset);
-    offset += encrypted.length;
-    final.copy(chunk, offset); // Should be empty usually
-    offset += final.length;
+    (encrypted as Buffer).copy(chunk, offset);
+    offset += (encrypted as Buffer).length;
+    (final as Buffer).copy(chunk, offset); // Should be empty usually
+    offset += (final as Buffer).length;
 
     // Write auth tag
     authTag.copy(chunk, offset);
@@ -365,8 +367,10 @@ export class MultiRecipientProcessor {
     decipher.setAuthTag(authTag);
     decipher.setAAD(headerBytes);
 
-    const decrypted = decipher.update(encrypted);
-    const final = decipher.final();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const decrypted = decipher.update(encrypted) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    const final = decipher.final() as Buffer;
     const decryptedMessage = Buffer.concat([decrypted, final]);
 
     // Verify signature if sender public key provided

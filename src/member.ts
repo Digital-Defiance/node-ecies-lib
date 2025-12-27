@@ -207,7 +207,15 @@ export class Member<
     }
 
     // Import deriveVotingKeysFromECDH from voting service
-    const { deriveVotingKeysFromECDH } = require('./services/voting.service');
+    const { deriveVotingKeysFromECDH } =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('./services/voting.service') as {
+        deriveVotingKeysFromECDH: (
+          ecdhPrivKey: Uint8Array,
+          ecdhPubKey: Uint8Array,
+          options?: Record<string, unknown>,
+        ) => { publicKey: Uint8Array; privateKey: Uint8Array };
+      };
 
     // Derive keys using ECDH bridge
     const keyPair = deriveVotingKeysFromECDH(

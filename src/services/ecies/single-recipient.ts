@@ -201,8 +201,10 @@ export class EciesSingleRecipientCore {
     cipher.setAAD(aad);
 
     // Encrypt the message
-    let encrypted = cipher.update(message);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+    let encrypted = cipher.update(message) as Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    encrypted = Buffer.concat([encrypted, cipher.final() as Buffer]);
 
     // Get and explicitly set the authentication tag to max tag length for consistency
     const authTag = cipher.getAuthTag();
@@ -211,12 +213,12 @@ export class EciesSingleRecipientCore {
     const lengthBuffer =
       encryptionType === 'simple' ? Buffer.alloc(0) : Buffer.alloc(UINT64_SIZE);
     if (encryptionType === 'single') {
-      lengthBuffer.writeBigUInt64BE(BigInt(encrypted.length));
+      lengthBuffer.writeBigUInt64BE(BigInt((encrypted as Buffer).length));
     }
 
     // Security fix 5: Encrypted size validation
     const maxExpectedSize = message.length + 1024;
-    if (encrypted.length > maxExpectedSize) {
+    if ((encrypted as Buffer).length > maxExpectedSize) {
       throw new ECIESError(ECIESErrorTypeEnum.EncryptedSizeExceedsExpected);
     }
 
@@ -703,8 +705,10 @@ export class EciesSingleRecipientCore {
           );
         }
 
-        const firstPart = decipher.update(encrypted);
-        const finalPart = decipher.final();
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+        const firstPart = decipher.update(encrypted) as Buffer;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+        const finalPart = decipher.final() as Buffer;
         const result = Buffer.concat([firstPart, finalPart]);
 
         // Security fix 8: Decrypted data validation
