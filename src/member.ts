@@ -213,8 +213,8 @@ export class Member<
         deriveVotingKeysFromECDH: (
           ecdhPrivKey: Uint8Array,
           ecdhPubKey: Uint8Array,
-          options?: Record<string, unknown>,
-        ) => { publicKey: Uint8Array; privateKey: Uint8Array };
+          options?: unknown,
+        ) => { publicKey: PublicKey; privateKey: PrivateKey };
       };
 
     // Derive keys using ECDH bridge
