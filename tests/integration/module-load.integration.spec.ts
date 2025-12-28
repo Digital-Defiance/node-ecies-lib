@@ -119,9 +119,15 @@ describe('Module Load Integration', () => {
       // Should have a reasonable number of exports
       expect(exportNames.length).toBeGreaterThan(20);
 
-      // Verify no undefined exports
+      // Type-only exports that don't have runtime values (TypeScript interfaces)
+      const typeOnlyExports = new Set([
+        'IVotingConsts',
+        // Add other type-only exports here if they appear
+      ]);
+
+      // Verify no undefined exports (excluding type-only exports)
       const undefinedExports = exportNames.filter(
-        (name) => eciesLib[name] === undefined,
+        (name) => eciesLib[name] === undefined && !typeOnlyExports.has(name),
       );
       expect(undefinedExports).toHaveLength(0);
     });

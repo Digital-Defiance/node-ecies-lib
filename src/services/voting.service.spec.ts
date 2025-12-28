@@ -383,7 +383,7 @@ describe('VotingService', () => {
   });
 
   describe('VotingService Methods', () => {
-    it('should serialize and deserialize public key', () => {
+    it('should serialize and deserialize public key', async () => {
       const votingKeys = deriveVotingKeysFromECDH(
         ecdhKeyPair.privateKey,
         ecdhKeyPair.publicKey,
@@ -394,11 +394,11 @@ describe('VotingService', () => {
       );
       expect(buffer.length).toBeGreaterThan(0);
 
-      const recovered = votingService.bufferToVotingPublicKey(buffer);
+      const recovered = await votingService.bufferToVotingPublicKey(buffer);
       expect(recovered.n).toBe(votingKeys.publicKey.n);
     });
 
-    it('should serialize and deserialize private key', () => {
+    it('should serialize and deserialize private key', async () => {
       const votingKeys = deriveVotingKeysFromECDH(
         ecdhKeyPair.privateKey,
         ecdhKeyPair.publicKey,
@@ -409,7 +409,7 @@ describe('VotingService', () => {
       );
       expect(buffer.length).toBeGreaterThan(0);
 
-      const recovered = votingService.bufferToVotingPrivateKey(
+      const recovered = await votingService.bufferToVotingPrivateKey(
         buffer,
         votingKeys.publicKey,
       );
@@ -751,7 +751,7 @@ describe('VotingService', () => {
     });
 
     describe('Key Recovery and Serialization', () => {
-      it('should recover keys from serialized form', () => {
+      it('should recover keys from serialized form', async () => {
         const publicKeySerialized = votingService.serializePublicKey(
           keyPair.publicKey,
         );
@@ -760,8 +760,8 @@ describe('VotingService', () => {
         );
 
         const recoveredPublic =
-          votingService.deserializePublicKey(publicKeySerialized);
-        const recoveredPrivate = votingService.deserializePrivateKey(
+          await votingService.deserializePublicKey(publicKeySerialized);
+        const recoveredPrivate = await votingService.deserializePrivateKey(
           privateKeySerialized,
           recoveredPublic,
         );
@@ -774,7 +774,7 @@ describe('VotingService', () => {
         expect(decrypted).toBe(message);
       });
 
-      it('should maintain homomorphic properties after serialization', () => {
+      it('should maintain homomorphic properties after serialization', async () => {
         const publicKeySerialized = votingService.serializePublicKey(
           keyPair.publicKey,
         );
@@ -783,8 +783,8 @@ describe('VotingService', () => {
         );
 
         const recoveredPublic =
-          votingService.deserializePublicKey(publicKeySerialized);
-        const recoveredPrivate = votingService.deserializePrivateKey(
+          await votingService.deserializePublicKey(publicKeySerialized);
+        const recoveredPrivate = await votingService.deserializePrivateKey(
           privateKeySerialized,
           recoveredPublic,
         );
@@ -800,7 +800,7 @@ describe('VotingService', () => {
         expect(decrypted).toBe(a + b);
       });
 
-      it('should handle multiple serialization-deserialization cycles', () => {
+      it('should handle multiple serialization-deserialization cycles', async () => {
         let currentPublic = keyPair.publicKey;
         let currentPrivate = keyPair.privateKey;
 
@@ -809,8 +809,9 @@ describe('VotingService', () => {
           const privSerialized =
             votingService.serializePrivateKey(currentPrivate);
 
-          currentPublic = votingService.deserializePublicKey(pubSerialized);
-          currentPrivate = votingService.deserializePrivateKey(
+          currentPublic =
+            await votingService.deserializePublicKey(pubSerialized);
+          currentPrivate = await votingService.deserializePrivateKey(
             privSerialized,
             currentPublic,
           );

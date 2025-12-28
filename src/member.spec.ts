@@ -515,21 +515,21 @@ describe('Member', () => {
       await expect(member.deriveVotingKeys()).rejects.toThrow();
     });
 
-    it('should load voting keys manually', () => {
+    it('should load voting keys manually', async () => {
       // Generate a voting key pair
-      const votingKeyPair = votingService.generateDeterministicKeyPair(
+      const votingKeyPair = await votingService.generateDeterministicKeyPair(
         Buffer.alloc(64, 0x42),
       );
 
       member.loadVotingKeys(votingKeyPair.publicKey, votingKeyPair.privateKey);
-
+      
       expect(member.votingPublicKey).toEqual(votingKeyPair.publicKey);
       expect(member.votingPrivateKey).toEqual(votingKeyPair.privateKey);
       expect(member.hasVotingPrivateKey).toBe(true);
     });
 
-    it('should load only voting public key', () => {
-      const votingKeyPair = votingService.generateDeterministicKeyPair(
+    it('should load only voting public key', async () => {
+      const votingKeyPair = await votingService.generateDeterministicKeyPair(
         Buffer.alloc(64, 0x42),
       );
 
@@ -571,7 +571,7 @@ describe('Member', () => {
     it('should support custom Miller-Rabin rounds for voting keys', async () => {
       // Should not throw with custom rounds
       await expect(
-        member.deriveVotingKeys({ primeTestIterations: 64 }),
+        member.deriveVotingKeys({ primeTestIterations: 64 })
       ).resolves.not.toThrow();
 
       expect(member.votingPublicKey).toBeDefined();
@@ -580,19 +580,19 @@ describe('Member', () => {
 
     it('should throw error for invalid key size', async () => {
       await expect(
-        member.deriveVotingKeys({ keypairBitLength: 1024 }),
+        member.deriveVotingKeys({ keypairBitLength: 1024 })
       ).rejects.toThrow('Key size must be at least 2048 bits');
     });
 
     it('should throw error for insufficient Miller-Rabin rounds', async () => {
       await expect(
-        member.deriveVotingKeys({ primeTestIterations: 32 }),
+        member.deriveVotingKeys({ primeTestIterations: 32 })
       ).rejects.toThrow('Must perform at least 64 Miller-Rabin iterations');
     });
 
     it('should throw error for odd key size', async () => {
       await expect(
-        member.deriveVotingKeys({ keypairBitLength: 2049 }),
+        member.deriveVotingKeys({ keypairBitLength: 2049 })
       ).rejects.toThrow('Key size must be even');
     });
 

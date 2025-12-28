@@ -260,7 +260,7 @@ describe('Dependency Injection Integration', () => {
 
       // Test progress tracking
       const progress = tracker.update(50);
-      expect(progress.processedBytes).toBe(50);
+      expect(progress.bytesProcessed).toBe(50);
     });
 
     it('should support full encryption workflow with all injected dependencies', async () => {
@@ -294,7 +294,7 @@ describe('Dependency Injection Integration', () => {
 
       // Test progress tracking
       const progress = tracker.update(encrypted.length);
-      expect(progress.processedBytes).toBe(encrypted.length);
+      expect(progress.bytesProcessed).toBe(encrypted.length);
 
       // Clean up
       sender.dispose();

@@ -21,6 +21,10 @@ export { Pbkdf2Service } from './services/pbkdf2';
 export { ProgressTracker } from './services/progress-tracker';
 export * from './services/voting.service';
 
+// Isolated key classes for voting
+export { IsolatedPublicKey } from './isolated-public';
+export { IsolatedPrivateKey } from './isolated-private';
+
 // Re-export Paillier types for voting functionality (optional peer dependency)
 export type {
   PrivateKey,

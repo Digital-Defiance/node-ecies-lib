@@ -9,7 +9,10 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   setupFiles: ['<rootDir>/tests/jest-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
-  forceExit: true,
+  // Run tests in-band to avoid BigInt serialization issues in Jest worker IPC
+  // See: https://github.com/jestjs/jest/issues/11617
+  workerThreads: false,
+  maxWorkers: 1,
   detectOpenHandles: false,
   transformIgnorePatterns: [
     'node_modules/(?!(@faker-js|@noble|@scure|@ethereumjs))',

@@ -1,6 +1,6 @@
 {
   "name": "@digitaldefiance/node-ecies-lib",
-  "version": "4.5.19",
+  "version": "4.6.3",
   "description": "Digital Defiance Node ECIES Library",
   "homepage": "https://github.com/Digital-Defiance/node-ecies-lib",
   "repository": {
@@ -65,7 +65,7 @@
     }
   },
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "4.5.18",
+    "@digitaldefiance/ecies-lib": "4.6.3",
     "@digitaldefiance/express-suite-test-utils": "1.0.14",
     "@digitaldefiance/i18n-lib": "3.8.16",
     "@ethereumjs/wallet": "^10.0.0",

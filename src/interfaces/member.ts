@@ -1,8 +1,8 @@
 import type {
   EmailString,
+  IECIESConstants,
   MemberType,
   SecureBuffer,
-  SecureString,
 } from '@digitaldefiance/ecies-lib';
 import type { Types } from '@digitaldefiance/mongoose-types';
 import type { Wallet } from '@ethereumjs/wallet';
@@ -15,58 +15,42 @@ import type { IStreamProgress } from './stream-progress';
 
 /**
  * Interface representing a member with cryptographic capabilities.
- * This interface defines the contract for member operations without
- * referencing concrete class implementations.
+ * This interface extends the shared IMember interface from ecies-lib
+ * with Node.js-specific types (Buffer instead of Uint8Array).
+ *
+ * Note: When TID includes ObjectId, we don't strictly extend ISharedMember
+ * because ObjectId is not compatible with the shared interface's constraints.
+ *
+ * @template TID - The ID type (Buffer, string, or ObjectId)
  */
 export interface IMember<
-  TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer,
+  TID extends string | Types.ObjectId | Buffer = Buffer,
 > {
-  // Required properties
+  // Properties from ISharedMember with Node.js-specific types
   readonly id: TID;
   readonly type: MemberType;
   readonly name: string;
   readonly email: EmailString;
   readonly publicKey: Buffer;
-  readonly creatorId: TID;
-  readonly dateCreated: Date;
-  readonly dateUpdated: Date;
-
-  // Optional private data properties
-  readonly privateKey: SecureBuffer | undefined;
+  readonly privateKey?: SecureBuffer;
   readonly wallet: Wallet;
+  readonly constants: IECIESConstants;
 
-  // Optional voting keys (for homomorphic encryption voting systems)
-  readonly votingPublicKey?: PublicKey;
-  readonly votingPrivateKey?: PrivateKey;
+  // Voting keys
+  votingPublicKey?: PublicKey;
+  votingPrivateKey?: PrivateKey;
 
-  // State properties
-  readonly hasPrivateKey: boolean;
-  readonly hasVotingPrivateKey: boolean;
+  // Methods
+  getPublicKeyString(): string;
+  getIdString(): string;
 
-  // Key management methods
-  unloadPrivateKey(): void;
-  unloadWallet(): void;
-  unloadWalletAndPrivateKey(): void;
-  loadWallet(mnemonic: SecureString): void;
-  loadPrivateKey(privateKey: SecureBuffer): void;
-
-  // Voting key management methods (optional, for systems that need voting)
-  loadVotingKeys?(
-    votingPublicKey: PublicKey,
-    votingPrivateKey?: PrivateKey,
-  ): void;
-  deriveVotingKeys?(
-    options?: import('../services/voting.service').DeriveVotingKeysOptions,
-  ): Promise<void>;
-  unloadVotingPrivateKey?(): void;
-
-  // Cryptographic methods
+  // Signature methods with Node.js-specific types
   sign(data: Buffer): SignatureBuffer;
   signData(data: Buffer): SignatureBuffer;
   verify(signature: SignatureBuffer, data: Buffer): boolean;
   verifySignature(data: Buffer, signature: Buffer, publicKey: Buffer): boolean;
 
-  // Encryption/Decryption methods
+  // Encryption/decryption methods with Node.js-specific types
   encryptDataStream(
     source: AsyncIterable<Buffer>,
     options?: {
@@ -87,8 +71,4 @@ export interface IMember<
   encryptData(data: string | Buffer, recipientPublicKey?: Buffer): Buffer;
 
   decryptData(encryptedData: Buffer): Buffer;
-
-  // Serialization methods
-  toJson(): string;
-  dispose(): void;
 }

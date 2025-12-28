@@ -40,9 +40,7 @@ export class NodeMemberError extends Error {
 /**
  * A member of an ECIES interchange
  */
-export class Member<
-  TID extends string | Types.ObjectId | Buffer | Uint8Array = Buffer,
->
+export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
   implements IMember<TID>, IBackendMemberOperational<TID>
 {
   private readonly _eciesService: ECIESService;
@@ -140,6 +138,26 @@ export class Member<
   }
   public get dateUpdated(): Date {
     return this._dateUpdated;
+  }
+  public get constants(): import('@digitaldefiance/ecies-lib').IECIESConstants {
+    return Constants.ECIES;
+  }
+
+  // Helper methods for string conversion
+  public getPublicKeyString(): string {
+    return this._publicKey.toString('hex');
+  }
+
+  public getIdString(): string {
+    if (typeof this._id === 'string') {
+      return this._id;
+    } else if (Buffer.isBuffer(this._id)) {
+      return this._id.toString('hex');
+    } else if (this._id instanceof Types.ObjectId) {
+      return this._id.toString();
+    }
+    // Fallback for Uint8Array
+    return Buffer.from(this._id as Uint8Array).toString('hex');
   }
 
   // Optional private data getters

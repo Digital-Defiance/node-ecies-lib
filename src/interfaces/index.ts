@@ -24,5 +24,7 @@ export * from './simple-public-key-only-buffer';
 export * from './single-encrypted-parsed-header';
 export * from './stream-config';
 export * from './stream-progress';
+export type { IVotingConsts } from './voting-consts';
+export { VOTING } from './voting-consts';
 export * from './wallet-seed';
 export * from './wrapped-key-consts';

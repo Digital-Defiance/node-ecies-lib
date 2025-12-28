@@ -177,7 +177,7 @@ describe('Streaming Encryption', () => {
       for await (const chunk of member.encryptDataStream(source, {
         onProgress: (progress) => {
           progressCalled = true;
-          expect(progress.processedBytes).toBeGreaterThan(0);
+          expect(progress.bytesProcessed).toBeGreaterThan(0);
           expect(progress.throughputBytesPerSec).toBeGreaterThanOrEqual(0);
         },
       })) {

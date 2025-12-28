@@ -32,8 +32,23 @@
 
 import { createECDH, createHash, createHmac } from 'crypto';
 
+import {
+  IVotingService,
+  IsolatedPrivateKey as SharedIsolatedPrivateKey,
+  IsolatedPublicKey as SharedIsolatedPublicKey,
+} from '@digitaldefiance/ecies-lib';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import type { KeyPair, PrivateKey, PublicKey } from 'paillier-bigint';
+
+import { VotingErrorType } from '../enumerations/voting-error-type';
+import { VotingError } from '../errors/voting';
+import { IsolatedPrivateKey } from '../isolated-private';
+import { IsolatedPublicKey } from '../isolated-public';
+import { type IVotingConsts, VOTING } from '../interfaces/voting-consts';
+
+// Re-export for backwards compatibility
+export type { IVotingConsts };
+export { VOTING };
 
 // Shared math utility types and functions
 export interface DeriveVotingKeysOptions {
@@ -391,11 +406,14 @@ export function generateDeterministicKeyPair(
   let PrivateKey: typeof import('paillier-bigint').PrivateKey;
 
   try {
-    const paillier =
-      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    const paillier = require('paillier-bigint');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     PublicKey = paillier.PublicKey;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     PrivateKey = paillier.PrivateKey;
-  } catch {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     throw new Error(
       'paillier-bigint is required for voting functionality. Install it with: npm install paillier-bigint',
     );
@@ -558,7 +576,7 @@ export function deriveVotingKeysFromECDH(
 /**
  * Voting service for deriving and managing Paillier voting keys from ECDH keys.
  */
-export class VotingService {
+export class VotingService implements IVotingService {
   private static instance?: VotingService;
 
   /**
@@ -579,11 +597,11 @@ export class VotingService {
    * @param options - Configuration options
    * @returns Paillier key pair for voting operations
    */
-  public deriveVotingKeysFromECDH(
+  public async deriveVotingKeysFromECDH(
     ecdhPrivKey: Uint8Array,
     ecdhPubKey: Uint8Array,
     options?: DeriveVotingKeysOptions,
-  ): KeyPair {
+  ): Promise<KeyPair> {
     return deriveVotingKeysFromECDH(ecdhPrivKey, ecdhPubKey, options);
   }
 
@@ -655,11 +673,11 @@ export class VotingService {
   /**
    * Generate a deterministic Paillier key pair from seed
    */
-  public generateDeterministicKeyPair(
+  public async generateDeterministicKeyPair(
     seed: Uint8Array,
     bits?: number,
     primeTestIterations?: number,
-  ): KeyPair {
+  ): Promise<KeyPair> {
     return generateDeterministicKeyPair(seed, bits, primeTestIterations);
   }
 
@@ -675,39 +693,91 @@ export class VotingService {
 
   /**
    * Serialize a Paillier public key to buffer
+   * Format: [magic:4][version:1][keyId:32][n_length:4][n:variable]
    *
    * SECURITY: Public keys are safe to share. This serialization
    * format is deterministic and preserves all key information.
    */
   public votingPublicKeyToBuffer(publicKey: PublicKey): Buffer {
-    // Serialize n value as hex string
-    const nHex = publicKey.n.toString(16);
-    // Store length prefix (4 bytes) + hex string as UTF-8
-    const lengthBuffer = Buffer.alloc(4);
-    lengthBuffer.writeUInt32BE(nHex.length);
-    return Buffer.concat([lengthBuffer, Buffer.from(nHex, 'utf-8')]);
+    // Generate keyId from n
+    const nHex = publicKey.n
+      .toString(VOTING.KEY_RADIX)
+      .padStart(VOTING.PUB_KEY_OFFSET, '0');
+    const nBytes = this.hexToBuffer(nHex);
+    const keyId = this.sha256(nBytes);
+
+    // Prepare n buffer
+    const nHexBytes = Buffer.from(nHex, 'utf-8');
+
+    // Create buffer: magic(4) + version(1) + keyId(32) + n_length(4) + n
+    const result = Buffer.alloc(4 + 1 + 32 + 4 + nHexBytes.length);
+
+    // Write magic
+    const magicBytes = Buffer.from(VOTING.KEY_MAGIC, 'utf-8');
+    magicBytes.copy(result, 0);
+
+    // Write version
+    result[4] = VOTING.KEY_VERSION;
+
+    // Write keyId
+    keyId.copy(result, 5);
+
+    // Write n_length and n
+    result.writeUInt32BE(nHexBytes.length, 37);
+    nHexBytes.copy(result, 41);
+
+    return result;
   }
 
   /**
    * Deserialize a Paillier public key from buffer
+   * Format: [magic:4][version:1][keyId:32][n_length:4][n:variable]
    */
-  public bufferToVotingPublicKey(buffer: Buffer): PublicKey {
+  public async bufferToVotingPublicKey(buffer: Buffer): Promise<PublicKey> {
     // Load PublicKey class
-    const { PublicKey } =
-      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    const { PublicKey } = require('paillier-bigint');
 
-    // Read length prefix
-    const length = buffer.readUInt32BE(0);
-    // Read hex string
-    const nHex = buffer.subarray(4, 4 + length).toString('utf-8');
+    // Minimum buffer length check
+    if (buffer.length < 41) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
+    }
+
+    // Verify magic
+    const magic = buffer.subarray(0, 4).toString('utf-8');
+    if (magic !== VOTING.KEY_MAGIC) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferWrongMagic);
+    }
+
+    // Read version
+    const version = buffer[4];
+    if (version !== VOTING.KEY_VERSION) {
+      throw new VotingError(VotingErrorType.UnsupportedPublicKeyVersion);
+    }
+
+    // Read keyId
+    const keyId = buffer.subarray(5, 37);
+
+    // Read n
+    const nLength = buffer.readUInt32BE(37);
+    const nHex = buffer.subarray(41, 41 + nLength).toString('utf-8');
     const n = BigInt('0x' + nHex);
 
+    // Verify keyId
+    const nBytes = this.hexToBuffer(nHex);
+    const computedKeyId = this.sha256(nBytes);
+    if (!keyId.equals(computedKeyId)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyIdMismatch);
+    }
+
     // g = n + 1 for simplified Paillier
-    return new PublicKey(n, n + 1n) as PublicKey;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    return new PublicKey(n, n + 1n);
   }
 
   /**
    * Serialize a Paillier private key to buffer
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
    *
    * SECURITY WARNING: Private keys must be kept secret!
    * - Only serialize for secure storage or transmission
@@ -716,48 +786,246 @@ export class VotingService {
    * - Consider using hardware security modules (HSM) for production
    */
   public votingPrivateKeyToBuffer(privateKey: PrivateKey): Buffer {
-    // Serialize lambda and mu values
-    const lambdaHex = privateKey.lambda.toString(16);
-    const muHex = privateKey.mu.toString(16);
+    // Serialize lambda and mu values with padding
+    const lambdaHex = privateKey.lambda
+      .toString(VOTING.KEY_RADIX)
+      .padStart(VOTING.PUB_KEY_OFFSET, '0');
+    const muHex = privateKey.mu
+      .toString(VOTING.KEY_RADIX)
+      .padStart(VOTING.PUB_KEY_OFFSET, '0');
 
-    const lambdaLengthBuffer = Buffer.alloc(4);
-    lambdaLengthBuffer.writeUInt32BE(lambdaHex.length);
+    const magicBytes = Buffer.from(VOTING.KEY_MAGIC, 'utf-8');
+    const lambdaBytes = Buffer.from(lambdaHex, 'utf-8');
+    const muBytes = Buffer.from(muHex, 'utf-8');
 
-    const muLengthBuffer = Buffer.alloc(4);
-    muLengthBuffer.writeUInt32BE(muHex.length);
+    // magic(4) + version(1) + lambda_length(4) + lambda + mu_length(4) + mu
+    const result = Buffer.alloc(
+      4 + 1 + 4 + lambdaBytes.length + 4 + muBytes.length,
+    );
 
-    return Buffer.concat([
-      lambdaLengthBuffer,
-      Buffer.from(lambdaHex, 'utf-8'),
-      muLengthBuffer,
-      Buffer.from(muHex, 'utf-8'),
-    ]);
+    // Write magic
+    magicBytes.copy(result, 0);
+
+    // Write version
+    result[4] = VOTING.KEY_VERSION;
+
+    // Write lambda_length and lambda
+    result.writeUInt32BE(lambdaBytes.length, 5);
+    lambdaBytes.copy(result, 9);
+
+    // Write mu_length and mu
+    result.writeUInt32BE(muBytes.length, 9 + lambdaBytes.length);
+    muBytes.copy(result, 13 + lambdaBytes.length);
+
+    return result;
   }
 
   /**
    * Deserialize a Paillier private key from buffer
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
    */
-  public bufferToVotingPrivateKey(
+  public async bufferToVotingPrivateKey(
     buffer: Buffer,
     publicKey: PublicKey,
-  ): PrivateKey {
+  ): Promise<PrivateKey> {
     // Load PrivateKey class
-    const { PrivateKey } =
-      require('paillier-bigint') as typeof import('paillier-bigint'); // eslint-disable-line @typescript-eslint/no-require-imports
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    const { PrivateKey } = require('paillier-bigint');
+
+    // Minimum buffer length check
+    if (buffer.length < 13) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferTooShort);
+    }
+
+    // Verify magic
+    const magic = buffer.subarray(0, 4).toString('utf-8');
+    if (magic !== VOTING.KEY_MAGIC) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferWrongMagic);
+    }
+
+    // Read version
+    const version = buffer[4];
+    if (version !== VOTING.KEY_VERSION) {
+      throw new VotingError(VotingErrorType.UnsupportedPrivateKeyVersion);
+    }
 
     // Read lambda
-    const lambdaLength = buffer.readUInt32BE(0);
-    const lambdaHex = buffer.subarray(4, 4 + lambdaLength).toString('utf-8');
+    const lambdaLength = buffer.readUInt32BE(5);
+    const lambdaHex = buffer.subarray(9, 9 + lambdaLength).toString('utf-8');
     const lambda = BigInt('0x' + lambdaHex);
 
     // Read mu
-    const muLength = buffer.readUInt32BE(4 + lambdaLength);
+    const muLength = buffer.readUInt32BE(9 + lambdaLength);
     const muHex = buffer
-      .subarray(8 + lambdaLength, 8 + lambdaLength + muLength)
+      .subarray(13 + lambdaLength, 13 + lambdaLength + muLength)
       .toString('utf-8');
     const mu = BigInt('0x' + muHex);
 
-    return new PrivateKey(lambda, mu, publicKey) as PrivateKey;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+    return new PrivateKey(lambda, mu, publicKey);
+  }
+
+  /**
+   * Serialize an IsolatedPublicKey to Buffer
+   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable]
+   */
+  public isolatedPublicKeyToBuffer(publicKey: SharedIsolatedPublicKey): Buffer {
+    const key = publicKey as unknown as IsolatedPublicKey;
+    if (!IsolatedPublicKey.isIsolatedPublicKey(key)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
+    }
+
+    const nHex = key.n
+      .toString(VOTING.KEY_RADIX)
+      .padStart(VOTING.PUB_KEY_OFFSET, '0');
+    const keyId = key.getKeyId();
+    const instanceId = key.getInstanceId();
+
+    const magicBytes = Buffer.from(VOTING.KEY_MAGIC, 'utf-8');
+    const nHexBytes = Buffer.from(nHex, 'utf-8');
+
+    // magic(4) + version(1) + keyId(32) + instanceId(32) + n_length(4) + n
+    const result = Buffer.alloc(4 + 1 + 32 + 32 + 4 + nHexBytes.length);
+
+    // Write magic
+    magicBytes.copy(result, 0);
+
+    // Write version
+    result[4] = VOTING.KEY_VERSION;
+
+    // Write keyId
+    Buffer.from(keyId).copy(result, 5);
+
+    // Write instanceId
+    Buffer.from(instanceId).copy(result, 37);
+
+    // Write n_length and n
+    result.writeUInt32BE(nHexBytes.length, 69);
+    nHexBytes.copy(result, 73);
+
+    return result;
+  }
+
+  /**
+   * Deserialize an IsolatedPublicKey from Buffer
+   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable]
+   */
+  public async bufferToIsolatedPublicKey(
+    buffer: Buffer,
+  ): Promise<SharedIsolatedPublicKey> {
+    // Minimum buffer length check
+    if (buffer.length < 73) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
+    }
+
+    // Verify magic
+    const magic = buffer.subarray(0, 4).toString('utf-8');
+    if (magic !== VOTING.KEY_MAGIC) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferWrongMagic);
+    }
+
+    // Read version
+    const version = buffer[4];
+    if (version !== VOTING.KEY_VERSION) {
+      throw new VotingError(VotingErrorType.UnsupportedPublicKeyVersion);
+    }
+
+    // Read keyId
+    const keyId = buffer.subarray(5, 37);
+
+    // Read instanceId
+    const instanceId = buffer.subarray(37, 69);
+
+    // Read n
+    const nLength = buffer.readUInt32BE(69);
+    const nHex = buffer.subarray(73, 73 + nLength).toString('utf-8');
+    const n = BigInt('0x' + nHex);
+
+    // g = n + 1 for simplified Paillier
+    const g = n + 1n;
+
+    // Create IsolatedPublicKey using fromBuffer factory method
+    // The keyId and instanceId from the buffer are trusted
+    return IsolatedPublicKey.fromBuffer(
+      n,
+      g,
+      keyId,
+      instanceId,
+    ) as unknown as SharedIsolatedPublicKey;
+  }
+
+  /**
+   * Serialize an IsolatedPrivateKey to Buffer
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
+   */
+  public isolatedPrivateKeyToBuffer(
+    privateKey: SharedIsolatedPrivateKey,
+  ): Buffer {
+    const key = privateKey as unknown as IsolatedPrivateKey;
+    // IsolatedPrivateKey uses same format as base PrivateKey
+    // Instance validation happens during decryption, not serialization
+    return this.votingPrivateKeyToBuffer(key);
+  }
+
+  /**
+   * Deserialize an IsolatedPrivateKey from Buffer
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
+   */
+  public async bufferToIsolatedPrivateKey(
+    buffer: Buffer,
+    publicKey: SharedIsolatedPublicKey,
+  ): Promise<SharedIsolatedPrivateKey> {
+    const key = publicKey as unknown as IsolatedPublicKey;
+    if (!IsolatedPublicKey.isIsolatedPublicKey(key)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
+    }
+
+    // Minimum buffer length check
+    if (buffer.length < 13) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferTooShort);
+    }
+
+    // Verify magic
+    const magic = buffer.subarray(0, 4).toString('utf-8');
+    if (magic !== VOTING.KEY_MAGIC) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferWrongMagic);
+    }
+
+    // Read version
+    const version = buffer[4];
+    if (version !== VOTING.KEY_VERSION) {
+      throw new VotingError(VotingErrorType.UnsupportedPrivateKeyVersion);
+    }
+
+    // Read lambda
+    const lambdaLength = buffer.readUInt32BE(5);
+    const lambdaHex = buffer.subarray(9, 9 + lambdaLength).toString('utf-8');
+    const lambda = BigInt('0x' + lambdaHex);
+
+    // Read mu
+    const muLength = buffer.readUInt32BE(9 + lambdaLength);
+    const muHex = buffer
+      .subarray(13 + lambdaLength, 13 + lambdaLength + muLength)
+      .toString('utf-8');
+    const mu = BigInt('0x' + muHex);
+
+    return new IsolatedPrivateKey(
+      lambda,
+      mu,
+      key,
+    ) as unknown as SharedIsolatedPrivateKey;
+  }
+
+  // Helper methods for serialization
+  private hexToBuffer(hex: string): Buffer {
+    if (hex.length % 2 !== 0) {
+      hex = '0' + hex;
+    }
+    return Buffer.from(hex, 'hex');
+  }
+
+  private sha256(data: Buffer): Buffer {
+    return createHash('sha256').update(data).digest();
   }
 
   // Aliases for cross-platform compatibility tests
@@ -765,18 +1033,20 @@ export class VotingService {
     return this.votingPublicKeyToBuffer(publicKey);
   }
 
-  public deserializePublicKey(buffer: Buffer | Uint8Array): PublicKey {
-    return this.bufferToVotingPublicKey(Buffer.from(buffer));
+  public async deserializePublicKey(
+    buffer: Buffer | Uint8Array,
+  ): Promise<PublicKey> {
+    return await this.bufferToVotingPublicKey(Buffer.from(buffer));
   }
 
   public serializePrivateKey(privateKey: PrivateKey): Buffer {
     return this.votingPrivateKeyToBuffer(privateKey);
   }
 
-  public deserializePrivateKey(
+  public async deserializePrivateKey(
     buffer: Buffer | Uint8Array,
     publicKey: PublicKey,
-  ): PrivateKey {
-    return this.bufferToVotingPrivateKey(Buffer.from(buffer), publicKey);
+  ): Promise<PrivateKey> {
+    return await this.bufferToVotingPrivateKey(Buffer.from(buffer), publicKey);
   }
 }
