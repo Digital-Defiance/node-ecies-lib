@@ -23,6 +23,7 @@ import type { IEncryptionConsts } from './interfaces/encryption-consts';
 import type { IKeyringConsts } from './interfaces/keyring-consts';
 import type { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
+import { VOTING } from './interfaces/voting-consts';
 
 /**
  * Constants for checksum operations
@@ -207,6 +208,10 @@ export const Constants: IConstants = Object.freeze({
    * Encryption constants used for encrypted data
    */
   ENCRYPTION: ENCRYPTION,
+  /**
+   * Voting constants used for homomorphic encryption voting
+   */
+  VOTING: VOTING,
   /**
    * Algorithm configuration string for keyring operations
    */
