@@ -259,7 +259,9 @@ describe('Paillier Cross-Platform Compatibility', () => {
           frontendKeyPair.publicKey,
         );
 
-      expect(backendDeserialized.lambda).toBe(frontendKeyPair.privateKey.lambda);
+      expect(backendDeserialized.lambda).toBe(
+        frontendKeyPair.privateKey.lambda,
+      );
       expect(backendDeserialized.mu).toBe(frontendKeyPair.privateKey.mu);
     });
 

@@ -59,7 +59,10 @@ export class ProgressTracker {
       this.bytesProcessed < this.totalBytes
     ) {
       const remainingBytes = this.totalBytes - this.bytesProcessed;
-      estimatedTimeRemaining = Math.max(0, remainingBytes / throughputBytesPerSec);
+      estimatedTimeRemaining = Math.max(
+        0,
+        remainingBytes / throughputBytesPerSec,
+      );
     }
 
     return {
@@ -91,7 +94,10 @@ export class ProgressTracker {
       this.bytesProcessed < this.totalBytes
     ) {
       const remainingBytes = this.totalBytes - this.bytesProcessed;
-      estimatedTimeRemaining = Math.max(0, remainingBytes / throughputBytesPerSec);
+      estimatedTimeRemaining = Math.max(
+        0,
+        remainingBytes / throughputBytesPerSec,
+      );
     }
 
     return {

@@ -22,8 +22,8 @@ import type { IConstants } from './interfaces/constants';
 import type { IEncryptionConsts } from './interfaces/encryption-consts';
 import type { IKeyringConsts } from './interfaces/keyring-consts';
 import type { PbkdfProfiles } from './interfaces/pbkdf-profiles';
-import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 import { VOTING } from './interfaces/voting-consts';
+import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
 
 /**
  * Constants for checksum operations

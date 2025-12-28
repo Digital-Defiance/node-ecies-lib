@@ -42,13 +42,12 @@ import type { KeyPair, PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { VotingErrorType } from '../enumerations/voting-error-type';
 import { VotingError } from '../errors/voting';
+import { VOTING } from '../interfaces/voting-consts';
 import { IsolatedPrivateKey } from '../isolated-private';
 import { IsolatedPublicKey } from '../isolated-public';
-import { type IVotingConsts, VOTING } from '../interfaces/voting-consts';
 
-// Re-export for backwards compatibility
-export type { IVotingConsts };
-export { VOTING };
+// Note: VOTING is imported for internal use; exported via interfaces/index.ts
+// No need to re-export here to avoid duplicate exports
 
 // Shared math utility types and functions
 export interface DeriveVotingKeysOptions {
