@@ -7,7 +7,7 @@ export * from './lib';
 export * from './constants';
 export * from './enumerations';
 export * from './i18n';
-export * from './interfaces';
+export type { IMember } from './interfaces';
 export * from './member';
 export * from './types';
 

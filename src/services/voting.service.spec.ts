@@ -476,7 +476,8 @@ describe('VotingService', () => {
   describe('Enhanced Paillier Homomorphic Property Tests', () => {
     let keyPair: { publicKey: PublicKey; privateKey: PrivateKey };
 
-    beforeEach(() => {
+    beforeAll(() => {
+      // Generate keys ONCE for all tests - major performance improvement
       const seed = randomBytes(64);
       keyPair = generateDeterministicKeyPair(seed, 2048, 128);
     });
