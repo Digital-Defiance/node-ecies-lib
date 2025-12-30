@@ -3,6 +3,11 @@
  */
 
 export { Poll } from './poll-core';
+export {
+  VotingPoll,
+  type ECKeyPairBuffer,
+  type VotingPollResults,
+} from './poll';
 export { VoteEncoder } from './encoder';
 export { PollTallier } from './tallier';
 export { PollFactory } from './factory';
@@ -17,6 +22,19 @@ export {
   type AuditEntry,
   type AuditLog,
 } from './audit';
+export {
+  PublicBulletinBoard,
+  type BulletinBoard,
+  type BulletinBoardEntry,
+  type TallyProof,
+} from './bulletin-board';
+export {
+  PollEventLogger,
+  EventType,
+  type EventLogger,
+  type EventLogEntry,
+  type PollConfiguration,
+} from './event-logger';
 export {
   VotingMethod,
   type VoteReceipt,

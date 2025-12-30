@@ -48,6 +48,24 @@ This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuri
 - **Runtime Configuration**: Injectable configuration profiles via `ConstantsRegistry` for dependency injection and testing.
 - **Cross-Platform**: Fully compatible with similarly numbered releases of `@digitaldefiance/ecies-lib` (browser).
 
+### 🗳️ Government-Grade Voting System
+
+A comprehensive voting system built on homomorphic encryption with 17 voting methods and 1100+ test cases:
+
+- **Fully Secure Methods**: Plurality, Approval, Weighted, Borda Count, Score, Yes/No, Supermajority
+- **Multi-Round Methods**: Ranked Choice (IRV), Two-Round, STAR, STV
+- **Core Security Features**:
+  - Homomorphic encryption (Paillier cryptosystem) - votes remain encrypted until tally
+  - Verifiable receipts with ECDSA signatures
+  - Public bulletin board with Merkle tree integrity
+  - Immutable audit log with cryptographic hash chain
+  - Event logger with microsecond timestamps
+  - Role separation (poll aggregator cannot decrypt votes)
+  - Double-vote prevention
+- **Government Requirements (EARS)**: Audit Log, Bulletin Board, Event Logger
+
+See [Voting System Documentation](src/lib/voting/README.md) for complete details.
+
 ## Compatibility
 
 **Important Note**: This library is **NOT** binary compatible with previous major versions (v1.x, v2.x, v3.x) due to the protocol upgrade to v4.0 (HKDF, AAD binding).
@@ -232,6 +250,20 @@ const encrypted = member.encryptData('My Secrets');
   - Stores sensitive data in memory using XOR obfuscation.
   - `dispose()` method to explicitly zero out memory.
   - Prevents accidental leakage via `console.log` or serialization.
+
+### Voting System
+
+- **`Poll`**: Core poll with vote aggregation and receipt issuance.
+- **`VotingPoll`**: High-level voting with encrypted receipts.
+- **`PollTallier`**: Decrypts and tallies votes (holds private key).
+- **`VoteEncoder`**: Encrypts votes using Paillier homomorphic encryption.
+- **`PollFactory`**: Convenient poll creation with method-specific configurations.
+- **`VotingSecurityValidator`**: Security level validation and enforcement.
+- **`ImmutableAuditLog`**: Hash-chained audit trail for compliance.
+- **`PublicBulletinBoard`**: Append-only vote publication with Merkle tree.
+- **`PollEventLogger`**: Event tracking with microsecond timestamps.
+- **`VotingMethod`**: Enum with all 17 voting methods.
+- **`SecurityLevel`**: Enum for security classifications (FullyHomomorphic, MultiRound, Insecure).
 
 ## Development
 
