@@ -179,6 +179,23 @@ const ecies = new ECIESService();
 const id = config.idProvider.generate(); // Returns 16-byte Uint8Array
 ```
 
+**Note**: The `ECIESService` constructor accepts both `IConstants` (from `createRuntimeConfiguration` or `registerNodeRuntimeConfiguration`) and `Partial<IECIESConfig>` for backward compatibility:
+
+```typescript
+// Option 1: Pass IConstants directly (recommended)
+const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const ecies1 = new ECIESService(config);
+
+// Option 2: Pass partial ECIES config (legacy)
+const ecies2 = new ECIESService({ 
+  curveName: 'secp256k1',
+  symmetricAlgorithm: 'aes-256-gcm' 
+});
+
+// Option 3: Use defaults
+const ecies3 = new ECIESService();
+```
+
 ### 3. Streaming Encryption (Large Files)
 
 Encrypt gigabytes of data with minimal memory footprint (<10MB).
@@ -233,6 +250,10 @@ const encrypted = member.encryptData('My Secrets');
 ### Core Services
 
 - **`ECIESService`**: The main entry point for encryption/decryption operations.
+  - **Constructor**: `constructor(config?: Partial<IECIESConfig> | IConstants, eciesParams?: IECIESConstants)`
+    - Accepts either `IConstants` (from `createRuntimeConfiguration`) or `Partial<IECIESConfig>` for backward compatibility
+    - When `IConstants` is provided, ECIES configuration is automatically extracted
+    - Optional `eciesParams` provides default values for any missing configuration
 - **`EciesCryptoCore`**: Low-level cryptographic primitives (keys, signatures, ECDH).
 - **`EciesMultiRecipient`**: Specialized service for handling multi-recipient messages.
 - **`EncryptionStream`**: Helper for chunked file encryption.

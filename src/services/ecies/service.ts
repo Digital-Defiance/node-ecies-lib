@@ -5,6 +5,7 @@ import {
   EciesStringKey,
   getEciesI18nEngine,
   HexString,
+  IConstants,
   IECIESConfig,
   IECIESConstants,
   SecureString,
@@ -38,21 +39,34 @@ export class ECIESService {
   protected readonly utilities: EciesUtilities;
 
   constructor(
-    config?: Partial<IECIESConfig>,
+    config?: Partial<IECIESConfig> | IConstants,
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
-    const actualConfig = config || {};
+    // Type guard to check if config is IConstants
+    const isFullConfig = config && typeof config === 'object' && 'ECIES' in config && 'idProvider' in config;
+    
+    // Extract ECIES config from IConstants or use config directly
+    const eciesConfig: Partial<IECIESConfig> = isFullConfig
+      ? {
+          curveName: (config as IConstants).ECIES.CURVE_NAME,
+          primaryKeyDerivationPath: (config as IConstants).ECIES.PRIMARY_KEY_DERIVATION_PATH,
+          mnemonicStrength: (config as IConstants).ECIES.MNEMONIC_STRENGTH,
+          symmetricAlgorithm: (config as IConstants).ECIES.SYMMETRIC.ALGORITHM,
+          symmetricKeyBits: (config as IConstants).ECIES.SYMMETRIC.KEY_BITS,
+          symmetricKeyMode: (config as IConstants).ECIES.SYMMETRIC.MODE,
+        }
+      : (config as Partial<IECIESConfig> | undefined) || {};
+
     const eciesConsts = eciesParams || Constants.ECIES;
 
     this._config = {
-      ...config,
       curveName: eciesConsts.CURVE_NAME,
       primaryKeyDerivationPath: eciesConsts.PRIMARY_KEY_DERIVATION_PATH,
       mnemonicStrength: eciesConsts.MNEMONIC_STRENGTH,
       symmetricAlgorithm: eciesConsts.SYMMETRIC.ALGORITHM,
       symmetricKeyBits: eciesConsts.SYMMETRIC.KEY_BITS,
       symmetricKeyMode: eciesConsts.SYMMETRIC.MODE,
-      ...actualConfig,
+      ...eciesConfig,
     };
 
     // Initialize all components
