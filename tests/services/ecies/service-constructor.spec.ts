@@ -5,8 +5,12 @@
  * These tests validate the constructor accepts both IConstants and Partial<IECIESConfig>
  */
 
-import { createRuntimeConfiguration, IConstants } from '@digitaldefiance/ecies-lib';
-import { GuidV4Provider, ObjectIdProvider } from '@digitaldefiance/ecies-lib';
+import {
+  createRuntimeConfiguration,
+  IConstants,
+  GuidV4Provider,
+  ObjectIdProvider,
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../../../src/services/ecies/service';
 import type { IECIESConfig } from '@digitaldefiance/ecies-lib';
 

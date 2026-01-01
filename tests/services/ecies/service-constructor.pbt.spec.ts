@@ -6,7 +6,11 @@
  */
 
 import * as fc from 'fast-check';
-import { createRuntimeConfiguration, GuidV4Provider, ObjectIdProvider } from '@digitaldefiance/ecies-lib';
+import {
+  createRuntimeConfiguration,
+  GuidV4Provider,
+  ObjectIdProvider,
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../../../src/services/ecies/service';
 import type { IECIESConfig } from '@digitaldefiance/ecies-lib';
 
@@ -74,10 +78,7 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
           fc.record(
             {
               curveName: fc.constantFrom('secp256k1', 'secp256k1'),
-              symmetricAlgorithm: fc.constantFrom(
-                'aes-256-gcm',
-                'aes-256-gcm',
-              ),
+              symmetricAlgorithm: fc.constantFrom('aes-256-gcm', 'aes-256-gcm'),
               symmetricKeyBits: fc.constantFrom(256, 256),
               symmetricKeyMode: fc.constantFrom('gcm', 'gcm'),
             },
@@ -171,9 +172,7 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
             const service = new ECIESService(constants);
 
             // Verify all ECIES config fields were correctly extracted
-            expect(service.config.curveName).toBe(
-              constants.ECIES.CURVE_NAME,
-            );
+            expect(service.config.curveName).toBe(constants.ECIES.CURVE_NAME);
             expect(service.config.primaryKeyDerivationPath).toBe(
               constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
             );

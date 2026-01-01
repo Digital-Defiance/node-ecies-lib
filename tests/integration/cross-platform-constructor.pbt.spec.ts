@@ -3,19 +3,19 @@
  *
  * Feature: fix-ecies-constructor-signature
  * Task: 4.2 Write property test for cross-platform consistency
- * 
+ *
  * Property 3: Cross-Platform Consistency
  * Validates: Requirements 3.1, 3.2
- * 
+ *
  * For any valid configuration object, passing it to ECIESService in the browser
  * library should have the same TypeScript behavior as passing it to ECIESService
  * in the Node.js library.
  */
 
 import * as fc from 'fast-check';
-import { 
-  createRuntimeConfiguration, 
-  GuidV4Provider, 
+import {
+  createRuntimeConfiguration,
+  GuidV4Provider,
   ObjectIdProvider,
   ECIESService as BrowserECIES,
   type IECIESConfig,
@@ -25,7 +25,7 @@ import { ECIESService as NodeECIES } from '../../src/services/ecies/service';
 describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
   /**
    * Property 3: Cross-Platform Consistency
-   * 
+   *
    * For any valid configuration object, passing it to ECIESService in the browser
    * library should have the same TypeScript behavior as passing it to ECIESService
    * in the Node.js library.
@@ -53,21 +53,23 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
             expect(nodeService).toBeInstanceOf(NodeECIES);
 
             // Both should extract the same ECIES config
-            expect(browserService.config.curveName).toBe(config.ECIES.CURVE_NAME);
+            expect(browserService.config.curveName).toBe(
+              config.ECIES.CURVE_NAME,
+            );
             expect(nodeService.config.curveName).toBe(config.ECIES.CURVE_NAME);
-            
+
             expect(browserService.config.symmetricAlgorithm).toBe(
-              config.ECIES.SYMMETRIC.ALGORITHM
+              config.ECIES.SYMMETRIC.ALGORITHM,
             );
             expect(nodeService.config.symmetricAlgorithm).toBe(
-              config.ECIES.SYMMETRIC.ALGORITHM
+              config.ECIES.SYMMETRIC.ALGORITHM,
             );
-            
+
             expect(browserService.config.symmetricKeyBits).toBe(
-              config.ECIES.SYMMETRIC.KEY_BITS
+              config.ECIES.SYMMETRIC.KEY_BITS,
             );
             expect(nodeService.config.symmetricKeyBits).toBe(
-              config.ECIES.SYMMETRIC.KEY_BITS
+              config.ECIES.SYMMETRIC.KEY_BITS,
             );
 
             // Both should have identical config
@@ -103,15 +105,19 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
 
             // Verify partial config values were applied identically
             if (partialConfig.curveName) {
-              expect(browserService.config.curveName).toBe(partialConfig.curveName);
-              expect(nodeService.config.curveName).toBe(partialConfig.curveName);
+              expect(browserService.config.curveName).toBe(
+                partialConfig.curveName,
+              );
+              expect(nodeService.config.curveName).toBe(
+                partialConfig.curveName,
+              );
             }
             if (partialConfig.symmetricAlgorithm) {
               expect(browserService.config.symmetricAlgorithm).toBe(
-                partialConfig.symmetricAlgorithm
+                partialConfig.symmetricAlgorithm,
               );
               expect(nodeService.config.symmetricAlgorithm).toBe(
-                partialConfig.symmetricAlgorithm
+                partialConfig.symmetricAlgorithm,
               );
             }
           },
@@ -122,21 +128,18 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
 
     it('should accept no parameters in both libraries', () => {
       fc.assert(
-        fc.property(
-          fc.constant(undefined),
-          () => {
-            // Both libraries should accept no parameters
-            const browserService = new BrowserECIES();
-            const nodeService = new NodeECIES();
+        fc.property(fc.constant(undefined), () => {
+          // Both libraries should accept no parameters
+          const browserService = new BrowserECIES();
+          const nodeService = new NodeECIES();
 
-            // Both should be properly initialized
-            expect(browserService).toBeInstanceOf(BrowserECIES);
-            expect(nodeService).toBeInstanceOf(NodeECIES);
+          // Both should be properly initialized
+          expect(browserService).toBeInstanceOf(BrowserECIES);
+          expect(nodeService).toBeInstanceOf(NodeECIES);
 
-            // Both should have identical default config
-            expect(browserService.config).toEqual(nodeService.config);
-          },
-        ),
+          // Both should have identical default config
+          expect(browserService.config).toEqual(nodeService.config);
+        }),
         { numRuns: 100 },
       );
     });
@@ -162,8 +165,10 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
             expect(nodeMnemonic.value?.split(' ').length).toBe(24);
 
             // Both should produce key pairs with same structure
-            const browserKeyPair = browserService.mnemonicToSimpleKeyPair(browserMnemonic);
-            const nodeKeyPair = nodeService.mnemonicToSimpleKeyPair(nodeMnemonic);
+            const browserKeyPair =
+              browserService.mnemonicToSimpleKeyPair(browserMnemonic);
+            const nodeKeyPair =
+              nodeService.mnemonicToSimpleKeyPair(nodeMnemonic);
 
             expect(browserKeyPair.privateKey).toBeInstanceOf(Uint8Array);
             expect(nodeKeyPair.privateKey).toBeInstanceOf(Uint8Array);
@@ -183,10 +188,7 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
     it('should handle documented usage pattern identically', () => {
       fc.assert(
         fc.property(
-          fc.constantFrom(
-            new GuidV4Provider(),
-            new ObjectIdProvider(),
-          ),
+          fc.constantFrom(new GuidV4Provider(), new ObjectIdProvider()),
           (idProvider) => {
             // This is the documented pattern from README
             const config = createRuntimeConfiguration({ idProvider });
@@ -222,7 +224,8 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
             // Both should extract identical ECIES config
             const browserConfig: IECIESConfig = {
               curveName: browserService.config.curveName,
-              primaryKeyDerivationPath: browserService.config.primaryKeyDerivationPath,
+              primaryKeyDerivationPath:
+                browserService.config.primaryKeyDerivationPath,
               mnemonicStrength: browserService.config.mnemonicStrength,
               symmetricAlgorithm: browserService.config.symmetricAlgorithm,
               symmetricKeyBits: browserService.config.symmetricKeyBits,
@@ -231,7 +234,8 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
 
             const nodeConfig: IECIESConfig = {
               curveName: nodeService.config.curveName,
-              primaryKeyDerivationPath: nodeService.config.primaryKeyDerivationPath,
+              primaryKeyDerivationPath:
+                nodeService.config.primaryKeyDerivationPath,
               mnemonicStrength: nodeService.config.mnemonicStrength,
               symmetricAlgorithm: nodeService.config.symmetricAlgorithm,
               symmetricKeyBits: nodeService.config.symmetricKeyBits,
@@ -241,7 +245,8 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
             expect(browserConfig).toEqual(nodeConfig);
             expect(browserConfig).toEqual({
               curveName: constants.ECIES.CURVE_NAME,
-              primaryKeyDerivationPath: constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
+              primaryKeyDerivationPath:
+                constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
               mnemonicStrength: constants.ECIES.MNEMONIC_STRENGTH,
               symmetricAlgorithm: constants.ECIES.SYMMETRIC.ALGORITHM,
               symmetricKeyBits: constants.ECIES.SYMMETRIC.KEY_BITS,
