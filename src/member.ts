@@ -492,15 +492,19 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     const email = new EmailString(storage.email);
 
     // Deserialize IDs using configured idProvider
-    const id = Buffer.from(eciesService.constants.idProvider.deserialize(storage.id));
-    const creatorId = Buffer.from(eciesService.constants.idProvider.deserialize(storage.creatorId));
+    const id = Buffer.from(
+      eciesService.constants.idProvider.deserialize(storage.id),
+    );
+    const creatorId = Buffer.from(
+      eciesService.constants.idProvider.deserialize(storage.creatorId),
+    );
 
     // Optional validation: warn if ID length doesn't match configured idProvider
     const expectedLength = eciesService.constants.idProvider.byteLength;
     if (id.length !== expectedLength) {
       console.warn(
         `Member ID length (${id.length}) does not match configured idProvider length (${expectedLength}). ` +
-        `This may indicate the Member was created with a different idProvider configuration.`
+          `This may indicate the Member was created with a different idProvider configuration.`,
       );
     }
 
@@ -599,7 +603,8 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     );
 
     // Use configured idProvider from service, with defensive fallback
-    const idProvider = eciesService.constants?.idProvider ?? Constants.idProvider;
+    const idProvider =
+      eciesService.constants?.idProvider ?? Constants.idProvider;
     const newId = Buffer.from(idProvider.generate());
     const dateCreated = new Date();
     return {

@@ -195,7 +195,9 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       );
 
       // Both should convert to valid UUIDs
-      const browserGuid = GuidV4.fromBuffer(Buffer.from(browserResult.member.id));
+      const browserGuid = GuidV4.fromBuffer(
+        Buffer.from(browserResult.member.id),
+      );
       const nodeGuid = GuidV4.fromBuffer(Buffer.from(nodeResult.member.id));
 
       // Verify both match UUID v4 format
@@ -479,7 +481,9 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
           ),
           fc.constantFrom(MemberType.User, MemberType.Admin),
-          fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim() === s),
+          fc
+            .string({ minLength: 1, maxLength: 50 })
+            .filter((s) => s.trim() === s),
           fc.emailAddress(),
           async (constants, memberType, name, email) => {
             const browserService = new BrowserECIESService(constants);
@@ -501,7 +505,9 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             );
 
             // Verify same ID length
-            expect(browserResult.member.id.length).toBe(nodeResult.member.id.length);
+            expect(browserResult.member.id.length).toBe(
+              nodeResult.member.id.length,
+            );
             expect(browserResult.member.id.length).toBe(
               constants.idProvider.byteLength,
             );
@@ -530,7 +536,9 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
           ),
           fc.constantFrom(MemberType.User, MemberType.Admin),
-          fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim() === s),
+          fc
+            .string({ minLength: 1, maxLength: 50 })
+            .filter((s) => s.trim() === s),
           fc.emailAddress(),
           async (constants, memberType, name, email) => {
             const browserService = new BrowserECIESService(constants);
@@ -554,7 +562,8 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             // Both should convert to string format without errors
             expect(() => {
               const browserIdBuffer = Buffer.from(browserResult.member.id);
-              const browserIdString = constants.idProvider.serialize(browserIdBuffer);
+              const browserIdString =
+                constants.idProvider.serialize(browserIdBuffer);
               expect(browserIdString).toBeDefined();
               expect(typeof browserIdString).toBe('string');
             }).not.toThrow();
@@ -588,7 +597,9 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
           ),
           fc.constantFrom(MemberType.User, MemberType.Admin),
-          fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim() === s),
+          fc
+            .string({ minLength: 1, maxLength: 50 })
+            .filter((s) => s.trim() === s),
           fc.emailAddress(),
           async (constants, memberType, name, email) => {
             const browserService = new BrowserECIESService(constants);

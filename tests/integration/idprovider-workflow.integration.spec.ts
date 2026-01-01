@@ -276,7 +276,9 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(user.member.id.length).toBe(16);
 
       // Verify createdBy relationship
-      expect(Buffer.from(user.member.creatorId)).toEqual(Buffer.from(admin.member.id));
+      expect(Buffer.from(user.member.creatorId)).toEqual(
+        Buffer.from(admin.member.id),
+      );
 
       // Verify both IDs are UUID-compatible
       const adminGuid = GuidV4.fromBuffer(Buffer.from(admin.member.id));
@@ -311,7 +313,9 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       const deserialized = Member.fromJson(json, service);
 
       // Verify ID preserved
-      expect(Buffer.from(deserialized.id)).toEqual(Buffer.from(result.member.id));
+      expect(Buffer.from(deserialized.id)).toEqual(
+        Buffer.from(result.member.id),
+      );
       expect(deserialized.id.length).toBe(16);
 
       // Verify all properties preserved
@@ -349,8 +353,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       }
 
       // Verify all IDs are unique
-      const idStrings = members.map(m =>
-        GuidV4.fromBuffer(Buffer.from(m.id)).asFullHexGuid,
+      const idStrings = members.map(
+        (m) => GuidV4.fromBuffer(Buffer.from(m.id)).asFullHexGuid,
       );
       const uniqueIds = new Set(idStrings);
       expect(uniqueIds.size).toBe(members.length);
@@ -386,7 +390,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       }
 
       // Verify all IDs are unique
-      const idStrings = members.map(m =>
+      const idStrings = members.map((m) =>
         config.idProvider.serialize(Buffer.from(m.id)),
       );
       const uniqueIds = new Set(idStrings);
@@ -452,9 +456,15 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
     it('should maintain isolation between service instances', () => {
       // Create multiple services
       const services = [
-        new ECIESService(createRuntimeConfiguration({ idProvider: new GuidV4Provider() })),
-        new ECIESService(createRuntimeConfiguration({ idProvider: new ObjectIdProvider() })),
-        new ECIESService(createRuntimeConfiguration({ idProvider: new GuidV4Provider() })),
+        new ECIESService(
+          createRuntimeConfiguration({ idProvider: new GuidV4Provider() }),
+        ),
+        new ECIESService(
+          createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
+        ),
+        new ECIESService(
+          createRuntimeConfiguration({ idProvider: new GuidV4Provider() }),
+        ),
         new ECIESService(), // Default
       ];
 
@@ -484,11 +494,36 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Interleave Member creation
-      const m1 = Member.newMember(guidService, MemberType.User, 'G1', new EmailString('g1@example.com'));
-      const m2 = Member.newMember(objectIdService, MemberType.User, 'O1', new EmailString('o1@example.com'));
-      const m3 = Member.newMember(guidService, MemberType.User, 'G2', new EmailString('g2@example.com'));
-      const m4 = Member.newMember(objectIdService, MemberType.User, 'O2', new EmailString('o2@example.com'));
-      const m5 = Member.newMember(guidService, MemberType.User, 'G3', new EmailString('g3@example.com'));
+      const m1 = Member.newMember(
+        guidService,
+        MemberType.User,
+        'G1',
+        new EmailString('g1@example.com'),
+      );
+      const m2 = Member.newMember(
+        objectIdService,
+        MemberType.User,
+        'O1',
+        new EmailString('o1@example.com'),
+      );
+      const m3 = Member.newMember(
+        guidService,
+        MemberType.User,
+        'G2',
+        new EmailString('g2@example.com'),
+      );
+      const m4 = Member.newMember(
+        objectIdService,
+        MemberType.User,
+        'O2',
+        new EmailString('o2@example.com'),
+      );
+      const m5 = Member.newMember(
+        guidService,
+        MemberType.User,
+        'G3',
+        new EmailString('g3@example.com'),
+      );
 
       // Verify correct ID lengths
       expect(m1.member.id.length).toBe(16);
@@ -537,7 +572,9 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Decrypt using recipient's private key
-      const recipientKeyPair = service.mnemonicToSimpleKeyPairBuffer(recipient.mnemonic);
+      const recipientKeyPair = service.mnemonicToSimpleKeyPairBuffer(
+        recipient.mnemonic,
+      );
       const decrypted = service.decryptSimpleOrSingleWithHeader(
         true,
         recipientKeyPair.privateKey,

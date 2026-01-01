@@ -88,21 +88,31 @@ export class ECIESService {
   /**
    * Robust type guard to check if config is IConstants
    */
-  private isIConstants(config: any): config is IConstants {
+  private isIConstants(
+    config: Partial<IECIESConfig> | IConstants | undefined,
+  ): config is IConstants {
     if (!config || typeof config !== 'object') {
       return false;
     }
 
-    // Check for required IConstants fields
-    const hasECIES = 'ECIES' in config && typeof config.ECIES === 'object';
+    // Check for required IConstants fields using type-safe property access
+    const configRecord = config as Record<string, unknown>;
+
+    const hasECIES =
+      'ECIES' in configRecord && typeof configRecord['ECIES'] === 'object';
+
+    const idProvider = configRecord['idProvider'];
     const hasIdProvider =
-      'idProvider' in config &&
-      typeof config.idProvider === 'object' &&
-      typeof config.idProvider.generate === 'function' &&
-      typeof config.idProvider.byteLength === 'number';
+      'idProvider' in configRecord &&
+      typeof idProvider === 'object' &&
+      idProvider !== null &&
+      typeof (idProvider as Record<string, unknown>)['generate'] ===
+        'function' &&
+      typeof (idProvider as Record<string, unknown>)['byteLength'] === 'number';
+
     const hasMemberIdLength =
-      'MEMBER_ID_LENGTH' in config &&
-      typeof config.MEMBER_ID_LENGTH === 'number';
+      'MEMBER_ID_LENGTH' in configRecord &&
+      typeof configRecord['MEMBER_ID_LENGTH'] === 'number';
 
     return hasECIES && hasIdProvider && hasMemberIdLength;
   }

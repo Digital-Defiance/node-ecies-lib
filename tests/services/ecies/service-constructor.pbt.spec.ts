@@ -365,7 +365,9 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
               createRuntimeConfiguration({ idProvider: new GuidV4Provider() }),
             ),
             fc.constant(
-              createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
+              createRuntimeConfiguration({
+                idProvider: new ObjectIdProvider(),
+              }),
             ),
             // Partial<IECIESConfig>
             fc.record(
@@ -399,4 +401,3 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
     });
   });
 });
-

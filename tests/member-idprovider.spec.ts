@@ -407,8 +407,12 @@ describe('Unit Tests: Member idProvider Integration (Node.js)', () => {
       expect(Buffer.from(deserialized.creatorId)).toEqual(
         Buffer.from(original.creatorId),
       );
-      expect(deserialized.dateCreated.getTime()).toBe(original.dateCreated.getTime());
-      expect(deserialized.dateUpdated.getTime()).toBe(original.dateUpdated.getTime());
+      expect(deserialized.dateCreated.getTime()).toBe(
+        original.dateCreated.getTime(),
+      );
+      expect(deserialized.dateUpdated.getTime()).toBe(
+        original.dateUpdated.getTime(),
+      );
     });
   });
 });
