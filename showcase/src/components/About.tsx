@@ -29,7 +29,7 @@ const About = () => {
           Defiance
         </h2>
         <p className="about-subtitle">
-          Open source excellence in Secure Development tools
+          Open source excellence in cryptographic development tools
         </p>
 
         <div className="about-content">
@@ -49,14 +49,15 @@ const About = () => {
             </p>
             <p>
               We've built <strong>@digitaldefiance/node-ecies-lib</strong> to
-              bring enterprise-grade encryption to the Node.js
+              bring enterprise-grade ECIES encryption to the Node.js
               ecosystem—complete with Protocol v4.0 security, streaming
-              capabilities, and comprehensive internationalization.
+              capabilities, government-grade voting system, and comprehensive
+              internationalization.
             </p>
             <p className="highlight-text">
               <FaCode /> <strong>100% Open Source.</strong> This library is
               freely available under the MIT License. We believe in empowering
-              the entire development community.
+              the entire development community with secure cryptographic tools.
             </p>
           </motion.div>
 
@@ -88,8 +89,8 @@ const About = () => {
               </div>
               <h4>Enterprise Quality</h4>
               <p>
-                Structured workflows, INCOSE validation, and comprehensive
-                testing integration. We don't compromise on quality.
+                220+ tests, comprehensive security hardening, and
+                production-ready code. We don't compromise on quality.
               </p>
             </motion.div>
 
@@ -119,8 +120,8 @@ const About = () => {
         >
           <h3>Join the Community</h3>
           <p>
-            Help us build the future of spec-driven development for AI-assisted
-            coding. Contribute to Akira, report issues, or star us on GitHub to
+            Help us build the future of secure cryptographic development.
+            Contribute to node-ecies-lib, report issues, or star us on GitHub to
             show your support.
           </p>
           <div className="cta-buttons">
@@ -143,13 +144,13 @@ const About = () => {
               Visit Digital Defiance on GitHub
             </a>
             <a
-              href="https://github.com/Digital-Defiance/Akira"
+              href="https://github.com/Digital-Defiance/node-ecies-lib"
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"
             >
               <FaCode />
-              Contribute to Akira
+              Contribute to node-ecies-lib
             </a>
           </div>
         </motion.div>
@@ -161,7 +162,7 @@ const About = () => {
           </p>
           <p className="footer-links">
             <a
-              href="https://github.com/Digital-Defiance/Akira/blob/main/LICENSE"
+              href="https://github.com/Digital-Defiance/node-ecies-lib/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -169,7 +170,7 @@ const About = () => {
             </a>
             {' • '}
             <a
-              href="https://github.com/Digital-Defiance/Akira"
+              href="https://github.com/Digital-Defiance/node-ecies-lib"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -177,11 +178,11 @@ const About = () => {
             </a>
             {' • '}
             <a
-              href="https://marketplace.visualstudio.com/publishers/DigitalDefiance"
+              href="https://www.npmjs.com/package/@digitaldefiance/node-ecies-lib"
               target="_blank"
               rel="noopener noreferrer"
             >
-              VS Code Marketplace
+              NPM
             </a>
           </p>
         </div>
