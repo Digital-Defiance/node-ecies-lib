@@ -32,6 +32,7 @@ import { EciesUtilities } from './utilities';
  */
 export class ECIESService {
   protected readonly _config: IECIESConfig;
+  protected readonly _constants: IConstants;
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly signature: EciesSignature;
   protected readonly singleRecipient: EciesSingleRecipientCore;
@@ -43,22 +44,24 @@ export class ECIESService {
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
     // Type guard to check if config is IConstants
-    const isFullConfig =
-      config &&
-      typeof config === 'object' &&
-      'ECIES' in config &&
-      'idProvider' in config;
+    const isFullConfig = this.isIConstants(config);
+
+    // Store full IConstants or use default Constants
+    if (isFullConfig) {
+      this._constants = config;
+    } else {
+      this._constants = Constants;
+    }
 
     // Extract ECIES config from IConstants or use config directly
     const eciesConfig: Partial<IECIESConfig> = isFullConfig
       ? {
-          curveName: (config as IConstants).ECIES.CURVE_NAME,
-          primaryKeyDerivationPath: (config as IConstants).ECIES
-            .PRIMARY_KEY_DERIVATION_PATH,
-          mnemonicStrength: (config as IConstants).ECIES.MNEMONIC_STRENGTH,
-          symmetricAlgorithm: (config as IConstants).ECIES.SYMMETRIC.ALGORITHM,
-          symmetricKeyBits: (config as IConstants).ECIES.SYMMETRIC.KEY_BITS,
-          symmetricKeyMode: (config as IConstants).ECIES.SYMMETRIC.MODE,
+          curveName: config.ECIES.CURVE_NAME,
+          primaryKeyDerivationPath: config.ECIES.PRIMARY_KEY_DERIVATION_PATH,
+          mnemonicStrength: config.ECIES.MNEMONIC_STRENGTH,
+          symmetricAlgorithm: config.ECIES.SYMMETRIC.ALGORITHM,
+          symmetricKeyBits: config.ECIES.SYMMETRIC.KEY_BITS,
+          symmetricKeyMode: config.ECIES.SYMMETRIC.MODE,
         }
       : (config as Partial<IECIESConfig> | undefined) || {};
 
@@ -82,12 +85,38 @@ export class ECIESService {
     this.utilities = new EciesUtilities();
   }
 
+  /**
+   * Robust type guard to check if config is IConstants
+   */
+  private isIConstants(config: any): config is IConstants {
+    if (!config || typeof config !== 'object') {
+      return false;
+    }
+
+    // Check for required IConstants fields
+    const hasECIES = 'ECIES' in config && typeof config.ECIES === 'object';
+    const hasIdProvider =
+      'idProvider' in config &&
+      typeof config.idProvider === 'object' &&
+      typeof config.idProvider.generate === 'function' &&
+      typeof config.idProvider.byteLength === 'number';
+    const hasMemberIdLength =
+      'MEMBER_ID_LENGTH' in config &&
+      typeof config.MEMBER_ID_LENGTH === 'number';
+
+    return hasECIES && hasIdProvider && hasMemberIdLength;
+  }
+
   public get core(): EciesCryptoCore {
     return this.cryptoCore;
   }
 
   public get config(): IECIESConfig {
     return this._config;
+  }
+
+  public get constants(): IConstants {
+    return this._constants;
   }
 
   /**

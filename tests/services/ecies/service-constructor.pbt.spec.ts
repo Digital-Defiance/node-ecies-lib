@@ -12,7 +12,6 @@ import {
   ObjectIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '../../../src/services/ecies/service';
-import type { IECIESConfig } from '@digitaldefiance/ecies-lib';
 
 describe('Property-Based Tests: ECIESService Constructor', () => {
   /**
@@ -216,7 +215,7 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
             const service = new ECIESService(constants);
 
             // Verify config matches the constants
-            const extractedConfig: IECIESConfig = {
+            const extractedConfig = {
               curveName: constants.ECIES.CURVE_NAME,
               primaryKeyDerivationPath:
                 constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
@@ -233,4 +232,171 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
       );
     });
   });
+
+  /**
+   * Property 1 (idProvider): ECIESService Preserves Full IConstants
+   * Feature: fix-idprovider-member-generation, Property 1: ECIESService Preserves Full IConstants
+   * Validates: Requirements 1.1, 1.2, 1.4
+   *
+   * For any IConstants object passed to ECIESService constructor,
+   * the service's constants property should return an equivalent IConstants
+   * object with the same idProvider.
+   */
+  describe('Property 1 (idProvider): ECIESService Preserves Full IConstants', () => {
+    it('should preserve full IConstants including idProvider', () => {
+      fc.assert(
+        fc.property(
+          // Generate random IConstants with different idProviders
+          fc.constantFrom(
+            createRuntimeConfiguration({ idProvider: new GuidV4Provider() }),
+            createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
+            createRuntimeConfiguration({}), // Default idProvider
+          ),
+          (constants) => {
+            // Create service with IConstants
+            const service = new ECIESService(constants);
+
+            // Verify constants property returns equivalent IConstants
+            expect(service.constants).toBeDefined();
+            expect(service.constants.idProvider).toBe(constants.idProvider);
+            expect(service.constants.idProvider.byteLength).toBe(
+              constants.idProvider.byteLength,
+            );
+            expect(service.constants.MEMBER_ID_LENGTH).toBe(
+              constants.MEMBER_ID_LENGTH,
+            );
+
+            // Verify all major IConstants fields are preserved
+            expect(service.constants.ECIES).toBe(constants.ECIES);
+            expect(service.constants.CHECKSUM).toBe(constants.CHECKSUM);
+            expect(service.constants.PBKDF2).toBe(constants.PBKDF2);
+            expect(service.constants.VOTING).toBe(constants.VOTING);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should preserve idProvider across different configurations', () => {
+      fc.assert(
+        fc.property(
+          fc.constantFrom(new GuidV4Provider(), new ObjectIdProvider()),
+          (idProvider) => {
+            const constants = createRuntimeConfiguration({ idProvider });
+            const service = new ECIESService(constants);
+
+            // Verify idProvider is preserved
+            expect(service.constants.idProvider).toBe(idProvider);
+            expect(service.constants.idProvider.byteLength).toBe(
+              idProvider.byteLength,
+            );
+
+            // Verify idProvider can generate IDs
+            const id = service.constants.idProvider.generate();
+            expect(id).toBeInstanceOf(Uint8Array); // idProvider returns Uint8Array
+            expect(id.length).toBe(idProvider.byteLength);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  /**
+   * Property 2 (idProvider): ECIESService Uses Default Constants When Given Partial Config
+   * Feature: fix-idprovider-member-generation, Property 2: ECIESService Uses Default Constants When Given Partial Config
+   * Validates: Requirements 1.3
+   *
+   * For any Partial<IECIESConfig> passed to ECIESService constructor,
+   * the service's constants property should return the default Constants object.
+   */
+  describe('Property 2 (idProvider): ECIESService Uses Default Constants When Given Partial Config', () => {
+    it('should use default Constants for Partial<IECIESConfig>', () => {
+      fc.assert(
+        fc.property(
+          fc.record(
+            {
+              curveName: fc.constantFrom('secp256k1'),
+              symmetricAlgorithm: fc.constantFrom('aes-256-gcm'),
+              symmetricKeyBits: fc.constantFrom(256),
+            },
+            { requiredKeys: [] },
+          ),
+          (partialConfig) => {
+            const service = new ECIESService(partialConfig);
+
+            // Verify constants property returns default Constants
+            // Note: We can't import Constants from node-ecies-lib, so we check properties
+            expect(service.constants).toBeDefined();
+            expect(service.constants.idProvider).toBeDefined();
+            expect(service.constants.idProvider.byteLength).toBe(12); // Default ObjectIdProvider
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should use default Constants when no config is provided', () => {
+      const service = new ECIESService();
+
+      // Verify constants property returns default Constants
+      expect(service.constants).toBeDefined();
+      expect(service.constants.idProvider).toBeDefined();
+      expect(service.constants.idProvider.byteLength).toBe(12);
+    });
+  });
+
+  /**
+   * Property 3 (idProvider): ECIESService Maintains Backward Compatible Config Property
+   * Feature: fix-idprovider-member-generation, Property 3: ECIESService Maintains Backward Compatible Config Property
+   * Validates: Requirements 1.5, 6.2
+   *
+   * For any ECIESService instance, the config property should return an IECIESConfig
+   * object with all expected ECIES configuration fields, regardless of whether the
+   * service was constructed with IConstants or Partial<IECIESConfig>.
+   */
+  describe('Property 3 (idProvider): ECIESService Maintains Backward Compatible Config Property', () => {
+    it('should return valid IECIESConfig for any construction method', () => {
+      fc.assert(
+        fc.property(
+          fc.oneof(
+            // IConstants
+            fc.constant(
+              createRuntimeConfiguration({ idProvider: new GuidV4Provider() }),
+            ),
+            fc.constant(
+              createRuntimeConfiguration({ idProvider: new ObjectIdProvider() }),
+            ),
+            // Partial<IECIESConfig>
+            fc.record(
+              {
+                curveName: fc.constantFrom('secp256k1'),
+                symmetricAlgorithm: fc.constantFrom('aes-256-gcm'),
+              },
+              { requiredKeys: [] },
+            ),
+            // No config
+            fc.constant(undefined),
+          ),
+          (config) => {
+            const service = new ECIESService(config);
+
+            // Verify config property returns valid IECIESConfig
+            expect(service.config).toBeDefined();
+            expect(service.config.curveName).toBeDefined();
+            expect(service.config.primaryKeyDerivationPath).toBeDefined();
+            expect(service.config.mnemonicStrength).toBeDefined();
+            expect(service.config.symmetricAlgorithm).toBeDefined();
+            expect(service.config.symmetricKeyBits).toBeDefined();
+            expect(service.config.symmetricKeyMode).toBeDefined();
+
+            // Verify config doesn't include idProvider (it's in constants, not config)
+            expect('idProvider' in service.config).toBe(false);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+  });
 });
+

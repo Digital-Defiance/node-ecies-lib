@@ -409,14 +409,14 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
 
   public toJson(): string {
     const storage: IMemberStorageData = {
-      id: Constants.idProvider.serialize(
+      id: this._eciesService.constants.idProvider.serialize(
         toUint8Array(this._id as Buffer | Uint8Array | string),
       ),
       type: this._type,
       name: this._name,
       email: this._email.toString(),
       publicKey: this._publicKey.toString('base64'),
-      creatorId: Constants.idProvider.serialize(
+      creatorId: this._eciesService.constants.idProvider.serialize(
         toUint8Array(this._creatorId as Buffer | Uint8Array | string),
       ),
       dateCreated: this._dateCreated.toISOString(),
@@ -491,6 +491,19 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
 
+    // Deserialize IDs using configured idProvider
+    const id = Buffer.from(eciesService.constants.idProvider.deserialize(storage.id));
+    const creatorId = Buffer.from(eciesService.constants.idProvider.deserialize(storage.creatorId));
+
+    // Optional validation: warn if ID length doesn't match configured idProvider
+    const expectedLength = eciesService.constants.idProvider.byteLength;
+    if (id.length !== expectedLength) {
+      console.warn(
+        `Member ID length (${id.length}) does not match configured idProvider length (${expectedLength}). ` +
+        `This may indicate the Member was created with a different idProvider configuration.`
+      );
+    }
+
     // Pass injected services to constructor
     const dateCreated = new Date(storage.dateCreated);
     return new Member(
@@ -501,10 +514,10 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
       Buffer.from(storage.publicKey, 'base64'),
       undefined,
       undefined,
-      Buffer.from(Constants.idProvider.deserialize(storage.id)),
+      id,
       dateCreated,
       new Date(storage.dateUpdated),
-      Buffer.from(Constants.idProvider.deserialize(storage.creatorId)),
+      creatorId,
     );
   }
 
@@ -585,7 +598,9 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
       Buffer.from(privateKey),
     );
 
-    const newId = Buffer.from(Constants.idProvider.generate());
+    // Use configured idProvider from service, with defensive fallback
+    const idProvider = eciesService.constants?.idProvider ?? Constants.idProvider;
+    const newId = Buffer.from(idProvider.generate());
     const dateCreated = new Date();
     return {
       // Pass injected services to constructor
