@@ -8,7 +8,7 @@ A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve 
 
 Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
 
-> Current Version: v4.1.0
+> Current Version: v4.7.14
 
 This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuring HKDF key derivation, AAD binding, and optimized multi-recipient encryption. It includes a pluggable ID provider system, memory-efficient streaming encryption, and comprehensive internationalization.
 
@@ -486,6 +486,40 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.7.14
+
+**Bug Fix: idProvider Configuration Now Respected by Member.newMember()**
+
+This release fixes a critical bug where `Member.newMember()` ignored the configured `idProvider` in `ECIESService` and always used the default `Constants.idProvider`.
+
+**What Changed:**
+- `ECIESService` now stores the full `IConstants` configuration (not just `IECIESConfig`)
+- New `ECIESService.constants` getter provides access to the complete configuration including `idProvider`
+- `Member.newMember()` now uses `eciesService.constants.idProvider.generate()` for ID generation
+- `Member.toJson()` and `Member.fromJson()` now use the service's configured `idProvider` for serialization
+- `Member.fromJson()` validates ID length and warns if it doesn't match the configured `idProvider`
+
+**Before (Broken):**
+```typescript
+const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const service = new ECIESService(config);
+const { member } = Member.newMember(service, MemberType.User, 'Alice', email);
+console.log(member.id.length); // 12 (wrong - used default ObjectIdProvider)
+```
+
+**After (Fixed):**
+```typescript
+const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const service = new ECIESService(config);
+const { member } = Member.newMember(service, MemberType.User, 'Alice', email);
+console.log(member.id.length); // 16 (correct - uses configured GuidV4Provider)
+```
+
+**Backward Compatibility:**
+- Existing code using default `idProvider` continues to work unchanged
+- The `ECIESService.config` getter still returns `IECIESConfig` for backward compatibility
+- `Member.fromJson()` warns but doesn't fail on ID length mismatch (for compatibility with existing serialized data)
 
 ### v4.4.2
 
