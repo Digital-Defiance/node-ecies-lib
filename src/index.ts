@@ -10,6 +10,7 @@ export * from './i18n';
 export * from './interfaces';
 export * from './member';
 export * from './types';
+export * from './secure-buffer';
 
 // Services - explicit exports to avoid conflicts
 export { AESGCMService } from './services/aes-gcm';
