@@ -3,8 +3,8 @@
  */
 import { randomBytes } from 'crypto';
 
-import type { IMember } from '../../interfaces/member';
 import type { PlatformID } from '../../interfaces';
+import type { IMember } from '../../interfaces/member';
 
 import { Poll } from './poll-core';
 import { VotingMethod } from './types';
@@ -29,11 +29,17 @@ export class PollFactory {
     );
   }
 
-  static createPlurality<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
+  static createPlurality<TID extends PlatformID = Buffer>(
+    choices: string[],
+    authority: IMember<TID>,
+  ): Poll<TID> {
     return this.create(choices, VotingMethod.Plurality, authority);
   }
 
-  static createApproval<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
+  static createApproval<TID extends PlatformID = Buffer>(
+    choices: string[],
+    authority: IMember<TID>,
+  ): Poll<TID> {
     return this.create(choices, VotingMethod.Approval, authority);
   }
 
@@ -47,11 +53,17 @@ export class PollFactory {
     });
   }
 
-  static createBorda<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
+  static createBorda<TID extends PlatformID = Buffer>(
+    choices: string[],
+    authority: IMember<TID>,
+  ): Poll<TID> {
     return this.create(choices, VotingMethod.Borda, authority);
   }
 
-  static createRankedChoice<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
+  static createRankedChoice<TID extends PlatformID = Buffer>(
+    choices: string[],
+    authority: IMember<TID>,
+  ): Poll<TID> {
     return this.create(choices, VotingMethod.RankedChoice, authority);
   }
 }

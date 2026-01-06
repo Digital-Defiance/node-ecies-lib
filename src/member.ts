@@ -4,7 +4,6 @@ import {
   IMemberStorageData,
   MemberErrorType,
   MemberType,
-  PlatformBuffer,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -17,13 +16,13 @@ import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
+import { PlatformID } from './interfaces';
 import { IEncryptedChunk } from './interfaces/encrypted-chunk';
 import { IMember } from './interfaces/member';
 import { IStreamProgress } from './interfaces/stream-progress';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
-import { SignatureBuffer, toBuffer, toUint8Array } from './types';
-import { PlatformID } from './interfaces';
+import { SignatureBuffer, toUint8Array } from './types';
 
 /**
  * Custom error classes that work with the plugin i18n system
@@ -41,9 +40,7 @@ export class NodeMemberError extends Error {
 /**
  * A member of an ECIES interchange
  */
-export class Member<TID extends PlatformID = Buffer>
-  implements IMember<TID>
-{
+export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   private readonly _eciesService: ECIESService;
   private readonly _id: TID;
   private readonly _idBytes: Buffer;
@@ -80,7 +77,7 @@ export class Member<TID extends PlatformID = Buffer>
     this._eciesService = eciesService;
     // Assign original parameters
     this._type = type;
-    const __id = id ?? Constants.idProvider.generate() as TID;
+    const __id = id ?? (Constants.idProvider.generate() as TID);
     this._id = __id;
     this._idBytes = Constants.idProvider.toBytes(__id) as Buffer;
     this._name = name;
@@ -535,7 +532,7 @@ export class Member<TID extends PlatformID = Buffer>
     );
   }
 
-  public static fromMnemonic<TID extends PlatformID = Buffer> (
+  public static fromMnemonic<TID extends PlatformID = Buffer>(
     mnemonic: SecureString,
     eciesService: ECIESService,
     memberType = MemberType.User,

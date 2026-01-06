@@ -9,8 +9,8 @@ import {
   NodeEciesStringKey,
 } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
-import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
 import { PlatformID } from '../interfaces';
+import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
 import { Member } from '../member';
 import { ECIESService } from '../services/ecies';
 
@@ -155,6 +155,12 @@ export class MemberBuilder {
     const service = new ECIESService();
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;
 
-    return Member.fromMnemonic(mnemonic, service, memberType, name, emailObj) as Member<TID>;
+    return Member.fromMnemonic(
+      mnemonic,
+      service,
+      memberType,
+      name,
+      emailObj,
+    ) as Member<TID>;
   }
 }

@@ -96,7 +96,7 @@ describe('Constants Validation', () => {
     it('should export calculateConfigChecksum function', () => {
       const { calculateConfigChecksum } = require('../src/constants');
       expect(typeof calculateConfigChecksum).toBe('function');
-      
+
       const checksum = calculateConfigChecksum(Constants);
       expect(typeof checksum).toBe('string');
       expect(checksum.length).toBeGreaterThan(0);
@@ -105,7 +105,7 @@ describe('Constants Validation', () => {
     it('should export captureCreationStack function', () => {
       const { captureCreationStack } = require('../src/constants');
       expect(typeof captureCreationStack).toBe('function');
-      
+
       const stack = captureCreationStack();
       expect(typeof stack).toBe('string');
       expect(stack.length).toBeGreaterThan(0);

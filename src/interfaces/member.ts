@@ -2,19 +2,16 @@ import type {
   EmailString,
   IECIESConstants,
   MemberType,
-  PlatformBuffer,
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
-import { ObjectId } from 'bson';
-import type { Types } from '@digitaldefiance/mongoose-types';
 import type { Wallet } from '@ethereumjs/wallet';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import type { SignatureBuffer } from '../types';
 
 import type { IEncryptedChunk } from './encrypted-chunk';
-import type { IStreamProgress } from './stream-progress';
 import type { PlatformID } from './platform-id';
+import type { IStreamProgress } from './stream-progress';
 
 /**
  * Interface representing a member with cryptographic capabilities.
@@ -26,9 +23,7 @@ import type { PlatformID } from './platform-id';
  *
  * @template TID - The ID type (Buffer, string, or ObjectId)
  */
-export interface IMember<
-  TID extends PlatformID = Buffer,
-> {
+export interface IMember<TID extends PlatformID = Buffer> {
   // Properties from ISharedMember with Node.js-specific types
   readonly id: TID;
   readonly idBytes: Buffer; // Canonical storage format for crypto operations

@@ -1,5 +1,4 @@
 import type { IConstants } from './constants';
-import type { PlatformID } from './platform-id';
 
 /**
  * Deep partial type utility
@@ -12,7 +11,7 @@ type DeepPartial<T> = {
  * Provenance information for a configuration.
  * Tracks who created it, when, and what modifications were made.
  */
-export interface IConfigurationProvenance<TID extends PlatformID = Buffer> {
+export interface IConfigurationProvenance {
   /**
    * The base configuration key this was derived from
    */

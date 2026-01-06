@@ -9,8 +9,8 @@ import {
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
 
-import { SignatureBuffer } from '../types';
 import { IMember } from '../interfaces';
+import { SignatureBuffer } from '../types';
 
 const createMockWallet = (): Wallet =>
   ({
@@ -156,10 +156,12 @@ export class MockBackendMember implements IMember<Buffer> {
     ) as SignatureBuffer;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   verifySignature(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _data: Buffer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _signature: Buffer,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _publicKey: Buffer,
   ): boolean {
     return true;

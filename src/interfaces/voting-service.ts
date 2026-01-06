@@ -7,6 +7,7 @@
  */
 
 import type { KeyPair, PrivateKey, PublicKey } from 'paillier-bigint';
+
 import type { IsolatedPrivateKey } from '../isolated-private';
 import type { IsolatedPublicKey } from '../isolated-public';
 

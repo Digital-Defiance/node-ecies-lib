@@ -5,8 +5,8 @@ import { randomBytes, createHash } from 'crypto';
 
 import type { PublicKey } from 'paillier-bigint';
 
-import type { IMember } from '../../interfaces/member';
 import type { PlatformID } from '../../interfaces';
+import type { IMember } from '../../interfaces/member';
 import type { SignatureBuffer } from '../../types';
 
 import { ImmutableAuditLog, type AuditLog } from './audit';
@@ -87,7 +87,9 @@ export class Poll<TID extends PlatformID = Buffer> {
     this._votes.set(voterId, vote.encrypted);
     const receipt = this._generateReceipt(voter);
     this._receipts.set(voterId, receipt);
-    const voterIdHash = createHash('sha256').update(Buffer.from(voter.id as Buffer)).digest();
+    const voterIdHash = createHash('sha256')
+      .update(Buffer.from(voter.id as Buffer))
+      .digest();
     this._auditLog.recordVoteCast(this._id, voterIdHash);
     return receipt;
   }

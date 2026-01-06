@@ -4,8 +4,8 @@
  */
 import { createHash } from 'crypto';
 
-import type { IMember } from '../../interfaces/member';
 import type { PlatformID } from '../../interfaces';
+import type { IMember } from '../../interfaces/member';
 import type { SignatureBuffer } from '../../types';
 
 export enum AuditEventType {
@@ -44,7 +44,9 @@ export interface AuditLog<TID extends PlatformID = Buffer> {
   verifyEntry(entry: AuditEntry<TID>): boolean;
 }
 
-export class ImmutableAuditLog<TID extends PlatformID = Buffer> implements AuditLog<TID> {
+export class ImmutableAuditLog<
+  TID extends PlatformID = Buffer,
+> implements AuditLog<TID> {
   private readonly entries: AuditEntry<TID>[] = [];
   private readonly authority: IMember<TID>;
   private sequence = 0;
@@ -97,7 +99,9 @@ export class ImmutableAuditLog<TID extends PlatformID = Buffer> implements Audit
   getEntriesForPoll(pollId: TID): readonly AuditEntry<TID>[] {
     const pollIdStr = Buffer.from(pollId as Buffer).toString('hex');
     return Object.freeze(
-      this.entries.filter((e) => Buffer.from(e.pollId as Buffer).toString('hex') === pollIdStr),
+      this.entries.filter(
+        (e) => Buffer.from(e.pollId as Buffer).toString('hex') === pollIdStr,
+      ),
     );
   }
 
