@@ -6,30 +6,31 @@ import { randomBytes, createHash } from 'crypto';
 import type { PublicKey } from 'paillier-bigint';
 
 import type { IMember } from '../../interfaces/member';
+import type { PlatformID } from '../../interfaces';
 import type { SignatureBuffer } from '../../types';
 
 import { ImmutableAuditLog, type AuditLog } from './audit';
 import { VotingSecurityValidator } from './security';
 import { VotingMethod, type VoteReceipt, type EncryptedVote } from './types';
 
-export class Poll {
-  private readonly _id: Buffer;
+export class Poll<TID extends PlatformID = Buffer> {
+  private readonly _id: TID;
   private readonly _choices: ReadonlyArray<string>;
   private readonly _method: VotingMethod;
-  private readonly _authority: IMember;
+  private readonly _authority: IMember<TID>;
   private readonly ___votingPublicKey: PublicKey;
   private readonly _votes: Map<string, bigint[]> = new Map();
   private readonly _receipts: Map<string, VoteReceipt> = new Map();
   private readonly _createdAt: number;
   private _closedAt?: number;
   private _maxWeight?: bigint;
-  private readonly _auditLog: ImmutableAuditLog;
+  private readonly _auditLog: ImmutableAuditLog<TID>;
 
   constructor(
-    id: Buffer,
+    id: TID,
     choices: string[],
     method: VotingMethod,
-    authority: IMember,
+    authority: IMember<TID>,
     votingPublicKey: PublicKey,
     maxWeight?: bigint,
     allowInsecure?: boolean,
@@ -53,7 +54,7 @@ export class Poll {
     });
   }
 
-  get id(): Buffer {
+  get id(): TID {
     return this._id;
   }
   get choices(): ReadonlyArray<string> {
@@ -74,25 +75,25 @@ export class Poll {
   get closedAt(): number | undefined {
     return this._closedAt;
   }
-  get auditLog(): AuditLog {
+  get auditLog(): AuditLog<TID> {
     return this._auditLog;
   }
 
-  vote(voter: IMember, vote: EncryptedVote): VoteReceipt {
+  vote(voter: IMember<TID>, vote: EncryptedVote): VoteReceipt {
     if (this.isClosed) throw new Error('Poll is closed');
-    const voterId = voter.id.toString('hex');
+    const voterId = Buffer.from(voter.id as Buffer).toString('hex');
     if (this._receipts.has(voterId)) throw new Error('Already voted');
     this._validateVote(vote);
     this._votes.set(voterId, vote.encrypted);
     const receipt = this._generateReceipt(voter);
     this._receipts.set(voterId, receipt);
-    const voterIdHash = createHash('sha256').update(voter.id).digest();
+    const voterIdHash = createHash('sha256').update(Buffer.from(voter.id as Buffer)).digest();
     this._auditLog.recordVoteCast(this._id, voterIdHash);
     return receipt;
   }
 
-  verifyReceipt(voter: IMember, receipt: VoteReceipt): boolean {
-    const voterId = voter.id.toString('hex');
+  verifyReceipt(voter: IMember<TID>, receipt: VoteReceipt): boolean {
+    const voterId = Buffer.from(voter.id as Buffer).toString('hex');
     const stored = this._receipts.get(voterId);
     if (!stored) return false;
     const data = this._receiptData(receipt);
@@ -169,11 +170,11 @@ export class Poll {
     if (!vote.encrypted?.length) throw new Error('Encrypted data required');
   }
 
-  private _generateReceipt(voter: IMember): VoteReceipt {
+  private _generateReceipt(voter: IMember<TID>): VoteReceipt {
     const nonce = randomBytes(16);
     const receipt: VoteReceipt = {
-      voterId: voter.id,
-      pollId: this._id,
+      voterId: Buffer.from(voter.id as Buffer),
+      pollId: Buffer.from(this._id as Buffer),
       timestamp: Date.now(),
       signature: Buffer.alloc(0),
       nonce,

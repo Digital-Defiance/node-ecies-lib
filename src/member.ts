@@ -4,6 +4,7 @@ import {
   IMemberStorageData,
   MemberErrorType,
   MemberType,
+  PlatformBuffer,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -16,13 +17,13 @@ import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
-import { IBackendMemberOperational } from './interfaces/backend-member-operational';
 import { IEncryptedChunk } from './interfaces/encrypted-chunk';
 import { IMember } from './interfaces/member';
 import { IStreamProgress } from './interfaces/stream-progress';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
 import { SignatureBuffer, toBuffer, toUint8Array } from './types';
+import { PlatformID } from './interfaces';
 
 /**
  * Custom error classes that work with the plugin i18n system
@@ -40,11 +41,12 @@ export class NodeMemberError extends Error {
 /**
  * A member of an ECIES interchange
  */
-export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
-  implements IMember<TID>, IBackendMemberOperational<TID>
+export class Member<TID extends PlatformID = Buffer>
+  implements IMember<TID>
 {
   private readonly _eciesService: ECIESService;
   private readonly _id: TID;
+  private readonly _idBytes: Buffer;
   private readonly _type: MemberType;
   private readonly _name: string;
   private readonly _email: EmailString;
@@ -78,7 +80,9 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     this._eciesService = eciesService;
     // Assign original parameters
     this._type = type;
-    this._id = id ?? (toBuffer(Constants.idProvider.generate()) as TID);
+    const __id = id ?? Constants.idProvider.generate() as TID;
+    this._id = __id;
+    this._idBytes = Constants.idProvider.toBytes(__id) as Buffer;
     this._name = name;
     if (!this._name || this._name.length == 0) {
       throw new NodeMemberError(
@@ -117,6 +121,12 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
   // Required getters
   public get id(): TID {
     return this._id;
+  }
+  public get idBytes(): Buffer {
+    return this._idBytes;
+  }
+  public get creatorIdBytes(): Buffer {
+    return Constants.idProvider.toBytes(this._creatorId) as Buffer;
   }
   public get type(): MemberType {
     return this._type;
@@ -483,11 +493,11 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     }
   }
 
-  public static fromJson(
+  public static fromJson<TID extends PlatformID = Buffer>(
     json: string,
     // Add injected services as parameters
     eciesService: ECIESService,
-  ): Member {
+  ): Member<TID> {
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
 
@@ -510,7 +520,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
 
     // Pass injected services to constructor
     const dateCreated = new Date(storage.dateCreated);
-    return new Member(
+    return new Member<TID>(
       eciesService,
       storage.type,
       storage.name,
@@ -518,27 +528,27 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
       Buffer.from(storage.publicKey, 'base64'),
       undefined,
       undefined,
-      id,
+      id as TID,
       dateCreated,
       new Date(storage.dateUpdated),
-      creatorId,
+      creatorId as TID,
     );
   }
 
-  public static fromMnemonic(
+  public static fromMnemonic<TID extends PlatformID = Buffer> (
     mnemonic: SecureString,
     eciesService: ECIESService,
     memberType = MemberType.User,
     name = 'Test User',
     email = new EmailString('test@example.com'),
-  ): Member {
+  ): Member<TID> {
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
     const publicKeyWithPrefix = eciesService.getPublicKey(
       Buffer.from(privateKey),
     );
 
-    return new Member(
+    return new Member<TID>(
       eciesService,
       memberType,
       name,
@@ -549,7 +559,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     );
   }
 
-  public static newMember(
+  public static newMember<TID extends PlatformID = Buffer>(
     // Add injected services as parameters
     eciesService: ECIESService,
     // Original parameters
@@ -558,7 +568,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     email: EmailString,
     forceMnemonic?: SecureString,
     createdBy?: Buffer,
-  ): { member: Member; mnemonic: SecureString } {
+  ): { member: Member<TID>; mnemonic: SecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new NodeMemberError(
@@ -609,7 +619,7 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
     const dateCreated = new Date();
     return {
       // Pass injected services to constructor
-      member: new Member(
+      member: new Member<TID>(
         eciesService,
         type,
         name,
@@ -617,10 +627,10 @@ export class Member<TID extends string | Types.ObjectId | Buffer = Buffer>
         publicKeyWithPrefix,
         new SecureBuffer(privateKey),
         wallet,
-        newId,
+        newId as TID,
         dateCreated,
         dateCreated,
-        createdBy ?? newId,
+        (createdBy ?? newId) as TID,
       ),
       mnemonic,
     };

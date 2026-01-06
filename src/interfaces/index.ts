@@ -1,12 +1,14 @@
 export * from './authenticated-cipher';
 export * from './authenticated-decipher';
-export * from './backend-member-operational';
 export * from './checksum-config';
 export * from './checksum-consts';
+export * from './configuration-provenance';
 export * from './constants';
 export * from './ecies-consts';
 export * from './encrypted-chunk';
 export * from './encryption-consts';
+export * from './id-provider';
+export * from './isolated-keys';
 export * from './keypair-buffer-with-un-encrypted-private-key';
 export * from './keyring-consts';
 export type * from './member';
@@ -16,6 +18,7 @@ export * from './multi-encrypted-parsed-header';
 export * from './multi-recipient-chunk';
 export * from './pbkdf-profiles';
 export * from './pbkdf2-result';
+export * from './platform-id';
 export * from './signing-key-private-key-info';
 export * from './simple-keypair';
 export * from './simple-keypair-buffer';
@@ -26,5 +29,14 @@ export * from './stream-config';
 export * from './stream-progress';
 export type { IVotingConsts } from './voting-consts';
 export { VOTING } from './voting-consts';
+export {
+  type IPoll,
+  type IVoteEncoder,
+  type IPollTallier,
+  type IPollFactory,
+  type IVotingSecurityValidator,
+  SecurityLevel as VotingSecurityLevel,
+} from './voting-poll';
+export * from './voting-service';
 export * from './wallet-seed';
 export * from './wrapped-key-consts';

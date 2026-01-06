@@ -11,7 +11,6 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/test-setup.ts'],
   // Run tests in-band to avoid BigInt serialization issues in Jest worker IPC
   // See: https://github.com/jestjs/jest/issues/11617
-  workerThreads: false,
   maxWorkers: 1,
   detectOpenHandles: false,
   transformIgnorePatterns: [

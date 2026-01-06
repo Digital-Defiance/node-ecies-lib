@@ -10,6 +10,7 @@ import {
 } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
 import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
+import { PlatformID } from '../interfaces';
 import { Member } from '../member';
 import { ECIESService } from '../services/ecies';
 
@@ -132,9 +133,9 @@ export class MemberBuilder {
    * @param json - JSON string representation of member
    * @returns Member instance
    */
-  static fromJson(json: string): Member {
+  static fromJson<TID extends PlatformID = Buffer>(json: string): Member<TID> {
     const service = new ECIESService();
-    return Member.fromJson(json, service);
+    return Member.fromJson(json, service) as Member<TID>;
   }
 
   /**
@@ -145,15 +146,15 @@ export class MemberBuilder {
    * @param email - Optional member email (defaults to 'test@example.com')
    * @returns Member instance
    */
-  static fromMnemonic(
+  static fromMnemonic<TID extends PlatformID = Buffer>(
     mnemonic: SecureString,
     memberType = MemberType.User,
     name = 'Test User',
     email: EmailString | string = 'test@example.com',
-  ): Member {
+  ): Member<TID> {
     const service = new ECIESService();
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;
 
-    return Member.fromMnemonic(mnemonic, service, memberType, name, emailObj);
+    return Member.fromMnemonic(mnemonic, service, memberType, name, emailObj) as Member<TID>;
   }
 }

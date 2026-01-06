@@ -4,21 +4,22 @@
 import { randomBytes } from 'crypto';
 
 import type { IMember } from '../../interfaces/member';
+import type { PlatformID } from '../../interfaces';
 
 import { Poll } from './poll-core';
 import { VotingMethod } from './types';
 
 export class PollFactory {
-  static create(
+  static create<TID extends PlatformID = Buffer>(
     choices: string[],
     method: VotingMethod,
-    authority: IMember,
+    authority: IMember<TID>,
     options?: { maxWeight?: bigint },
-  ): Poll {
+  ): Poll<TID> {
     if (!authority.votingPublicKey)
       throw new Error('Authority must have voting public key');
-    const id = randomBytes(16);
-    return new Poll(
+    const id = randomBytes(16) as TID;
+    return new Poll<TID>(
       id,
       choices,
       method,
@@ -28,29 +29,29 @@ export class PollFactory {
     );
   }
 
-  static createPlurality(choices: string[], authority: IMember): Poll {
+  static createPlurality<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
     return this.create(choices, VotingMethod.Plurality, authority);
   }
 
-  static createApproval(choices: string[], authority: IMember): Poll {
+  static createApproval<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
     return this.create(choices, VotingMethod.Approval, authority);
   }
 
-  static createWeighted(
+  static createWeighted<TID extends PlatformID = Buffer>(
     choices: string[],
-    authority: IMember,
+    authority: IMember<TID>,
     maxWeight: bigint,
-  ): Poll {
+  ): Poll<TID> {
     return this.create(choices, VotingMethod.Weighted, authority, {
       maxWeight,
     });
   }
 
-  static createBorda(choices: string[], authority: IMember): Poll {
+  static createBorda<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
     return this.create(choices, VotingMethod.Borda, authority);
   }
 
-  static createRankedChoice(choices: string[], authority: IMember): Poll {
+  static createRankedChoice<TID extends PlatformID = Buffer>(choices: string[], authority: IMember<TID>): Poll<TID> {
     return this.create(choices, VotingMethod.RankedChoice, authority);
   }
 }

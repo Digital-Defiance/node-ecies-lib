@@ -5,6 +5,7 @@
 import { createHash } from 'crypto';
 
 import type { IMember } from '../../interfaces/member';
+import type { PlatformID } from '../../interfaces';
 import type { SignatureBuffer } from '../../types';
 
 export enum AuditEventType {
@@ -13,39 +14,49 @@ export enum AuditEventType {
   PollClosed = 'poll_closed',
 }
 
-export interface AuditEntry {
+export interface AuditEntry<TID extends PlatformID = Buffer> {
+  /** Sequence number (monotonically increasing) */
   readonly sequence: number;
+  /** Event type */
   readonly eventType: AuditEventType;
+  /** Microsecond-precision timestamp */
   readonly timestamp: number;
-  readonly pollId: Buffer;
+  /** Poll identifier */
+  readonly pollId: TID;
+  /** Hash of voter ID (for vote events) */
   readonly voterIdHash?: Buffer;
-  readonly authorityId?: Buffer;
+  /** Authority/creator ID (for creation/closure events) */
+  readonly authorityId?: TID;
+  /** Hash of previous entry (chain integrity) */
   readonly previousHash: Buffer;
+  /** Hash of this entry's data */
   readonly entryHash: Buffer;
+  /** Digital signature from authority */
   readonly signature: Buffer;
+  /** Additional event metadata */
   readonly metadata?: Record<string, unknown>;
 }
 
-export interface AuditLog {
-  getEntries(): readonly AuditEntry[];
-  getEntriesForPoll(pollId: Buffer): readonly AuditEntry[];
+export interface AuditLog<TID extends PlatformID = Buffer> {
+  getEntries(): readonly AuditEntry<TID>[];
+  getEntriesForPoll(pollId: TID): readonly AuditEntry<TID>[];
   verifyChain(): boolean;
-  verifyEntry(entry: AuditEntry): boolean;
+  verifyEntry(entry: AuditEntry<TID>): boolean;
 }
 
-export class ImmutableAuditLog implements AuditLog {
-  private readonly entries: AuditEntry[] = [];
-  private readonly authority: IMember;
+export class ImmutableAuditLog<TID extends PlatformID = Buffer> implements AuditLog<TID> {
+  private readonly entries: AuditEntry<TID>[] = [];
+  private readonly authority: IMember<TID>;
   private sequence = 0;
 
-  constructor(authority: IMember) {
+  constructor(authority: IMember<TID>) {
     this.authority = authority;
   }
 
   recordPollCreated(
-    pollId: Buffer,
+    pollId: TID,
     metadata?: Record<string, unknown>,
-  ): AuditEntry {
+  ): AuditEntry<TID> {
     return this.appendEntry({
       eventType: AuditEventType.PollCreated,
       pollId,
@@ -55,10 +66,10 @@ export class ImmutableAuditLog implements AuditLog {
   }
 
   recordVoteCast(
-    pollId: Buffer,
+    pollId: TID,
     voterIdHash: Buffer,
     metadata?: Record<string, unknown>,
-  ): AuditEntry {
+  ): AuditEntry<TID> {
     return this.appendEntry({
       eventType: AuditEventType.VoteCast,
       pollId,
@@ -68,9 +79,9 @@ export class ImmutableAuditLog implements AuditLog {
   }
 
   recordPollClosed(
-    pollId: Buffer,
+    pollId: TID,
     metadata?: Record<string, unknown>,
-  ): AuditEntry {
+  ): AuditEntry<TID> {
     return this.appendEntry({
       eventType: AuditEventType.PollClosed,
       pollId,
@@ -79,14 +90,14 @@ export class ImmutableAuditLog implements AuditLog {
     });
   }
 
-  getEntries(): readonly AuditEntry[] {
+  getEntries(): readonly AuditEntry<TID>[] {
     return Object.freeze([...this.entries]);
   }
 
-  getEntriesForPoll(pollId: Buffer): readonly AuditEntry[] {
-    const pollIdStr = pollId.toString('hex');
+  getEntriesForPoll(pollId: TID): readonly AuditEntry<TID>[] {
+    const pollIdStr = Buffer.from(pollId as Buffer).toString('hex');
     return Object.freeze(
-      this.entries.filter((e) => e.pollId.toString('hex') === pollIdStr),
+      this.entries.filter((e) => Buffer.from(e.pollId as Buffer).toString('hex') === pollIdStr),
     );
   }
 
@@ -105,7 +116,7 @@ export class ImmutableAuditLog implements AuditLog {
     return true;
   }
 
-  verifyEntry(entry: AuditEntry): boolean {
+  verifyEntry(entry: AuditEntry<TID>): boolean {
     const data = this.serializeEntryForSigning(entry);
     return this.authority.verify(
       entry.signature as unknown as SignatureBuffer,
@@ -115,15 +126,15 @@ export class ImmutableAuditLog implements AuditLog {
 
   private appendEntry(
     partial: Omit<
-      AuditEntry,
+      AuditEntry<TID>,
       'sequence' | 'timestamp' | 'previousHash' | 'entryHash' | 'signature'
     >,
-  ): AuditEntry {
+  ): AuditEntry<TID> {
     const previousHash =
       this.entries.length > 0
         ? this.entries[this.entries.length - 1].entryHash
         : Buffer.alloc(32);
-    const entry: Omit<AuditEntry, 'entryHash' | 'signature'> = {
+    const entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'> = {
       sequence: this.sequence++,
       timestamp: this.getMicrosecondTimestamp(),
       previousHash,
@@ -132,37 +143,37 @@ export class ImmutableAuditLog implements AuditLog {
     const entryHash = this.computeEntryHash(entry);
     const data = this.serializeEntryForSigning({ ...entry, entryHash });
     const signature = this.authority.sign(data);
-    const finalEntry: AuditEntry = { ...entry, entryHash, signature };
+    const finalEntry: AuditEntry<TID> = { ...entry, entryHash, signature };
     this.entries.push(finalEntry);
     return finalEntry;
   }
 
   private computeEntryHash(
-    entry: Omit<AuditEntry, 'entryHash' | 'signature'>,
+    entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'>,
   ): Buffer {
     const data = this.serializeEntryForHashing(entry);
     return createHash('sha256').update(data).digest();
   }
 
   private serializeEntryForHashing(
-    entry: Omit<AuditEntry, 'entryHash' | 'signature'>,
+    entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'>,
   ): Buffer {
     const parts: Buffer[] = [
       this.encodeNumber(entry.sequence),
       Buffer.from(entry.eventType, 'utf8'),
       this.encodeNumber(entry.timestamp),
-      entry.pollId,
+      Buffer.from(entry.pollId as Buffer),
       entry.previousHash,
     ];
     if (entry.voterIdHash) parts.push(entry.voterIdHash);
-    if (entry.authorityId) parts.push(entry.authorityId);
+    if (entry.authorityId) parts.push(Buffer.from(entry.authorityId as Buffer));
     if (entry.metadata)
       parts.push(Buffer.from(JSON.stringify(entry.metadata), 'utf8'));
     return Buffer.concat(parts);
   }
 
   private serializeEntryForSigning(
-    entry: Omit<AuditEntry, 'signature'>,
+    entry: Omit<AuditEntry<TID>, 'signature'>,
   ): Buffer {
     return Buffer.concat([
       this.serializeEntryForHashing(entry),

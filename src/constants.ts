@@ -1,5 +1,8 @@
 import { CipherGCMTypes } from 'crypto';
 
+import { ObjectId } from 'bson';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import type {
   IConstants as IBaseConstants,
   IPBkdf2Consts,
@@ -24,6 +27,32 @@ import type { IKeyringConsts } from './interfaces/keyring-consts';
 import type { PbkdfProfiles } from './interfaces/pbkdf-profiles';
 import { VOTING } from './interfaces/voting-consts';
 import type { IWrappedKeyConsts } from './interfaces/wrapped-key-consts';
+
+/**
+ * Calculates a checksum for a configuration object.
+ * Uses SHA-256 of JSON representation.
+ */
+function calculateConfigChecksum(config: IConstants): string {
+  // Create a stable JSON representation with BigInt support
+  const replacer = (_key: string, value: unknown) =>
+    typeof value === 'bigint' ? value.toString() : value;
+  const stable = JSON.stringify(config, replacer);
+  const encoder = new TextEncoder();
+  const data = encoder.encode(stable);
+  return bytesToHex(sha256(data));
+}
+
+/**
+ * Captures a stack trace for provenance tracking
+ */
+function captureCreationStack(): string {
+  const stack = new Error().stack;
+  if (!stack) return 'stack unavailable';
+
+  // Remove the first two lines (Error message and this function)
+  const lines = stack.split('\n').slice(2);
+  return lines.join('\n');
+}
 
 /**
  * Constants for checksum operations
@@ -264,3 +293,6 @@ if (OBJECT_ID_LENGTH !== 12) {
     OBJECT_ID_LENGTH,
   );
 }
+
+// Export utility functions
+export { calculateConfigChecksum, captureCreationStack };

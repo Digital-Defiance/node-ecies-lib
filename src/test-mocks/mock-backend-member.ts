@@ -9,8 +9,8 @@ import {
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
 
-import type { IBackendMemberOperational } from '../interfaces/backend-member-operational';
 import { SignatureBuffer } from '../types';
+import { IMember } from '../interfaces';
 
 const createMockWallet = (): Wallet =>
   ({
@@ -23,7 +23,7 @@ const createMockWallet = (): Wallet =>
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
   }) as unknown as Wallet;
 
-export class MockBackendMember implements IBackendMemberOperational<Buffer> {
+export class MockBackendMember implements IMember<Buffer> {
   private _id: Buffer;
   private _type: MemberType;
   private _name: string;
@@ -82,7 +82,7 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   get email(): EmailString {
     return this._email;
   }
-  get publicKey(): Uint8Array {
+  get publicKey(): Buffer {
     return this._publicKey;
   }
   get creatorId(): Buffer {
@@ -97,11 +97,30 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   get privateKey(): SecureBuffer | undefined {
     return this._privateKey;
   }
-  get wallet(): Wallet | undefined {
+  get wallet(): Wallet {
+    if (!this._wallet) {
+      throw new Error('Wallet not loaded');
+    }
     return this._wallet;
   }
   get hasPrivateKey(): boolean {
     return this._hasPrivateKey;
+  }
+
+  get idBytes(): Buffer {
+    return this._id;
+  }
+
+  get constants(): import('@digitaldefiance/ecies-lib').IECIESConstants {
+    return {} as import('@digitaldefiance/ecies-lib').IECIESConstants;
+  }
+
+  getPublicKeyString(): string {
+    return this._publicKey.toString('hex');
+  }
+
+  getIdString(): string {
+    return this._id.toString('hex');
   }
 
   unloadPrivateKey(): void {}
@@ -130,12 +149,29 @@ export class MockBackendMember implements IBackendMemberOperational<Buffer> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  encryptData(_data: string | Buffer): Uint8Array {
+  signData(_data: Buffer): SignatureBuffer {
+    return Buffer.from(
+      faker.string.hexadecimal({ length: 128 }),
+      'hex',
+    ) as SignatureBuffer;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  verifySignature(
+    _data: Buffer,
+    _signature: Buffer,
+    _publicKey: Buffer,
+  ): boolean {
+    return true;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  encryptData(_data: string | Buffer, _recipientPublicKey?: Buffer): Buffer {
     return Buffer.from(faker.string.hexadecimal({ length: 256 }), 'hex');
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  decryptData(_encryptedData: Buffer): Uint8Array {
+  decryptData(_encryptedData: Buffer): Buffer {
     return Buffer.from(faker.lorem.paragraph());
   }
 
