@@ -7,6 +7,8 @@
 
 import type { PublicKey, PrivateKey, KeyPair } from 'paillier-bigint';
 
+import type { PlatformID } from './platform-id';
+
 /**
  * Voting methods supported by the poll system
  */
@@ -37,11 +39,11 @@ export enum VotingMethod {
  * Vote receipt proving participation.
  * Cryptographically signed proof that a vote was cast.
  */
-export interface IVoteReceipt {
+export interface IVoteReceipt<TID extends PlatformID = Buffer> {
   /** Unique identifier of the voter */
-  voterId: Buffer;
+  voterId: TID;
   /** Unique identifier of the poll */
-  pollId: Buffer;
+  pollId: TID;
   /** Unix timestamp when vote was cast */
   timestamp: number;
   /** Cryptographic signature from poll authority */
@@ -54,7 +56,7 @@ export interface IVoteReceipt {
  * Encrypted vote data using Paillier homomorphic encryption.
  * Structure varies by voting method.
  */
-export interface IEncryptedVote {
+export interface IEncryptedVote<TID extends PlatformID = Buffer> {
   /** Single choice index (for Plurality, Weighted, etc.) */
   choiceIndex?: number;
   /** Multiple choice indices (for Approval voting) */
@@ -68,16 +70,16 @@ export interface IEncryptedVote {
   /** Array of encrypted vote values (one per choice) */
   encrypted: bigint[];
   /** Plaintext vote data (only for insecure methods) */
-  plaintext?: IPlaintextVote;
+  plaintext?: IPlaintextVote<TID>;
 }
 
 /**
  * Plaintext vote data for insecure voting methods.
  * WARNING: Only use for Quadratic, Consensus, or ConsentBased methods.
  */
-export interface IPlaintextVote {
+export interface IPlaintextVote<TID extends PlatformID = Buffer> {
   /** Unique identifier of the voter */
-  voterId: Buffer;
+  voterId: TID;
   /** Single choice index */
   choiceIndex?: number;
   /** Multiple choice indices */
@@ -141,9 +143,9 @@ export interface ISupermajorityConfig {
  * Member interface for voting operations.
  * Extends base member with voting-specific capabilities.
  */
-export interface IVotingMember {
+export interface IVotingMember<TID extends PlatformID = Buffer> {
   /** Unique identifier of the member */
-  readonly id: Buffer;
+  readonly id: TID;
   /** ECDSA public key for signing */
   readonly publicKey: Buffer;
   /** Paillier public key for vote encryption (optional) */
@@ -169,9 +171,9 @@ export interface IVotingMember {
  * Poll interface for vote aggregation and management.
  * Holds encrypted votes and issues receipts, but cannot decrypt votes.
  */
-export interface IPoll {
+export interface IPoll<TID extends PlatformID = Buffer> {
   /** Unique identifier of the poll */
-  readonly id: Buffer;
+  readonly id: TID;
   /** Array of choice names */
   readonly choices: ReadonlyArray<string>;
   /** Voting method used */
@@ -192,7 +194,7 @@ export interface IPoll {
    * @returns Vote receipt
    * @throws Error if poll is closed or voter already voted
    */
-  vote(voter: IVotingMember, vote: IEncryptedVote): IVoteReceipt;
+  vote(voter: IVotingMember<TID>, vote: IEncryptedVote<TID>): IVoteReceipt<TID>;
 
   /**
    * Verify a vote receipt is valid.
@@ -200,7 +202,7 @@ export interface IPoll {
    * @param receipt - Receipt to verify
    * @returns True if receipt is valid
    */
-  verifyReceipt(voter: IVotingMember, receipt: IVoteReceipt): boolean;
+  verifyReceipt(voter: IVotingMember<TID>, receipt: IVoteReceipt<TID>): boolean;
 
   /**
    * Close the poll to new votes.
@@ -219,21 +221,24 @@ export interface IPoll {
  * Vote encoder interface for encrypting votes.
  * Converts vote choices into encrypted Paillier ciphertexts.
  */
-export interface IVoteEncoder {
+export interface IVoteEncoder<TID extends PlatformID = Buffer> {
   /**
    * Encode a plurality vote (single choice).
    * @param choiceIndex - Index of chosen option
    * @param choiceCount - Total number of choices
    * @returns Encrypted vote
    */
-  encodePlurality(choiceIndex: number, choiceCount: number): IEncryptedVote;
+  encodePlurality(
+    choiceIndex: number,
+    choiceCount: number,
+  ): IEncryptedVote<TID>;
   /**
    * Encode an approval vote (multiple choices).
    * @param choices - Indices of approved options
    * @param choiceCount - Total number of choices
    * @returns Encrypted vote
    */
-  encodeApproval(choices: number[], choiceCount: number): IEncryptedVote;
+  encodeApproval(choices: number[], choiceCount: number): IEncryptedVote<TID>;
   /**
    * Encode a weighted vote.
    * @param choiceIndex - Index of chosen option
@@ -245,21 +250,24 @@ export interface IVoteEncoder {
     choiceIndex: number,
     weight: bigint,
     choiceCount: number,
-  ): IEncryptedVote;
+  ): IEncryptedVote<TID>;
   /**
    * Encode a Borda count vote (ranked with points).
    * @param rankings - Indices in preference order
    * @param choiceCount - Total number of choices
    * @returns Encrypted vote
    */
-  encodeBorda(rankings: number[], choiceCount: number): IEncryptedVote;
+  encodeBorda(rankings: number[], choiceCount: number): IEncryptedVote<TID>;
   /**
    * Encode a ranked choice vote (for IRV).
    * @param rankings - Indices in preference order
    * @param choiceCount - Total number of choices
    * @returns Encrypted vote
    */
-  encodeRankedChoice(rankings: number[], choiceCount: number): IEncryptedVote;
+  encodeRankedChoice(
+    rankings: number[],
+    choiceCount: number,
+  ): IEncryptedVote<TID>;
   /**
    * Encode vote based on method.
    * @param method - Voting method
@@ -276,33 +284,33 @@ export interface IVoteEncoder {
       weight?: bigint;
     },
     choiceCount: number,
-  ): IEncryptedVote;
+  ): IEncryptedVote<TID>;
 }
 
 /**
  * Poll tallier interface for decrypting and tallying votes.
  * Holds private key and can decrypt results after poll closes.
  */
-export interface IPollTallier {
+export interface IPollTallier<TID extends PlatformID = Buffer> {
   /**
    * Tally votes and determine winner(s).
    * @param poll - Poll to tally
    * @returns Poll results
    * @throws Error if poll is not closed
    */
-  tally(poll: IPoll): IPollResults;
+  tally(poll: IPoll<TID>): IPollResults;
   /**
    * Tally ranked choice votes using IRV algorithm.
    * @param poll - Poll to tally
    * @returns Poll results with elimination rounds
    */
-  tallyRankedChoice(poll: IPoll): IPollResults;
+  tallyRankedChoice(poll: IPoll<TID>): IPollResults;
 }
 
 /**
  * Poll factory interface for creating polls.
  */
-export interface IPollFactory {
+export interface IPollFactory<TID extends PlatformID = Buffer> {
   /**
    * Create a poll with specified method.
    * @param choices - Array of choice names
@@ -314,23 +322,23 @@ export interface IPollFactory {
   create(
     choices: string[],
     method: VotingMethod,
-    authority: IVotingMember,
+    authority: IVotingMember<TID>,
     options?: { maxWeight?: bigint },
-  ): IPoll;
+  ): IPoll<TID>;
   /**
    * Create a plurality poll.
    * @param choices - Array of choice names
    * @param authority - Poll authority
    * @returns New poll
    */
-  createPlurality(choices: string[], authority: IVotingMember): IPoll;
+  createPlurality(choices: string[], authority: IVotingMember<TID>): IPoll<TID>;
   /**
    * Create an approval voting poll.
    * @param choices - Array of choice names
    * @param authority - Poll authority
    * @returns New poll
    */
-  createApproval(choices: string[], authority: IVotingMember): IPoll;
+  createApproval(choices: string[], authority: IVotingMember<TID>): IPoll<TID>;
   /**
    * Create a weighted voting poll.
    * @param choices - Array of choice names
@@ -340,23 +348,26 @@ export interface IPollFactory {
    */
   createWeighted(
     choices: string[],
-    authority: IVotingMember,
+    authority: IVotingMember<TID>,
     maxWeight: bigint,
-  ): IPoll;
+  ): IPoll<TID>;
   /**
    * Create a Borda count poll.
    * @param choices - Array of choice names
    * @param authority - Poll authority
    * @returns New poll
    */
-  createBorda(choices: string[], authority: IVotingMember): IPoll;
+  createBorda(choices: string[], authority: IVotingMember<TID>): IPoll<TID>;
   /**
    * Create a ranked choice poll.
    * @param choices - Array of choice names
    * @param authority - Poll authority
    * @returns New poll
    */
-  createRankedChoice(choices: string[], authority: IVotingMember): IPoll;
+  createRankedChoice(
+    choices: string[],
+    authority: IVotingMember<TID>,
+  ): IPoll<TID>;
 }
 
 /**

@@ -6,11 +6,13 @@ import { createHash, randomBytes } from 'crypto';
 
 import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
 
-import { Constants } from '../../constants';
+import { getNodeRuntimeConfiguration } from '../../constants';
+import type { PlatformID } from '../../interfaces';
 import { Member } from '../../member';
 import { ECIESService } from '../../services/ecies/service';
 import { VotingService } from '../../services/voting.service';
 import { SignatureBuffer } from '../../types';
+const Constants = getNodeRuntimeConfiguration();
 
 export interface ECKeyPairBuffer {
   privateKey: Buffer;
@@ -48,7 +50,7 @@ export interface VotingPollResults {
  * - Ranked choice voting support
  * - Weighted voting support
  */
-export class VotingPoll {
+export class VotingPoll<TID extends PlatformID = Buffer> {
   public readonly choices: string[];
   public readonly votes: bigint[];
   private readonly paillierKeyPair: PaillierKeyPair;
@@ -79,11 +81,13 @@ export class VotingPoll {
     this.createdAt = new Date();
   }
 
-  public async generateEncryptedReceipt(member: Member): Promise<Buffer> {
+  public async generateEncryptedReceipt(member: Member<TID>): Promise<Buffer> {
     const randomNonce = randomBytes(16).toString(
       Constants.VOTING.KEY_FORMAT as BufferEncoding,
     );
-    const memberId = Constants.idProvider.serialize(member.id);
+    const memberId = Constants.idProvider.serialize(
+      Constants.idProvider.toBytes(member.id),
+    );
     const hashInput = `${Date.now()}-${randomNonce}-${memberId}`;
     const hash = createHash('sha256').update(hashInput).digest();
     const signature = this.eciesService.signMessage(
@@ -101,13 +105,17 @@ export class VotingPoll {
     return encryptedReceipt;
   }
 
-  public memberVoted(member: Member): boolean {
-    const memberId = Constants.idProvider.serialize(member.id);
+  public memberVoted(member: Member<TID>): boolean {
+    const memberId = Constants.idProvider.serialize(
+      Constants.idProvider.toBytes(member.id),
+    );
     return this.receipts.has(memberId);
   }
 
-  public verifyReceipt(member: Member, encryptedReceipt: Buffer): boolean {
-    const memberId = Constants.idProvider.serialize(member.id);
+  public verifyReceipt(member: Member<TID>, encryptedReceipt: Buffer): boolean {
+    const memberId = Constants.idProvider.serialize(
+      Constants.idProvider.toBytes(member.id),
+    );
     const foundReceipt = this.receipts.get(memberId);
     if (!foundReceipt) {
       return false;
@@ -129,7 +137,7 @@ export class VotingPoll {
     );
   }
 
-  public async vote(choiceIndex: number, member: Member): Promise<Buffer> {
+  public async vote(choiceIndex: number, member: Member<TID>): Promise<Buffer> {
     if (this.isClosed) {
       throw new Error('Poll is closed');
     }
@@ -159,7 +167,7 @@ export class VotingPoll {
   public async voteWeighted(
     choiceIndex: number,
     weight: bigint,
-    member: Member,
+    member: Member<TID>,
   ): Promise<Buffer> {
     if (this.isClosed) {
       throw new Error('Poll is closed');
@@ -185,7 +193,7 @@ export class VotingPoll {
 
   public async voteRanked(
     rankedChoices: number[],
-    member: Member,
+    member: Member<TID>,
   ): Promise<Buffer> {
     if (this.isClosed) {
       throw new Error('Poll is closed');
@@ -225,7 +233,7 @@ export class VotingPoll {
 
   public async voteApproval(
     approvedChoices: number[],
-    member: Member,
+    member: Member<TID>,
   ): Promise<Buffer> {
     if (this.isClosed) {
       throw new Error('Poll is closed');
@@ -429,18 +437,18 @@ export class VotingPoll {
     return this.closedAt.getTime() - this.createdAt.getTime();
   }
 
-  public static newPoll(
+  public static newPoll<TID extends PlatformID = Buffer>(
     eciesService: ECIESService,
     choices: string[],
     paillierKeyPair: PaillierKeyPair,
     ecKeyPair: ECKeyPairBuffer,
-  ): VotingPoll {
+  ): VotingPoll<TID> {
     const votes = new Array<bigint>(choices.length);
     for (let i = 0; i < choices.length; i++) {
       votes[i] = paillierKeyPair.publicKey.encrypt(0n);
     }
 
-    return new VotingPoll(
+    return new VotingPoll<TID>(
       eciesService,
       choices,
       paillierKeyPair,
@@ -449,12 +457,12 @@ export class VotingPoll {
     );
   }
 
-  public static async newPollWithKeys(
+  public static async newPollWithKeys<TID extends PlatformID = Buffer>(
     eciesService: ECIESService,
     votingService: VotingService,
     choices: string[],
   ): Promise<{
-    poll: VotingPoll;
+    poll: VotingPoll<TID>;
     paillierKeyPair: PaillierKeyPair;
     ecKeyPair: ECKeyPairBuffer;
   }> {
@@ -468,7 +476,7 @@ export class VotingPoll {
       ecKeyPair.privateKey,
       ecKeyPair.publicKey,
     );
-    const poll = VotingPoll.newPoll(
+    const poll = VotingPoll.newPoll<TID>(
       eciesService,
       choices,
       paillierKeyPair,

@@ -4,6 +4,7 @@ import {
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 
+import { getNodeRuntimeConfiguration } from '../constants';
 import {
   NodeEciesComponentId,
   NodeEciesStringKey,
@@ -13,6 +14,7 @@ import { PlatformID } from '../interfaces';
 import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
 import { Member } from '../member';
 import { ECIESService } from '../services/ecies';
+const Constants = getNodeRuntimeConfiguration();
 
 export class MemberBuilder {
   private eciesService?: ECIESService;
@@ -108,17 +110,17 @@ export class MemberBuilder {
    * @param createdBy - Optional creator ID
    * @returns Member with mnemonic
    */
-  static newMember(
+  static newMember<TID extends PlatformID = Buffer>(
     type: MemberType,
     name: string,
     email: EmailString | string,
     forceMnemonic?: SecureString,
-    createdBy?: Buffer,
-  ): IBackendMemberWithMnemonic {
-    const service = new ECIESService();
+    createdBy?: TID,
+  ): IBackendMemberWithMnemonic<TID> {
+    const service = new ECIESService(Constants);
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;
 
-    return Member.newMember(
+    return Member.newMember<TID>(
       service,
       type,
       name,

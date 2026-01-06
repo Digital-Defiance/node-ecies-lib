@@ -13,6 +13,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 
 import { Constants } from '../constants';
+import type { PlatformID } from '../interfaces';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
 import type { IMember } from '../interfaces/member';
@@ -27,26 +28,26 @@ import { AESGCMService } from './aes-gcm';
 import { EciesCryptoCore } from './ecies/crypto-core';
 import { EciesMultiRecipient } from './ecies/multi-recipient';
 
-export interface IMultiRecipient {
-  id: Buffer;
+export interface IMultiRecipient<TID extends PlatformID = Buffer> {
+  id: TID;
   publicKey: Buffer;
 }
 
-export interface IMultiEncryptedMessage {
+export interface IMultiEncryptedMessage<TID extends PlatformID = Buffer> {
   dataLength: number;
   recipientCount: number;
-  recipientIds: Buffer[];
+  recipientIds: TID[];
   recipientKeys: Buffer[];
   encryptedMessage: Buffer;
   headerSize: number;
   ephemeralPublicKey?: Buffer;
 }
 
-export class MultiRecipientProcessor {
+export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
   private readonly aesGcm: AESGCMService;
   private readonly cryptoCore: EciesCryptoCore;
   private readonly consts: IECIESConstants;
-  private readonly eciesMultiRecipient: EciesMultiRecipient;
+  private readonly eciesMultiRecipient: EciesMultiRecipient<TID>;
   private readonly constants: IMultiRecipientConstants;
   private readonly recipientIdSize: number;
 
@@ -54,14 +55,14 @@ export class MultiRecipientProcessor {
     cryptoCore: EciesCryptoCore,
     consts: IECIESConstants = Constants.ECIES,
     aesGcm?: AESGCMService,
-    eciesMultiRecipient?: EciesMultiRecipient,
+    eciesMultiRecipient?: EciesMultiRecipient<TID>,
   ) {
     this.cryptoCore = cryptoCore;
     this.consts = consts;
     // Use injected dependencies or create defaults
     this.aesGcm = aesGcm ?? new AESGCMService();
     this.eciesMultiRecipient =
-      eciesMultiRecipient ?? new EciesMultiRecipient(cryptoCore);
+      eciesMultiRecipient ?? new EciesMultiRecipient<TID>(cryptoCore);
     this.recipientIdSize = consts.MULTIPLE.RECIPIENT_ID_SIZE;
     this.constants = getMultiRecipientConstants(this.recipientIdSize);
   }
@@ -71,14 +72,21 @@ export class MultiRecipientProcessor {
    * Wrapper around EciesMultiRecipient.encryptMultiple for backward compatibility.
    */
   public async encryptMultiple(
-    recipients: IMultiRecipient[],
+    recipients: IMultiRecipient<TID>[],
     message: Buffer,
     preamble: Buffer = Buffer.alloc(0),
-  ): Promise<IMultiEncryptedMessage> {
+  ): Promise<IMultiEncryptedMessage<TID>> {
     // Convert IMultiRecipient to IMember-like objects
     // EciesMultiRecipient expects IMember[] which has id: Buffer and publicKey: Buffer
     // IMultiRecipient already matches this structure, so we can safely cast
-    const members = recipients as IMember[];
+    const members: IMember<TID>[] = recipients.map(
+      (r) =>
+        ({
+          id: r.id,
+          publicKey: r.publicKey,
+          idBytes: Constants.idProvider.toBytes(r.id),
+        }) as IMember<TID>,
+    );
 
     const result = this.eciesMultiRecipient.encryptMultiple(
       members,
@@ -93,7 +101,7 @@ export class MultiRecipientProcessor {
    * Builds the header for a message encrypted for multiple recipients.
    * Wrapper around EciesMultiRecipient.buildECIESMultipleRecipientHeader for backward compatibility.
    */
-  public buildHeader(data: IMultiEncryptedMessage): Buffer {
+  public buildHeader(data: IMultiEncryptedMessage<TID>): Buffer {
     return this.eciesMultiRecipient.buildECIESMultipleRecipientHeader(data);
   }
 
@@ -412,20 +420,20 @@ export class MultiRecipientProcessor {
    * Wrapper around EciesMultiRecipient.decryptMultipleECIEForRecipient for backward compatibility.
    */
   public async decryptMultipleForRecipient(
-    encryptedData: IMultiEncryptedMessage,
-    recipientId: Buffer,
+    encryptedData: IMultiEncryptedMessage<TID>,
+    recipientId: TID,
     privateKey: Buffer,
     senderPublicKey?: Buffer,
   ): Promise<Buffer> {
     // Create a partial IMember with only the properties needed for decryption
-    const member: Pick<IMember, 'id' | 'privateKey'> = {
+    const member: Pick<IMember<TID>, 'id' | 'privateKey'> = {
       id: recipientId,
       privateKey: new SecureBuffer(privateKey),
     };
 
     return this.eciesMultiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,
-      member as IMember,
+      member as IMember<TID>,
       senderPublicKey,
     );
   }
@@ -434,9 +442,12 @@ export class MultiRecipientProcessor {
    * Parses a multi-encrypted header.
    * Wrapper around EciesMultiRecipient.parseMultiEncryptedHeader for backward compatibility.
    */
-  public parseHeader(
-    data: Buffer,
-  ): Omit<IMultiEncryptedMessage, 'encryptedMessage'> & { headerSize: number } {
+  public parseHeader(data: Buffer): Omit<
+    IMultiEncryptedMessage<TID>,
+    'encryptedMessage'
+  > & {
+    headerSize: number;
+  } {
     const result = this.eciesMultiRecipient.parseMultiEncryptedHeader(data);
     return result;
   }
@@ -445,7 +456,7 @@ export class MultiRecipientProcessor {
    * Parses a multi-encrypted buffer into its components.
    * Wrapper around EciesMultiRecipient.parseMultiEncryptedBuffer for backward compatibility.
    */
-  public parseMessage(data: Buffer): IMultiEncryptedMessage {
+  public parseMessage(data: Buffer): IMultiEncryptedMessage<TID> {
     const result = this.eciesMultiRecipient.parseMultiEncryptedBuffer(data);
     return result;
   }

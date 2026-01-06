@@ -174,7 +174,10 @@ describe('Cross-Platform Compatibility', () => {
 
       expect(parsed.dataLength).toBe(encrypted.dataLength);
       expect(parsed.recipientCount).toBe(encrypted.recipientCount);
-      expect(parsed.recipientIds[0]).toEqual(encrypted.recipientIds[0]);
+      // Convert both to Buffer for consistent comparison
+      expect(Buffer.from(parsed.recipientIds[0] as any)).toEqual(
+        Buffer.from(encrypted.recipientIds[0] as any),
+      );
       expect(parsed.recipientKeys[0]).toEqual(encrypted.recipientKeys[0]);
     });
   });

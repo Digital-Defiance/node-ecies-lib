@@ -7,6 +7,7 @@ import {
 
 import {
   Constants as AppConstants,
+  arraysEqual,
   EciesCipherSuiteEnum,
   EciesEncryptionTypeEnum,
   ECIESError,
@@ -14,6 +15,8 @@ import {
   EciesVersionEnum,
 } from '@digitaldefiance/ecies-lib';
 
+import { getNodeRuntimeConfiguration } from '../../constants';
+import { PlatformID } from '../../interfaces';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import type { IMember } from '../../interfaces/member';
@@ -22,11 +25,12 @@ import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-pa
 
 import { EciesCryptoCore } from './crypto-core';
 import { EciesSingleRecipientCore } from './single-recipient';
+const Constants = getNodeRuntimeConfiguration();
 
 /**
  * Multiple recipient encryption/decryption functions for ECIES
  */
-export class EciesMultiRecipient {
+export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly singleRecipientCore: EciesSingleRecipientCore;
 
@@ -196,11 +200,11 @@ export class EciesMultiRecipient {
     ecdh.setPrivateKey(privateKey);
     const sharedSecret = ecdh.computeSecret(normalizedKey);
 
-    // Use HKDF to derive the key
+    // Use HKDF to derive the key - match frontend implementation
     const symKey = this.cryptoCore.deriveSharedKey(
       sharedSecret,
       Buffer.alloc(0), // No salt
-      Buffer.from('ecies-v2-key-derivation'), // Info
+      Buffer.from(new TextEncoder().encode('ecies-v2-key-derivation')), // Info - match frontend
       this.cryptoCore.consts.SYMMETRIC.KEY_SIZE,
     );
 
@@ -246,11 +250,11 @@ export class EciesMultiRecipient {
    * @throws EciesError if the number of recipients is greater than 65535.
    */
   public encryptMultiple(
-    recipients: IMember[],
+    recipients: IMember<TID>[],
     message: Buffer,
     preamble?: Buffer,
     senderPrivateKey?: Buffer,
-  ): IMultiEncryptedMessage {
+  ): IMultiEncryptedMessage<TID> {
     if (recipients.length > AppConstants.UINT16_MAX) {
       throw new ECIESError(ECIESErrorTypeEnum.TooManyRecipients);
     }
@@ -294,11 +298,11 @@ export class EciesMultiRecipient {
         member.publicKey,
         symmetricKey,
         ephemeralPrivateKey,
-        member.id as Buffer, // Use Recipient ID as AAD
+        Constants.idProvider.toBytes(member.id) as Buffer, // Use Recipient ID bytes as AAD - match frontend
       ),
     }));
 
-    const recipientIds = encryptionResults.map(({ id }) => id as Buffer);
+    const recipientIds = encryptionResults.map(({ id }) => id);
     const recipientKeys = encryptionResults.map(
       ({ encryptedKey }) => encryptedKey,
     );
@@ -312,7 +316,7 @@ export class EciesMultiRecipient {
 
     // Build the header to use as AAD for message encryption
     // We need to construct a temporary object to build the header
-    const tempHeaderData: IMultiEncryptedMessage = {
+    const tempHeaderData: IMultiEncryptedMessage<TID> = {
       dataLength: messageToEncrypt.length,
       recipientCount: recipients.length,
       recipientIds,
@@ -373,8 +377,8 @@ export class EciesMultiRecipient {
    * @returns The decrypted message.
    */
   public decryptMultipleECIEForRecipient(
-    encryptedData: IMultiEncryptedMessage,
-    recipient: IMember,
+    encryptedData: IMultiEncryptedMessage<TID>,
+    recipient: IMember<TID>,
     senderPublicKey?: Buffer,
   ): Buffer {
     if (recipient.privateKey === undefined) {
@@ -383,7 +387,11 @@ export class EciesMultiRecipient {
 
     // Find this recipient's encrypted key
     const recipientIndex: number = encryptedData.recipientIds.findIndex(
-      (id: Buffer): boolean => id.equals(recipient.id as Buffer),
+      (id: TID): boolean =>
+        arraysEqual(
+          Constants.idProvider.toBytes(id),
+          Constants.idProvider.toBytes(recipient.id),
+        ),
     );
     if (recipientIndex === -1) {
       throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
@@ -400,7 +408,7 @@ export class EciesMultiRecipient {
       Buffer.from(recipient.privateKey.value),
       encryptedKey,
       encryptedData.ephemeralPublicKey,
-      recipient.id as Buffer, // Use Recipient ID as AAD
+      recipient.id as Buffer, // Use Recipient ID as AAD - match frontend
     );
 
     // Rebuild header to use as AAD
@@ -517,7 +525,7 @@ export class EciesMultiRecipient {
    * @throws EciesError if the number of encrypted keys does not match the number of recipients
    */
   public buildECIESMultipleRecipientHeader(
-    data: IMultiEncryptedMessage,
+    data: IMultiEncryptedMessage<TID>,
   ): Buffer {
     if (
       data.recipientIds.length > this.cryptoCore.consts.MULTIPLE.MAX_RECIPIENTS
@@ -581,9 +589,21 @@ export class EciesMultiRecipient {
       data.recipientIds.length *
         this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE,
     );
-    data.recipientIds.forEach((recipientId: Buffer, index: number) => {
+    data.recipientIds.forEach((recipientId: TID, index: number) => {
+      const idData = Constants.idProvider.toBytes(recipientId);
+      if (idData.length !== this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE) {
+        throw new ECIESError(
+          ECIESErrorTypeEnum.InvalidECIESMultipleRecipientIdSize,
+          undefined,
+          undefined,
+          {
+            expected: String(this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE),
+            actual: String(idData.length),
+          },
+        );
+      }
       recipientsBuffer.set(
-        recipientId,
+        idData,
         index * this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE,
       );
     });
@@ -633,7 +653,9 @@ export class EciesMultiRecipient {
    * @param data - The data to parse.
    * @returns The parsed header.
    */
-  public parseMultiEncryptedHeader(data: Buffer): IMultiEncryptedParsedHeader {
+  public parseMultiEncryptedHeader(
+    data: Buffer,
+  ): IMultiEncryptedParsedHeader<TID> {
     // Ensure there's enough data to read headers
     // minimum: 1 (ver) + 1 (suite) + 1 (type) + 33 (pubkey) + 8 (len) + 2 (count) = 46
     if (data.length < 46) {
@@ -772,7 +794,9 @@ export class EciesMultiRecipient {
     return {
       dataLength,
       recipientCount,
-      recipientIds,
+      recipientIds: recipientIds.map(
+        (idBuffer) => Constants.idProvider.fromBytes(idBuffer) as TID,
+      ),
       recipientKeys,
       headerSize: offset,
       ephemeralPublicKey,
@@ -784,7 +808,7 @@ export class EciesMultiRecipient {
    * @param data - The multi-encrypted buffer to parse.
    * @returns The parsed multi-encrypted buffer.
    */
-  public parseMultiEncryptedBuffer(data: Buffer): IMultiEncryptedMessage {
+  public parseMultiEncryptedBuffer(data: Buffer): IMultiEncryptedMessage<TID> {
     const header = this.parseMultiEncryptedHeader(data);
     const encryptedMessage = data.subarray(header.headerSize);
 

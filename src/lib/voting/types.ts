@@ -3,6 +3,8 @@
  * Uses Buffer instead of Uint8Array for better Node.js performance
  */
 
+import type { PlatformID } from '../../interfaces';
+
 export type { IMember } from '../../interfaces/member';
 
 export enum VotingMethod {
@@ -26,9 +28,9 @@ export enum VotingMethod {
   ConsentBased = 'consent-based',
 }
 
-export interface VoteReceipt {
-  voterId: Buffer;
-  pollId: Buffer;
+export interface VoteReceipt<TID extends PlatformID = Buffer> {
+  voterId: TID;
+  pollId: TID;
   timestamp: number;
   signature: Buffer;
   nonce: Buffer;
@@ -52,18 +54,18 @@ export interface RoundResult {
   winner?: number;
 }
 
-export interface EncryptedVote {
+export interface EncryptedVote<TID extends PlatformID = Buffer> {
   choiceIndex?: number;
   choices?: number[];
   rankings?: number[];
   weight?: bigint;
   score?: number;
   encrypted: bigint[];
-  plaintext?: PlaintextVote;
+  plaintext?: PlaintextVote<TID>;
 }
 
-export interface PlaintextVote {
-  voterId: Buffer;
+export interface PlaintextVote<TID extends PlatformID = Buffer> {
+  voterId: TID;
   choiceIndex?: number;
   choices?: number[];
   weight?: bigint;

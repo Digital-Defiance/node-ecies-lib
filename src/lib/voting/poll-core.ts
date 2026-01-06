@@ -5,6 +5,7 @@ import { randomBytes, createHash } from 'crypto';
 
 import type { PublicKey } from 'paillier-bigint';
 
+import { getNodeRuntimeConfiguration } from '../../constants';
 import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
 import type { SignatureBuffer } from '../../types';
@@ -12,6 +13,7 @@ import type { SignatureBuffer } from '../../types';
 import { ImmutableAuditLog, type AuditLog } from './audit';
 import { VotingSecurityValidator } from './security';
 import { VotingMethod, type VoteReceipt, type EncryptedVote } from './types';
+const Constants = getNodeRuntimeConfiguration();
 
 export class Poll<TID extends PlatformID = Buffer> {
   private readonly _id: TID;
@@ -20,7 +22,7 @@ export class Poll<TID extends PlatformID = Buffer> {
   private readonly _authority: IMember<TID>;
   private readonly ___votingPublicKey: PublicKey;
   private readonly _votes: Map<string, bigint[]> = new Map();
-  private readonly _receipts: Map<string, VoteReceipt> = new Map();
+  private readonly _receipts: Map<string, VoteReceipt<TID>> = new Map();
   private readonly _createdAt: number;
   private _closedAt?: number;
   private _maxWeight?: bigint;
@@ -79,7 +81,7 @@ export class Poll<TID extends PlatformID = Buffer> {
     return this._auditLog;
   }
 
-  vote(voter: IMember<TID>, vote: EncryptedVote): VoteReceipt {
+  vote(voter: IMember<TID>, vote: EncryptedVote<TID>): VoteReceipt<TID> {
     if (this.isClosed) throw new Error('Poll is closed');
     const voterId = Buffer.from(voter.id as Buffer).toString('hex');
     if (this._receipts.has(voterId)) throw new Error('Already voted');
@@ -94,7 +96,7 @@ export class Poll<TID extends PlatformID = Buffer> {
     return receipt;
   }
 
-  verifyReceipt(voter: IMember<TID>, receipt: VoteReceipt): boolean {
+  verifyReceipt(voter: IMember<TID>, receipt: VoteReceipt<TID>): boolean {
     const voterId = Buffer.from(voter.id as Buffer).toString('hex');
     const stored = this._receipts.get(voterId);
     if (!stored) return false;
@@ -133,7 +135,7 @@ export class Poll<TID extends PlatformID = Buffer> {
     }) as ReadonlyMap<string, readonly bigint[]>;
   }
 
-  private _validateVote(vote: EncryptedVote): void {
+  private _validateVote(vote: EncryptedVote<TID>): void {
     switch (this._method) {
       case VotingMethod.Plurality:
         if (vote.choiceIndex === undefined) throw new Error('Choice required');
@@ -172,11 +174,11 @@ export class Poll<TID extends PlatformID = Buffer> {
     if (!vote.encrypted?.length) throw new Error('Encrypted data required');
   }
 
-  private _generateReceipt(voter: IMember<TID>): VoteReceipt {
+  private _generateReceipt(voter: IMember<TID>): VoteReceipt<TID> {
     const nonce = randomBytes(16);
-    const receipt: VoteReceipt = {
-      voterId: Buffer.from(voter.id as Buffer),
-      pollId: Buffer.from(this._id as Buffer),
+    const receipt: VoteReceipt<TID> = {
+      voterId: voter.id,
+      pollId: this._id,
       timestamp: Date.now(),
       signature: Buffer.alloc(0),
       nonce,
@@ -186,12 +188,12 @@ export class Poll<TID extends PlatformID = Buffer> {
     return receipt;
   }
 
-  private _receiptData(receipt: VoteReceipt): Buffer {
+  private _receiptData(receipt: VoteReceipt<TID>): Buffer {
     const timestamp = Buffer.alloc(8);
     timestamp.writeBigUInt64BE(BigInt(receipt.timestamp));
     return Buffer.concat([
-      receipt.voterId,
-      receipt.pollId,
+      Constants.idProvider.toBytes(receipt.voterId),
+      Constants.idProvider.toBytes(receipt.pollId),
       timestamp,
       receipt.nonce,
     ]);

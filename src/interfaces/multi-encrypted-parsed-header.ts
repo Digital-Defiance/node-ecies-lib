@@ -1,4 +1,6 @@
-export interface IMultiEncryptedParsedHeader {
+import type { PlatformID } from './platform-id';
+
+export interface IMultiEncryptedParsedHeader<TID extends PlatformID = Buffer> {
   /**
    * The length of the data before encryption
    */
@@ -10,7 +12,7 @@ export interface IMultiEncryptedParsedHeader {
   /**
    * The IDs of the recipients
    */
-  readonly recipientIds: Buffer[];
+  readonly recipientIds: TID[];
   /**
    * An encrypted version of the symmetric key for each recipient
    */

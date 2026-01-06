@@ -10,7 +10,7 @@ import { VotingMethod } from './types';
 import type { IMember, EncryptedVote } from './types';
 
 // Mock Member for testing
-class MockMember implements IMember {
+class MockMember implements IMember<Buffer> {
   constructor(
     public readonly id: Buffer,
     public readonly votingPublicKey?: PublicKey,

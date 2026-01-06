@@ -79,16 +79,20 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
 
     const parsed = frontendMulti.parseMessage(new Uint8Array(fullMessage));
 
+    // Convert recipient IDs to Uint8Array for frontend compatibility
+    const frontendRecipient1Id = new Uint8Array(recipient1.id);
+    const frontendRecipient2Id = new Uint8Array(recipient2.id);
+
     const decrypted1 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
-      recipient1.id,
+      frontendRecipient1Id,
       new Uint8Array(recipient1.privateKey!.value),
     );
     expect(Buffer.from(decrypted1)).toEqual(message);
 
     const decrypted2 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
-      recipient2.id,
+      frontendRecipient2Id,
       new Uint8Array(recipient2.privateKey!.value),
     );
     expect(Buffer.from(decrypted2)).toEqual(message);

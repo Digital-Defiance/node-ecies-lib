@@ -3,14 +3,15 @@
  */
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
+import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
 
 import { Poll } from './poll-core';
 import { VotingMethod, type PollResults, type RoundResult } from './types';
 
-export class PollTallier {
+export class PollTallier<TID extends PlatformID = Buffer> {
   constructor(
-    private readonly __authority: IMember,
+    private readonly __authority: IMember<TID>,
     private readonly votingPrivateKey: PrivateKey,
     private readonly __votingPublicKey: PublicKey,
   ) {
@@ -18,7 +19,7 @@ export class PollTallier {
       throw new Error('Authority must have private key');
   }
 
-  tally(poll: Poll): PollResults {
+  tally(poll: Poll<TID>): PollResults {
     if (!poll.isClosed) throw new Error('Poll must be closed');
     const votes = poll.getEncryptedVotes();
     const choiceCount = poll.choices.length;
@@ -54,7 +55,7 @@ export class PollTallier {
   }
 
   private _tallyAdditive(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -79,7 +80,7 @@ export class PollTallier {
   }
 
   private _tallyScored(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -87,7 +88,7 @@ export class PollTallier {
   }
 
   private _tallyYesNo(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -95,7 +96,7 @@ export class PollTallier {
   }
 
   private _tallyRankedChoice(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -222,7 +223,7 @@ export class PollTallier {
   }
 
   private _tallyQuadratic(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -248,7 +249,7 @@ export class PollTallier {
   }
 
   private _tallyConsensus(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -274,7 +275,7 @@ export class PollTallier {
   }
 
   private _tallyConsentBased(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -301,7 +302,7 @@ export class PollTallier {
   }
 
   private _tallyTwoRound(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -348,7 +349,7 @@ export class PollTallier {
   }
 
   private _tallySTAR(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {
@@ -385,7 +386,7 @@ export class PollTallier {
   }
 
   private _tallySTV(
-    poll: Poll,
+    poll: Poll<TID>,
     votes: ReadonlyMap<string, readonly bigint[]>,
     choiceCount: number,
   ): PollResults {

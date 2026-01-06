@@ -11,7 +11,7 @@ import { Types } from '@digitaldefiance/mongoose-types';
 import { Wallet } from '@ethereumjs/wallet';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
-import { Constants } from './constants';
+import { getNodeRuntimeConfiguration } from './constants';
 import {
   getNodeEciesTranslation,
   NodeEciesStringKey,
@@ -23,6 +23,7 @@ import { IStreamProgress } from './interfaces/stream-progress';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
 import { SignatureBuffer, toUint8Array } from './types';
+const Constants = getNodeRuntimeConfiguration();
 
 /**
  * Custom error classes that work with the plugin i18n system
@@ -564,7 +565,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     name: string,
     email: EmailString,
     forceMnemonic?: SecureString,
-    createdBy?: Buffer,
+    createdBy?: TID,
   ): { member: Member<TID>; mnemonic: SecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {

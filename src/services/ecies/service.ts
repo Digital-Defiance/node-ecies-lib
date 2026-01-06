@@ -14,6 +14,7 @@ import { Wallet } from '@ethereumjs/wallet';
 
 // Import all the modular components
 import { Constants } from '../../constants';
+import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
 import type { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import type { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
@@ -30,13 +31,13 @@ import { EciesUtilities } from './utilities';
 /**
  * Unified ECIES service that integrates all the modular components
  */
-export class ECIESService {
+export class ECIESService<TID extends PlatformID = Buffer> {
   protected readonly _config: IECIESConfig;
   protected readonly _constants: IConstants;
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly signature: EciesSignature;
   protected readonly singleRecipient: EciesSingleRecipientCore;
-  protected readonly multiRecipient: EciesMultiRecipient;
+  protected readonly multiRecipient: EciesMultiRecipient<TID>;
   protected readonly utilities: EciesUtilities;
 
   constructor(
@@ -295,16 +296,16 @@ export class ECIESService {
 
   // === Multi-Recipient Methods ===
   public async encryptMultiple(
-    recipients: Array<IMember>,
+    recipients: Array<IMember<TID>>,
     message: Buffer,
     preamble?: Buffer,
-  ): Promise<IMultiEncryptedMessage> {
+  ): Promise<IMultiEncryptedMessage<TID>> {
     return this.multiRecipient.encryptMultiple(recipients, message, preamble);
   }
 
   public decryptMultipleECIEForRecipient(
-    encryptedData: IMultiEncryptedMessage,
-    recipient: IMember,
+    encryptedData: IMultiEncryptedMessage<TID>,
+    recipient: IMember<TID>,
   ): Buffer {
     return this.multiRecipient.decryptMultipleECIEForRecipient(
       encryptedData,
@@ -323,16 +324,18 @@ export class ECIESService {
   }
 
   public buildECIESMultipleRecipientHeader(
-    data: IMultiEncryptedMessage,
+    data: IMultiEncryptedMessage<TID>,
   ): Buffer {
     return this.multiRecipient.buildECIESMultipleRecipientHeader(data);
   }
 
-  public parseMultiEncryptedHeader(data: Buffer): IMultiEncryptedParsedHeader {
+  public parseMultiEncryptedHeader(
+    data: Buffer,
+  ): IMultiEncryptedParsedHeader<TID> {
     return this.multiRecipient.parseMultiEncryptedHeader(data);
   }
 
-  public parseMultiEncryptedBuffer(data: Buffer): IMultiEncryptedMessage {
+  public parseMultiEncryptedBuffer(data: Buffer): IMultiEncryptedMessage<TID> {
     return this.multiRecipient.parseMultiEncryptedBuffer(data);
   }
 
@@ -362,7 +365,7 @@ export class ECIESService {
 
   public encrypt(
     encryptionType: EciesEncryptionType,
-    recipient: IMember,
+    recipient: IMember<TID>,
     message: Buffer,
     preamble?: Buffer,
   ): Buffer {

@@ -4,12 +4,17 @@
  */
 import type { PublicKey } from 'paillier-bigint';
 
+import type { PlatformID } from '../../interfaces';
+
 import { VotingMethod, type EncryptedVote } from './types';
 
-export class VoteEncoder {
+export class VoteEncoder<TID extends PlatformID = Buffer> {
   constructor(private readonly votingPublicKey: PublicKey) {}
 
-  encodePlurality(choiceIndex: number, choiceCount: number): EncryptedVote {
+  encodePlurality(
+    choiceIndex: number,
+    choiceCount: number,
+  ): EncryptedVote<TID> {
     const encrypted: bigint[] = [];
     for (let i = 0; i < choiceCount; i++) {
       encrypted.push(
@@ -21,7 +26,7 @@ export class VoteEncoder {
     return { choiceIndex, encrypted };
   }
 
-  encodeApproval(choices: number[], choiceCount: number): EncryptedVote {
+  encodeApproval(choices: number[], choiceCount: number): EncryptedVote<TID> {
     const choiceSet = new Set(choices);
     const encrypted: bigint[] = [];
     for (let i = 0; i < choiceCount; i++) {
@@ -38,7 +43,7 @@ export class VoteEncoder {
     choiceIndex: number,
     weight: bigint,
     choiceCount: number,
-  ): EncryptedVote {
+  ): EncryptedVote<TID> {
     const encrypted: bigint[] = [];
     for (let i = 0; i < choiceCount; i++) {
       encrypted.push(
@@ -50,7 +55,7 @@ export class VoteEncoder {
     return { choiceIndex, weight, encrypted };
   }
 
-  encodeBorda(rankings: number[], choiceCount: number): EncryptedVote {
+  encodeBorda(rankings: number[], choiceCount: number): EncryptedVote<TID> {
     const encrypted: bigint[] = new Array(choiceCount) as bigint[];
     const points = BigInt(rankings.length);
     for (let i = 0; i < choiceCount; i++) {
@@ -66,7 +71,10 @@ export class VoteEncoder {
     return { rankings, encrypted };
   }
 
-  encodeRankedChoice(rankings: number[], choiceCount: number): EncryptedVote {
+  encodeRankedChoice(
+    rankings: number[],
+    choiceCount: number,
+  ): EncryptedVote<TID> {
     const encrypted: bigint[] = new Array(choiceCount) as bigint[];
     for (let i = 0; i < choiceCount; i++) {
       encrypted[i] = this.votingPublicKey.encrypt(0n) as bigint;
@@ -89,7 +97,7 @@ export class VoteEncoder {
       weight?: bigint;
     },
     choiceCount: number,
-  ): EncryptedVote {
+  ): EncryptedVote<TID> {
     switch (method) {
       case VotingMethod.Plurality:
         if (data.choiceIndex === undefined) throw new Error('Choice required');

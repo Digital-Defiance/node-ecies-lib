@@ -9,7 +9,8 @@ import {
   XorService,
 } from '@digitaldefiance/ecies-lib';
 
-import { Constants } from './constants';
+import { getNodeRuntimeConfiguration } from './constants';
+const Constants = getNodeRuntimeConfiguration();
 
 /**
  * Default ID provider (singleton, no circular dependency)
