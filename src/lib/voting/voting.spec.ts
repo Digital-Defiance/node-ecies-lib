@@ -8,21 +8,29 @@ import { VoteEncoder } from './encoder';
 import { PollFactory } from './factory';
 import { Poll as _Poll } from './poll-core';
 import { PollTallier } from './tallier';
-import type { IMember } from './types';
+import type { IMember } from '../../interfaces/member';
 import {
   VotingMethod,
   VotingSecurityValidator,
   SecurityLevel as _SecurityLevel,
 } from './index';
 
+import { BufferIdProvider } from '../id-providers/buffer-provider';
+
 // Mock Member for testing
 class MockMember implements IMember {
+  public readonly idProvider = new BufferIdProvider(32, 'MockBuffer');
+
   constructor(
     public readonly id: Buffer,
     public readonly publicKey: Buffer,
     public readonly votingPublicKey: any,
     public readonly votingPrivateKey: any,
   ) {}
+
+  get idBytes(): Buffer {
+    return this.id;
+  }
 
   sign(_data: Buffer): Buffer {
     return Buffer.alloc(64); // Mock signature

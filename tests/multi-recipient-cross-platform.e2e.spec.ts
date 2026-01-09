@@ -52,11 +52,11 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     // Backend expects objects with id (Buffer) and publicKey (Buffer)
     const backendRecipients = [
       {
-        id: Buffer.from(recipient1.id),
+        id: recipient1.idBytes,
         publicKey: Buffer.from(recipient1.publicKey),
       },
       {
-        id: Buffer.from(recipient2.id),
+        id: recipient2.idBytes,
         publicKey: Buffer.from(recipient2.publicKey),
       },
     ];
@@ -80,8 +80,8 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     const parsed = frontendMulti.parseMessage(new Uint8Array(fullMessage));
 
     // Convert recipient IDs to Uint8Array for frontend compatibility
-    const frontendRecipient1Id = new Uint8Array(recipient1.id);
-    const frontendRecipient2Id = new Uint8Array(recipient2.id);
+    const frontendRecipient1Id = new Uint8Array(recipient1.idBytes);
+    const frontendRecipient2Id = new Uint8Array(recipient2.idBytes);
 
     const decrypted1 = await frontendMulti.decryptMultipleForRecipient(
       parsed,
@@ -120,11 +120,11 @@ describe('Multi-Recipient Cross-Platform Compatibility', () => {
     // Frontend expects { id: Uint8Array, publicKey: Uint8Array }
     const frontendRecipients = [
       {
-        id: new Uint8Array(recipient1.id),
+        id: new Uint8Array(recipient1.idBytes),
         publicKey: new Uint8Array(recipient1.publicKey),
       },
       {
-        id: new Uint8Array(recipient2.id),
+        id: new Uint8Array(recipient2.idBytes),
         publicKey: new Uint8Array(recipient2.publicKey),
       },
     ];

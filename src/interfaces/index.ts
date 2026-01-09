@@ -18,6 +18,7 @@ export * from './multi-encrypted-parsed-header';
 export * from './multi-recipient-chunk';
 export * from './pbkdf-profiles';
 export * from './pbkdf2-result';
+export * from './platform-buffer';
 export * from './platform-id';
 export * from './signing-key-private-key-info';
 export * from './simple-keypair';
@@ -27,16 +28,11 @@ export * from './simple-public-key-only-buffer';
 export * from './single-encrypted-parsed-header';
 export * from './stream-config';
 export * from './stream-progress';
-export type { IVotingConsts } from './voting-consts';
+// IVotingConsts is now exported from lib/voting/interfaces (re-exported from ecies-lib)
+// Removed duplicate export: IVotingConsts
 export { VOTING } from './voting-consts';
-export {
-  type IPoll,
-  type IVoteEncoder,
-  type IPollTallier,
-  type IPollFactory,
-  type IVotingSecurityValidator,
-  SecurityLevel as VotingSecurityLevel,
-} from './voting-poll';
+// Voting interfaces are now exported from lib/voting/interfaces
+// Removed duplicate exports: IPoll, IVoteEncoder, IPollTallier, IPollFactory, IVotingSecurityValidator
 export * from './voting-service';
 export * from './wallet-seed';
 export * from './wrapped-key-consts';

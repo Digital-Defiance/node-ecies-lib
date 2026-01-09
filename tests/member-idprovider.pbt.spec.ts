@@ -54,10 +54,12 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             );
 
             // Verify Member ID length matches configured idProvider
-            expect(result.member.id.length).toBe(
+            expect(result.member.idBytes.length).toBe(
               service.constants.idProvider.byteLength,
             );
-            expect(result.member.id.length).toBe(constants.MEMBER_ID_LENGTH);
+            expect(result.member.idBytes.length).toBe(
+              constants.MEMBER_ID_LENGTH,
+            );
           },
         ),
         { numRuns: 100 },
@@ -86,7 +88,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             );
 
             // Verify 16-byte GUID
-            expect(result.member.id.length).toBe(16);
+            expect(result.member.idBytes.length).toBe(16);
             expect(service.constants.idProvider.byteLength).toBe(16);
           },
         ),
@@ -116,7 +118,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             );
 
             // Verify 12-byte ObjectID
-            expect(result.member.id.length).toBe(12);
+            expect(result.member.idBytes.length).toBe(12);
             expect(service.constants.idProvider.byteLength).toBe(12);
           },
         ),
@@ -161,7 +163,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             );
 
             // Verify default 12-byte ObjectID
-            expect(result.member.id.length).toBe(12);
+            expect(result.member.idBytes.length).toBe(12);
             expect(service.constants.idProvider.byteLength).toBe(12);
           },
         ),
@@ -188,7 +190,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             );
 
             // Verify default 12-byte ObjectID
-            expect(result.member.id.length).toBe(12);
+            expect(result.member.idBytes.length).toBe(12);
           },
         ),
         { numRuns: 100 },
@@ -229,7 +231,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
 
             // Verify GuidV4.fromBuffer succeeds
             expect(() => {
-              const guid = GuidV4.fromBuffer(Buffer.from(result.member.id));
+              const guid = GuidV4.fromBuffer(result.member.idBytes);
               expect(guid).toBeDefined();
               expect(guid.asFullHexGuid).toMatch(
                 /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -275,9 +277,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
 
             // Verify ObjectID conversion succeeds
             expect(() => {
-              const idBuffer = Buffer.isBuffer(result.member.id)
-                ? result.member.id
-                : Buffer.from(result.member.id);
+              const idBuffer = result.member.idBytes;
               const objectIdString = constants.idProvider.serialize(idBuffer);
               expect(objectIdString).toBeDefined();
               expect(typeof objectIdString).toBe('string');
@@ -324,9 +324,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
 
             // Verify ID conversion doesn't throw
             expect(() => {
-              const idBuffer = Buffer.isBuffer(result.member.id)
-                ? result.member.id
-                : Buffer.from(result.member.id);
+              const idBuffer = result.member.idBytes;
               const idString = constants.idProvider.serialize(idBuffer);
               expect(idString).toBeDefined();
               expect(typeof idString).toBe('string');
@@ -334,9 +332,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
 
             // Verify round-trip conversion
             expect(() => {
-              const idBuffer = Buffer.isBuffer(result.member.id)
-                ? result.member.id
-                : Buffer.from(result.member.id);
+              const idBuffer = result.member.idBytes;
               const idString = constants.idProvider.serialize(idBuffer);
               const deserializedId = constants.idProvider.deserialize(idString);
               expect(Buffer.from(deserializedId)).toEqual(idBuffer);
@@ -391,14 +387,10 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             const deserializedMember = Member.fromJson(json, service);
 
             // Verify ID is preserved
-            const originalBuffer = Buffer.isBuffer(originalId)
-              ? originalId
-              : Buffer.from(originalId);
-            const deserializedBuffer = Buffer.isBuffer(deserializedMember.id)
-              ? deserializedMember.id
-              : Buffer.from(deserializedMember.id);
+            const originalBuffer = originalMember.idBytes;
+            const deserializedBuffer = deserializedMember.idBytes;
 
-            expect(deserializedBuffer).toEqual(originalBuffer);
+            expect(Buffer.compare(deserializedBuffer, originalBuffer)).toBe(0);
             expect(deserializedBuffer.length).toBe(originalBuffer.length);
             expect(deserializedBuffer.length).toBe(
               service.constants.idProvider.byteLength,
@@ -446,14 +438,10 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             const deserialized = Member.fromJson(json, service);
 
             // Verify 16-byte ID preserved
-            const originalBuffer = Buffer.isBuffer(originalId)
-              ? originalId
-              : Buffer.from(originalId);
-            const deserializedBuffer = Buffer.isBuffer(deserialized.id)
-              ? deserialized.id
-              : Buffer.from(deserialized.id);
+            const originalBuffer = result.member.idBytes;
+            const deserializedBuffer = deserialized.idBytes;
 
-            expect(deserializedBuffer).toEqual(originalBuffer);
+            expect(Buffer.compare(deserializedBuffer, originalBuffer)).toBe(0);
             expect(deserializedBuffer.length).toBe(16);
 
             // Verify UUID compatibility maintained
@@ -492,14 +480,10 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             const deserialized = Member.fromJson(json, service);
 
             // Verify 12-byte ID preserved
-            const originalBuffer = Buffer.isBuffer(originalId)
-              ? originalId
-              : Buffer.from(originalId);
-            const deserializedBuffer = Buffer.isBuffer(deserialized.id)
-              ? deserialized.id
-              : Buffer.from(deserialized.id);
+            const originalBuffer = result.member.idBytes;
+            const deserializedBuffer = deserialized.idBytes;
 
-            expect(deserializedBuffer).toEqual(originalBuffer);
+            expect(Buffer.compare(deserializedBuffer, originalBuffer)).toBe(0);
             expect(deserializedBuffer.length).toBe(12);
 
             // Verify ObjectID compatibility maintained

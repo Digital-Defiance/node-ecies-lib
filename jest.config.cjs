@@ -1,6 +1,18 @@
 const { pathsToModuleNameMapper } = require('ts-jest');
 const { compilerOptions } = require('../../tsconfig.base.json');
 
+// Suppress TypeScript ESLint deprecation warnings
+const originalWarn = process.emitWarning;
+process.emitWarning = function(warning, type, code) {
+  if (
+    typeof warning === 'string' &&
+    warning.includes('The \'argument\' property is deprecated on TSImportType nodes')
+  ) {
+    return;
+  }
+  originalWarn.call(process, warning, type, code);
+};
+
 module.exports = {
   testEnvironment: 'node',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
@@ -51,6 +63,10 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
     '^@digitaldefiance/ecies-lib$':
       '<rootDir>/../digitaldefiance-ecies-lib/src/index.ts',
+    '^@digitaldefiance/ecies-lib/voting$':
+      '<rootDir>/../digitaldefiance-ecies-lib/src/lib/voting/index.ts',
+    '^@digitaldefiance/ecies-lib/(.*)$':
+      '<rootDir>/../digitaldefiance-ecies-lib/src/$1',
     ...pathsToModuleNameMapper(compilerOptions.paths, {
       prefix: '<rootDir>/../../',
     }),

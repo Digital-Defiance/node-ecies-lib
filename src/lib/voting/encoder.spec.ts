@@ -1,9 +1,10 @@
 /**
  * VoteEncoder Tests - Node.js
+ * Tests for Buffer-specialized VoteEncoder that extends ecies-lib
  */
 import { generateRandomKeysSync as generateKeyPair } from 'paillier-bigint';
 import { VoteEncoder } from './encoder';
-import { VotingMethod } from './types';
+import { VotingMethod } from './enumerations';
 
 describe('VoteEncoder', () => {
   let encoder: VoteEncoder;
@@ -15,6 +16,27 @@ describe('VoteEncoder', () => {
     publicKey = keyPair.publicKey;
     privateKey = keyPair.privateKey;
     encoder = new VoteEncoder(publicKey);
+  });
+
+  describe('Buffer Type Verification', () => {
+    test('should return EncryptedVote with Buffer-compatible types', () => {
+      const vote = encoder.encodePlurality(1, 3);
+      expect(vote.choiceIndex).toBe(1);
+      expect(vote.encrypted).toHaveLength(3);
+      expect(Array.isArray(vote.encrypted)).toBe(true);
+      // Verify encrypted values are bigints (platform-agnostic)
+      vote.encrypted.forEach((enc) => {
+        expect(typeof enc).toBe('bigint');
+      });
+    });
+
+    test('should work with Buffer-specialized EncryptedVote type', () => {
+      // This test verifies TypeScript compilation with Buffer types
+      const vote = encoder.encodePlurality(0, 2);
+      // If this compiles, it means the type specialization works
+      expect(vote).toBeDefined();
+      expect(vote.encrypted).toBeDefined();
+    });
   });
 
   describe('Plurality Encoding', () => {

@@ -85,8 +85,8 @@ export class VotingPoll<TID extends PlatformID = Buffer> {
     const randomNonce = randomBytes(16).toString(
       Constants.VOTING.KEY_FORMAT as BufferEncoding,
     );
-    const memberId = Constants.idProvider.serialize(
-      Constants.idProvider.toBytes(member.id),
+    const memberId = member.idProvider.serialize(
+      member.idProvider.toBytes(member.id),
     );
     const hashInput = `${Date.now()}-${randomNonce}-${memberId}`;
     const hash = createHash('sha256').update(hashInput).digest();
@@ -106,15 +106,15 @@ export class VotingPoll<TID extends PlatformID = Buffer> {
   }
 
   public memberVoted(member: Member<TID>): boolean {
-    const memberId = Constants.idProvider.serialize(
-      Constants.idProvider.toBytes(member.id),
+    const memberId = member.idProvider.serialize(
+      member.idProvider.toBytes(member.id),
     );
     return this.receipts.has(memberId);
   }
 
   public verifyReceipt(member: Member<TID>, encryptedReceipt: Buffer): boolean {
-    const memberId = Constants.idProvider.serialize(
-      Constants.idProvider.toBytes(member.id),
+    const memberId = member.idProvider.serialize(
+      member.idProvider.toBytes(member.id),
     );
     const foundReceipt = this.receipts.get(memberId);
     if (!foundReceipt) {

@@ -1,9 +1,4 @@
+import type { PlatformID as BasePlatformID } from '@digitaldefiance/ecies-lib';
 import { Types } from '@digitaldefiance/mongoose-types';
-import { ObjectId } from 'bson';
 
-export type PlatformID =
-  | Uint8Array
-  | Buffer
-  | ObjectId
-  | Types.ObjectId
-  | string;
+export type PlatformID = BasePlatformID | Buffer | Types.ObjectId;

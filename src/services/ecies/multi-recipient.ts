@@ -13,6 +13,7 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   EciesVersionEnum,
+  IIdProvider,
 } from '@digitaldefiance/ecies-lib';
 
 import { getNodeRuntimeConfiguration } from '../../constants';
@@ -33,10 +34,20 @@ const Constants = getNodeRuntimeConfiguration();
 export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
   protected readonly cryptoCore: EciesCryptoCore;
   protected readonly singleRecipientCore: EciesSingleRecipientCore;
+  protected readonly idProvider: IIdProvider<TID>;
 
-  constructor(cryptoCore: EciesCryptoCore) {
+  /**
+   * Create a new multi-recipient ECIES instance.
+   * @param cryptoCore ECIES crypto core
+   * @param idProvider ID provider for recipient IDs. Defaults to Constants.idProvider.
+   */
+  constructor(
+    cryptoCore: EciesCryptoCore,
+    idProvider: IIdProvider<TID> = Constants.idProvider as IIdProvider<TID>,
+  ) {
     this.cryptoCore = cryptoCore;
     this.singleRecipientCore = new EciesSingleRecipientCore(cryptoCore.config);
+    this.idProvider = idProvider;
   }
 
   /**
@@ -85,7 +96,15 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
       // Ensure we're using the properly formatted public key (with 0x04 prefix)
       sharedSecret = ecdh.computeSecret(normalizedReceiverPublicKey);
     } catch (error: unknown) {
-      console.error('[ERROR][encrypt] Failed to compute shared secret:', error);
+      if (
+        process.env.NODE_ENV !== 'test' &&
+        !globalThis.process?.env?.JEST_WORKER_ID
+      ) {
+        console.error(
+          '[ERROR][encrypt] Failed to compute shared secret:',
+          error,
+        );
+      }
       if (error instanceof Error) {
         if (
           'code' in error &&
@@ -266,7 +285,12 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
       messageToEncrypt = Buffer.concat([signature, message]);
     }
 
-    if (messageToEncrypt.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
+    const maxDataSize = Math.min(
+      this.cryptoCore.consts.MAX_RAW_DATA_SIZE,
+      this.cryptoCore.consts.MULTIPLE.MAX_DATA_SIZE,
+    );
+
+    if (messageToEncrypt.length > maxDataSize) {
       throw new ECIESError(ECIESErrorTypeEnum.FileSizeTooLarge);
     }
 
@@ -292,15 +316,36 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
       ]);
     }
 
-    const encryptionResults = recipients.map((member) => ({
-      id: member.id,
-      encryptedKey: this.encryptKey(
-        member.publicKey,
-        symmetricKey,
-        ephemeralPrivateKey,
-        Constants.idProvider.toBytes(member.id) as Buffer, // Use Recipient ID bytes as AAD - match frontend
-      ),
-    }));
+    const encryptionResults = recipients.map((member) => {
+      const idBytes = Buffer.isBuffer(member.id)
+        ? Buffer.from(member.id)
+        : member.id instanceof Uint8Array
+          ? Buffer.from(member.id)
+          : Buffer.from(this.idProvider.toBytes(member.id));
+      if (
+        idBytes.length !== this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE
+      ) {
+        throw new ECIESError(
+          ECIESErrorTypeEnum.InvalidECIESMultipleRecipientIdSize,
+          undefined,
+          undefined,
+          {
+            expected: String(this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE),
+            actual: String(idBytes.length),
+          },
+        );
+      }
+
+      return {
+        id: member.id,
+        encryptedKey: this.encryptKey(
+          member.publicKey,
+          symmetricKey,
+          ephemeralPrivateKey,
+          idBytes, // Use Recipient ID bytes as AAD - match frontend
+        ),
+      };
+    });
 
     const recipientIds = encryptionResults.map(({ id }) => id);
     const recipientKeys = encryptionResults.map(
@@ -377,21 +422,199 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
    * @returns The decrypted message.
    */
   public decryptMultipleECIEForRecipient(
+    encryptedMessage: Buffer,
+    recipientIds: TID[],
+    recipientKeys: Buffer[],
+    ephemeralPublicKey: Buffer,
+    recipientId: TID,
+    recipientPrivateKey: Buffer,
+    senderPublicKey?: Buffer,
+  ): Buffer;
+
+  public decryptMultipleECIEForRecipient(
     encryptedData: IMultiEncryptedMessage<TID>,
     recipient: IMember<TID>,
     senderPublicKey?: Buffer,
+  ): Buffer;
+
+  public decryptMultipleECIEForRecipient(
+    encryptedDataOrMessage: IMultiEncryptedMessage<TID> | Buffer,
+    recipientOrIds: IMember<TID> | TID[],
+    recipientKeysOrSenderPublicKey?: Buffer[] | Buffer,
+    ephemeralPublicKey?: Buffer,
+    recipientId?: TID,
+    recipientPrivateKey?: Buffer,
+    senderPublicKey?: Buffer,
   ): Buffer {
+    // Legacy signature support: accept raw pieces instead of IMultiEncryptedMessage
+    if (
+      Buffer.isBuffer(encryptedDataOrMessage) &&
+      Array.isArray(recipientOrIds) &&
+      Array.isArray(recipientKeysOrSenderPublicKey) &&
+      ephemeralPublicKey &&
+      recipientId !== undefined &&
+      recipientPrivateKey
+    ) {
+      const dataLength =
+        encryptedDataOrMessage.length -
+        this.cryptoCore.consts.IV_SIZE -
+        this.cryptoCore.consts.AUTH_TAG_SIZE;
+
+      const reconstructed: IMultiEncryptedMessage<TID> = {
+        dataLength,
+        recipientCount: recipientOrIds.length,
+        recipientIds: recipientOrIds,
+        recipientKeys: recipientKeysOrSenderPublicKey,
+        encryptedMessage: encryptedDataOrMessage,
+        headerSize: this.calculateECIESMultipleRecipientOverhead(
+          recipientOrIds.length,
+          false,
+          recipientKeysOrSenderPublicKey,
+        ),
+        ephemeralPublicKey,
+      };
+
+      const recipientBytes = Buffer.isBuffer(recipientId)
+        ? Buffer.from(recipientId)
+        : recipientId instanceof Uint8Array
+          ? Buffer.from(recipientId)
+          : Buffer.from(this.idProvider.toBytes(recipientId));
+
+      // Instead of creating a fake IMember, just inline the decryption logic
+      const recipientIndex: number = recipientOrIds.findIndex(
+        (id: TID): boolean => {
+          // If both IDs are already Buffer/Uint8Array, compare directly
+          if (
+            (Buffer.isBuffer(id) || id instanceof Uint8Array) &&
+            (Buffer.isBuffer(recipientId) || recipientId instanceof Uint8Array)
+          ) {
+            const idBytes = Buffer.isBuffer(id) ? id : Buffer.from(id);
+            const recipientIdBytes = Buffer.isBuffer(recipientId)
+              ? recipientId
+              : Buffer.from(recipientId);
+            return arraysEqual(idBytes, recipientIdBytes);
+          }
+          // Otherwise use the ID provider's toBytes method
+          return arraysEqual(
+            this.idProvider.toBytes(id),
+            this.idProvider.toBytes(recipientId),
+          );
+        },
+      );
+      if (recipientIndex === -1) {
+        throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
+      }
+
+      const encryptedKey = recipientKeysOrSenderPublicKey[recipientIndex];
+
+      if (!ephemeralPublicKey) {
+        throw new ECIESError(ECIESErrorTypeEnum.InvalidEphemeralPublicKey);
+      }
+
+      // Decrypt the symmetric key
+      const symmetricKey = this.decryptKey(
+        recipientPrivateKey,
+        encryptedKey,
+        ephemeralPublicKey,
+        recipientBytes, // Use Recipient ID as AAD
+      );
+
+      // Rebuild header to use as AAD
+      const headerBytes = this.buildECIESMultipleRecipientHeader(reconstructed);
+
+      // Extract the IV and auth tag from the encrypted message
+      const iv = encryptedDataOrMessage.subarray(
+        0,
+        this.cryptoCore.consts.IV_SIZE,
+      );
+      const authTag = encryptedDataOrMessage.subarray(
+        this.cryptoCore.consts.IV_SIZE,
+        this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
+      );
+
+      // Extract the encrypted content
+      const encrypted = encryptedDataOrMessage.subarray(
+        this.cryptoCore.consts.IV_SIZE + this.cryptoCore.consts.AUTH_TAG_SIZE,
+      );
+
+      // Decrypt the content with the symmetric key
+      const decipher = createDecipheriv(
+        this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
+        symmetricKey,
+        iv,
+      ) as AuthenticatedDecipher;
+
+      decipher.setAuthTag(authTag);
+      decipher.setAAD(headerBytes);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+      const decrypted = decipher.update(encrypted) as Buffer;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment
+      const final = decipher.final() as Buffer;
+      const decryptedMessage = Buffer.concat([decrypted, final]);
+
+      // The decrypted message should match the original data length
+      if (decryptedMessage.length !== reconstructed.dataLength) {
+        throw new ECIESError(ECIESErrorTypeEnum.InvalidDataLength);
+      }
+
+      // If sender public key is provided, verify signature
+      if (senderPublicKey) {
+        // Expect [Signature (64)][Message]
+        if (decryptedMessage.length < 64) {
+          throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
+        }
+        const signature = decryptedMessage.subarray(0, 64);
+        const message = decryptedMessage.subarray(64);
+
+        const isValid = this.cryptoCore.verify(
+          senderPublicKey,
+          message,
+          signature,
+        );
+        if (!isValid) {
+          throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
+        }
+
+        return message;
+      }
+
+      return decryptedMessage;
+    }
+
+    const encryptedData = encryptedDataOrMessage as IMultiEncryptedMessage<TID>;
+    const recipient = recipientOrIds as IMember<TID>;
+    // Handle the case where third parameter is senderPublicKey (Buffer) for the second overload
+    const actualSenderPublicKey = Buffer.isBuffer(
+      recipientKeysOrSenderPublicKey,
+    )
+      ? recipientKeysOrSenderPublicKey
+      : senderPublicKey;
+
     if (recipient.privateKey === undefined) {
       throw new ECIESError(ECIESErrorTypeEnum.PrivateKeyNotLoaded);
     }
 
     // Find this recipient's encrypted key
     const recipientIndex: number = encryptedData.recipientIds.findIndex(
-      (id: TID): boolean =>
-        arraysEqual(
-          Constants.idProvider.toBytes(id),
-          Constants.idProvider.toBytes(recipient.id),
-        ),
+      (id: TID): boolean => {
+        // If both IDs are already Buffer/Uint8Array, compare directly
+        if (
+          (Buffer.isBuffer(id) || id instanceof Uint8Array) &&
+          (Buffer.isBuffer(recipient.id) || recipient.id instanceof Uint8Array)
+        ) {
+          const idBytes = Buffer.isBuffer(id) ? id : Buffer.from(id);
+          const recipientIdBytes = Buffer.isBuffer(recipient.id)
+            ? recipient.id
+            : Buffer.from(recipient.id);
+          return arraysEqual(idBytes, recipientIdBytes);
+        }
+        // Otherwise use the ID provider's toBytes method
+        return arraysEqual(
+          this.idProvider.toBytes(id),
+          this.idProvider.toBytes(recipient.id),
+        );
+      },
     );
     if (recipientIndex === -1) {
       throw new ECIESError(ECIESErrorTypeEnum.RecipientNotFound);
@@ -404,11 +627,21 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
     }
 
     // Decrypt the symmetric key using the detected encryption type
+    // Convert recipient ID to bytes for AAD
+    let recipientIdBytes: Buffer;
+    if (Buffer.isBuffer(recipient.id) || recipient.id instanceof Uint8Array) {
+      recipientIdBytes = Buffer.isBuffer(recipient.id)
+        ? recipient.id
+        : Buffer.from(recipient.id);
+    } else {
+      recipientIdBytes = Buffer.from(this.idProvider.toBytes(recipient.id));
+    }
+
     const symmetricKey = this.decryptKey(
       Buffer.from(recipient.privateKey.value),
       encryptedKey,
       encryptedData.ephemeralPublicKey,
-      recipient.id as Buffer, // Use Recipient ID as AAD - match frontend
+      recipientIdBytes, // Use Recipient ID as AAD
     );
 
     // Rebuild header to use as AAD
@@ -451,7 +684,7 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
     }
 
     // If sender public key is provided, verify signature
-    if (senderPublicKey) {
+    if (actualSenderPublicKey) {
       // Expect [Signature (64)][Message]
       if (decryptedMessage.length < 64) {
         throw new ECIESError(ECIESErrorTypeEnum.InvalidSignature);
@@ -460,7 +693,7 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
       const message = decryptedMessage.subarray(64);
 
       const isValid = this.cryptoCore.verify(
-        senderPublicKey,
+        actualSenderPublicKey,
         message,
         signature,
       );
@@ -590,7 +823,11 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
         this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE,
     );
     data.recipientIds.forEach((recipientId: TID, index: number) => {
-      const idData = Constants.idProvider.toBytes(recipientId);
+      const idData = Buffer.isBuffer(recipientId)
+        ? Buffer.from(recipientId)
+        : recipientId instanceof Uint8Array
+          ? Buffer.from(recipientId)
+          : Buffer.from(this.idProvider.toBytes(recipientId));
       if (idData.length !== this.cryptoCore.consts.MULTIPLE.RECIPIENT_ID_SIZE) {
         throw new ECIESError(
           ECIESErrorTypeEnum.InvalidECIESMultipleRecipientIdSize,
@@ -795,7 +1032,7 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
       dataLength,
       recipientCount,
       recipientIds: recipientIds.map(
-        (idBuffer) => Constants.idProvider.fromBytes(idBuffer) as TID,
+        (idBuffer) => this.idProvider.fromBytes(idBuffer) as TID,
       ),
       recipientKeys,
       headerSize: offset,

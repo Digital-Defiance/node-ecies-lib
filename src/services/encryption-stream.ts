@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { IIdProvider } from '@digitaldefiance/ecies-lib';
+
 import {
   NodeEciesComponentId,
   NodeEciesStringKey,
@@ -34,20 +36,24 @@ export interface IDecryptStreamOptions {
 
 export class EncryptionStream {
   private readonly processor: ChunkProcessor;
-  private readonly multiRecipientProcessor: MultiRecipientProcessor;
+  private readonly multiRecipientProcessor: MultiRecipientProcessor<Buffer>;
   private readonly engine = getNodeEciesI18nEngine();
 
   constructor(
-    private readonly ecies: ECIESService,
+    private readonly ecies: ECIESService<Buffer>,
     private readonly config: IStreamConfig = DEFAULT_STREAM_CONFIG,
     processor?: ChunkProcessor,
-    multiRecipientProcessor?: MultiRecipientProcessor,
+    multiRecipientProcessor?: MultiRecipientProcessor<Buffer>,
   ) {
     // Use injected dependencies or create defaults
     this.processor = processor ?? new ChunkProcessor(ecies);
     this.multiRecipientProcessor =
       multiRecipientProcessor ??
-      new MultiRecipientProcessor(ecies.core, ecies.core.consts);
+      new MultiRecipientProcessor<Buffer>(
+        ecies.core,
+        ecies.constants.idProvider as IIdProvider<Buffer>, // Type assertion needed for compatibility
+        ecies.constants.ECIES, // Pass ECIES constants instead of full constants
+      );
   }
 
   public async *encryptStream(
@@ -197,8 +203,7 @@ export class EncryptionStream {
       }
       if (
         !recipient.id ||
-        recipient.id.length !==
-          this.ecies.core.consts.MULTIPLE.RECIPIENT_ID_SIZE
+        recipient.id.length !== this.ecies.constants.idProvider.byteLength
       ) {
         throw new Error(
           this.engine.translate(
@@ -369,7 +374,7 @@ export class EncryptionStream {
   ): AsyncGenerator<Buffer, void, unknown> {
     if (
       !recipientId ||
-      recipientId.length !== this.ecies.core.consts.MULTIPLE.RECIPIENT_ID_SIZE
+      recipientId.length !== this.ecies.constants.idProvider.byteLength
     ) {
       throw new Error(
         this.engine.translate(

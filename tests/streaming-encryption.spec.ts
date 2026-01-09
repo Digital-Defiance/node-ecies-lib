@@ -1,4 +1,5 @@
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 import { Constants } from '../src/constants';
 import { Member } from '../src/member';
@@ -396,32 +397,34 @@ describe('Streaming Encryption', () => {
     });
 
     it('should handle invalid private key during decryption', async () => {
-      const data = Buffer.from('Test');
-      const source = (async function* () {
-        yield data;
-      })();
+      await withConsoleMocks({ mute: true }, async () => {
+        const data = Buffer.from('Test');
+        const source = (async function* () {
+          yield data;
+        })();
 
-      const encrypted: Buffer[] = [];
-      for await (const chunk of stream.encryptStream(source, publicKey)) {
-        encrypted.push(chunk.data);
-      }
-
-      const decryptSource = (async function* () {
-        for (const chunk of encrypted) {
-          yield chunk;
+        const encrypted: Buffer[] = [];
+        for await (const chunk of stream.encryptStream(source, publicKey)) {
+          encrypted.push(chunk.data);
         }
-      })();
 
-      const invalidKey = Buffer.alloc(32);
+        const decryptSource = (async function* () {
+          for (const chunk of encrypted) {
+            yield chunk;
+          }
+        })();
 
-      await expect(async () => {
-        for await (const _chunk of stream.decryptStream(
-          decryptSource,
-          invalidKey,
-        )) {
-          // Should throw
-        }
-      }).rejects.toThrow();
+        const invalidKey = Buffer.alloc(32);
+
+        await expect(async () => {
+          for await (const _chunk of stream.decryptStream(
+            decryptSource,
+            invalidKey,
+          )) {
+            // Should throw
+          }
+        }).rejects.toThrow();
+      });
     });
 
     it('should handle corrupted encrypted data', async () => {

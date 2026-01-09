@@ -10,6 +10,7 @@ import {
   SecureString,
   SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 import { Wallet } from '@ethereumjs/wallet';
 import { createECDH, randomBytes } from 'crypto';
 
@@ -459,45 +460,47 @@ describe('ECIES Cross-Platform Compatibility', () => {
     });
 
     it('should have comparable decryption performance', async () => {
-      const message = randomBytes(messageSize);
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
-        receiverKeyPair.publicKey,
-        message,
-      );
-
-      // Backend performance
-      const backendStart = Date.now();
-      for (let i = 0; i < iterations; i++) {
-        backendService.decryptSimpleOrSingleWithHeader(
+      await withConsoleMocks({ mute: true }, async () => {
+        const message = randomBytes(messageSize);
+        const encrypted = backendService.encryptSimpleOrSingle(
           false,
-          receiverKeyPair.privateKey,
-          encrypted,
+          receiverKeyPair.publicKey,
+          message,
         );
-      }
-      const backendTime = Date.now() - backendStart;
 
-      // Frontend performance
-      const frontendStart = Date.now();
-      for (let i = 0; i < iterations; i++) {
-        await frontendService.decryptSimpleOrSingleWithHeader(
-          false,
-          new Uint8Array(receiverKeyPair.privateKey),
-          new Uint8Array(encrypted),
+        // Backend performance
+        const backendStart = Date.now();
+        for (let i = 0; i < iterations; i++) {
+          backendService.decryptSimpleOrSingleWithHeader(
+            false,
+            receiverKeyPair.privateKey,
+            encrypted,
+          );
+        }
+        const backendTime = Date.now() - backendStart;
+
+        // Frontend performance
+        const frontendStart = Date.now();
+        for (let i = 0; i < iterations; i++) {
+          await frontendService.decryptSimpleOrSingleWithHeader(
+            false,
+            new Uint8Array(receiverKeyPair.privateKey),
+            new Uint8Array(encrypted),
+          );
+        }
+        const frontendTime = Date.now() - frontendStart;
+
+        // Log performance results for analysis - this is expected output for performance tests
+        console.log(
+          `Backend decryption: ${backendTime}ms for ${iterations} iterations`,
         );
-      }
-      const frontendTime = Date.now() - frontendStart;
+        console.log(
+          `Frontend decryption: ${frontendTime}ms for ${iterations} iterations`,
+        );
 
-      // Log performance results for analysis - this is expected output for performance tests
-      console.log(
-        `Backend decryption: ${backendTime}ms for ${iterations} iterations`,
-      );
-      console.log(
-        `Frontend decryption: ${frontendTime}ms for ${iterations} iterations`,
-      );
-
-      // Performance should be within reasonable bounds
-      expect(frontendTime).toBeLessThan(backendTime * 10);
+        // Performance should be within reasonable bounds
+        expect(frontendTime).toBeLessThan(backendTime * 10);
+      });
     });
   });
 

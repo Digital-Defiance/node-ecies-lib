@@ -128,7 +128,10 @@ export class EciesSingleRecipientCore {
         normalizedReceiverPublicKey,
       );
     } catch (error: unknown) {
-      if (process.env.NODE_ENV !== 'test') {
+      if (
+        process.env.NODE_ENV !== 'test' &&
+        !globalThis.process?.env?.JEST_WORKER_ID
+      ) {
         console.error(
           '[ERROR][encrypt] Failed to compute shared secret:',
           error,
@@ -626,7 +629,10 @@ export class EciesSingleRecipientCore {
           normalizedEphemeralKey,
         );
       } catch (err) {
-        if (process.env.NODE_ENV !== 'test') {
+        if (
+          process.env.NODE_ENV !== 'test' &&
+          !globalThis.process?.env?.JEST_WORKER_ID
+        ) {
           console.error(
             '[ERROR][decrypt] Failed to compute shared secret:',
             err,

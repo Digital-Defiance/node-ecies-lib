@@ -4,18 +4,9 @@ import {
   SecureStorageErrorType,
   DisposedError,
   SecureStorageError,
-  IIdProvider,
   ObjectIdProvider,
   XorService,
 } from '@digitaldefiance/ecies-lib';
-
-import { getNodeRuntimeConfiguration } from './constants';
-const Constants = getNodeRuntimeConfiguration();
-
-/**
- * Default ID provider (singleton, no circular dependency)
- */
-const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
 
 /**
  * A secure buffer implementation for Node.js using Buffer instead of Uint8Array.
@@ -32,15 +23,15 @@ const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
 export class SecureBuffer implements Disposable {
   private _disposed: boolean = false;
   private readonly _id: Buffer;
-  private readonly _idProvider: IIdProvider;
+  private readonly _idProvider: ObjectIdProvider;
   private readonly _length: number;
   private readonly _obfuscatedValue: Buffer;
   private readonly _key: Buffer;
   private readonly _obfuscatedChecksum: Buffer;
   private _disposedAt?: string;
 
-  constructor(data?: Buffer, idProvider: IIdProvider = DEFAULT_ID_PROVIDER) {
-    this._idProvider = idProvider;
+  constructor(data?: Buffer) {
+    this._idProvider = new ObjectIdProvider();
     this._id = Buffer.from(this._idProvider.generate());
     // don't bother encrypting an empty buffer
     if (data === undefined || data.length === 0) {
@@ -83,7 +74,7 @@ export class SecureBuffer implements Disposable {
    * @returns A new SecureBuffer instance using the global ID provider
    */
   static create(data?: Buffer): SecureBuffer {
-    return new SecureBuffer(data, Constants.idProvider);
+    return new SecureBuffer(data);
   }
 
   /**

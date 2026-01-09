@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   EmailString,
+  IIdProvider,
   IMemberStorageData,
   MemberErrorType,
   MemberType,
@@ -50,6 +51,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   private readonly _email: EmailString;
   private readonly _publicKey: Buffer;
   private readonly _creatorId: TID;
+  private readonly _creatorIdBytes: Buffer;
   private readonly _dateCreated: Date;
   private readonly _dateUpdated: Date;
   private _privateKey?: SecureBuffer;
@@ -78,9 +80,23 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     this._eciesService = eciesService;
     // Assign original parameters
     this._type = type;
-    const __id = id ?? (Constants.idProvider.generate() as TID);
-    this._id = __id;
-    this._idBytes = Constants.idProvider.toBytes(__id) as Buffer;
+    // Handle ID initialization properly:
+    // - If id is provided, use it and derive bytes from it
+    // - If not provided, generate bytes first, then derive native ID
+    if (id !== undefined) {
+      this._id = id;
+      this._idBytes = this._eciesService.constants.idProvider.toBytes(
+        this._id,
+      ) as Buffer;
+    } else {
+      const generated = this._eciesService.constants.idProvider.generate();
+      this._idBytes = Buffer.isBuffer(generated)
+        ? (generated as Buffer)
+        : Buffer.from(generated);
+      this._id = this._eciesService.constants.idProvider.fromBytes(
+        toUint8Array(this._idBytes),
+      ) as TID;
+    }
     this._name = name;
     if (!this._name || this._name.length == 0) {
       throw new NodeMemberError(
@@ -114,6 +130,12 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     this._dateCreated = dateCreated ?? now();
     this._dateUpdated = dateUpdated ?? now();
     this._creatorId = creatorId ?? this._id;
+    this._creatorIdBytes =
+      this._creatorId === this._id
+        ? this._idBytes
+        : (this._eciesService.constants.idProvider.toBytes(
+            this._creatorId,
+          ) as Buffer);
   }
 
   // Required getters
@@ -124,7 +146,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     return this._idBytes;
   }
   public get creatorIdBytes(): Buffer {
-    return Constants.idProvider.toBytes(this._creatorId) as Buffer;
+    return this._creatorIdBytes;
   }
   public get type(): MemberType {
     return this._type;
@@ -146,6 +168,11 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   }
   public get dateUpdated(): Date {
     return this._dateUpdated;
+  }
+
+  // Expose the service's idProvider for voting system compatibility
+  public get idProvider(): IIdProvider<TID> {
+    return this._eciesService.constants.idProvider as IIdProvider<TID>;
   }
   public get constants(): import('@digitaldefiance/ecies-lib').IECIESConstants {
     return Constants.ECIES;
@@ -179,6 +206,11 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         MemberErrorType.NoWallet,
       );
     }
+    return this._wallet;
+  }
+
+  // Optional wallet getter for compatibility
+  public get walletOptional(): Wallet | undefined {
     return this._wallet;
   }
 
@@ -418,14 +450,14 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public toJson(): string {
     const storage: IMemberStorageData = {
       id: this._eciesService.constants.idProvider.serialize(
-        toUint8Array(this._id as Buffer | Uint8Array | string),
+        toUint8Array(this._idBytes),
       ),
       type: this._type,
       name: this._name,
       email: this._email.toString(),
       publicKey: this._publicKey.toString('base64'),
       creatorId: this._eciesService.constants.idProvider.serialize(
-        toUint8Array(this._creatorId as Buffer | Uint8Array | string),
+        toUint8Array(this._creatorIdBytes),
       ),
       dateCreated: this._dateCreated.toISOString(),
       dateUpdated: this._dateUpdated.toISOString(),
@@ -499,22 +531,30 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
 
-    // Deserialize IDs using configured idProvider
-    const id = Buffer.from(
+    // Deserialize IDs using the service's idProvider
+    const idBytes = Buffer.from(
       eciesService.constants.idProvider.deserialize(storage.id),
     );
-    const creatorId = Buffer.from(
+    const creatorIdBytes = Buffer.from(
       eciesService.constants.idProvider.deserialize(storage.creatorId),
     );
 
     // Optional validation: warn if ID length doesn't match configured idProvider
     const expectedLength = eciesService.constants.idProvider.byteLength;
-    if (id.length !== expectedLength) {
+    if (idBytes.length !== expectedLength) {
       console.warn(
-        `Member ID length (${id.length}) does not match configured idProvider length (${expectedLength}). ` +
+        `Member ID length (${idBytes.length}) does not match configured idProvider length (${expectedLength}). ` +
           `This may indicate the Member was created with a different idProvider configuration.`,
       );
     }
+
+    // Convert bytes to native types
+    const id = eciesService.constants.idProvider.fromBytes(
+      toUint8Array(idBytes),
+    ) as TID;
+    const creatorId = eciesService.constants.idProvider.fromBytes(
+      toUint8Array(creatorIdBytes),
+    ) as TID;
 
     // Pass injected services to constructor
     const dateCreated = new Date(storage.dateCreated);
@@ -526,10 +566,10 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       Buffer.from(storage.publicKey, 'base64'),
       undefined,
       undefined,
-      id as TID,
+      id,
       dateCreated,
       new Date(storage.dateUpdated),
-      creatorId as TID,
+      creatorId,
     );
   }
 
@@ -610,13 +650,9 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       Buffer.from(privateKey),
     );
 
-    // Use configured idProvider from service, with defensive fallback
-    const idProvider =
-      eciesService.constants?.idProvider ?? Constants.idProvider;
-    const newId = Buffer.from(idProvider.generate());
     const dateCreated = new Date();
     return {
-      // Pass injected services to constructor
+      // Create member without specifying ID - constructor handles generation
       member: new Member<TID>(
         eciesService,
         type,
@@ -625,10 +661,10 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         publicKeyWithPrefix,
         new SecureBuffer(privateKey),
         wallet,
-        newId as TID,
+        undefined,
         dateCreated,
         dateCreated,
-        (createdBy ?? newId) as TID,
+        createdBy,
       ),
       mnemonic,
     };

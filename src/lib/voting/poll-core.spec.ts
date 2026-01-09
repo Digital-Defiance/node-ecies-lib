@@ -4,17 +4,49 @@
  * Node.js version - adapted for Buffer usage
  */
 import { generateRandomKeysSync as generateKeyPair } from 'paillier-bigint';
+import { MemberType, IECIESConstants } from '@digitaldefiance/ecies-lib';
+import { Wallet } from '@ethereumjs/wallet';
 import { Poll } from './poll-core';
-import { VotingMethod } from './types';
-import type { IMember, EncryptedVote } from './types';
+import { VotingMethod } from './enumerations';
+import { BufferIdProvider } from '../../lib/id-providers/buffer-provider';
+import type { IMember } from '../../interfaces/member';
+import type { EncryptedVote } from './interfaces';
 
 class MockMember implements IMember<Buffer> {
+  public readonly idProvider = new BufferIdProvider(32, 'MockBuffer');
+  public readonly type = MemberType.Individual;
+  public readonly name = 'Mock Member';
+  public readonly email = 'mock@example.com' as any;
+  public readonly creatorId = Buffer.from([0]);
+  public readonly dateCreated = new Date();
+  public readonly dateUpdated = new Date();
+  public readonly privateKey = undefined;
+  public readonly wallet = {} as Wallet;
+  public readonly constants = {} as IECIESConstants;
+
   constructor(
     public readonly id: Buffer,
     public readonly publicKey: Buffer,
     public readonly votingPublicKey: any,
     public readonly votingPrivateKey: any,
   ) {}
+
+  get idBytes(): Buffer {
+    return this.id;
+  }
+
+  get walletOptional(): Wallet | undefined {
+    return undefined;
+  }
+
+  get hasPrivateKey(): boolean {
+    return false;
+  }
+
+  get hasVotingPrivateKey(): boolean {
+    return !!this.votingPrivateKey;
+  }
+
   sign(data: Buffer): Buffer {
     // Generate unique signature based on data
     const sig = Buffer.alloc(64);
@@ -23,6 +55,7 @@ class MockMember implements IMember<Buffer> {
     }
     return sig;
   }
+
   verify(signature: Buffer, data: Buffer): boolean {
     // Verify signature matches data
     for (let i = 0; i < Math.min(data.length, 64); i++) {
@@ -30,6 +63,18 @@ class MockMember implements IMember<Buffer> {
     }
     return true;
   }
+
+  // Required methods from IMember interface
+  unloadPrivateKey(): void {}
+  unloadWallet(): void {}
+  unloadWalletAndPrivateKey(): void {}
+  loadWallet(): void {}
+  loadPrivateKey(): void {}
+  loadVotingKeys(): void {}
+  deriveVotingKeys(): Promise<void> {
+    return Promise.resolve();
+  }
+  unloadVotingPrivateKey(): void {}
 }
 
 describe('Poll', () => {

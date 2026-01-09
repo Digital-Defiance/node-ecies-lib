@@ -8,16 +8,87 @@ import { VoteEncoder } from './encoder';
 import { PollFactory } from './factory';
 import { Poll as _Poll } from './poll-core';
 import { PollTallier } from './tallier';
-import { VotingMethod as _VotingMethod } from './types';
-import type { IMember } from './types';
+import { VotingMethod as _VotingMethod } from './enumerations';
+import type { IMember } from '../../interfaces/member';
+import type { IIdProvider } from '@digitaldefiance/ecies-lib';
+
+/**
+ * Simple ID provider for test MockMember class
+ * Handles 4-byte Buffer IDs used in voting tests
+ */
+class MockBufferIdProvider implements IIdProvider<Buffer> {
+  readonly byteLength = 4;
+  readonly name = 'MockBuffer';
+
+  generate(): Uint8Array {
+    const buffer = new Uint8Array(4);
+    crypto.getRandomValues(buffer);
+    return buffer;
+  }
+
+  validate(id: Uint8Array): boolean {
+    return id.length === 4;
+  }
+
+  serialize(id: Uint8Array): string {
+    return Array.from(id)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  deserialize(str: string): Uint8Array {
+    if (str.length !== 8) throw new Error('Invalid hex string length');
+    const bytes = new Uint8Array(4);
+    for (let i = 0; i < 4; i++) {
+      bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+    }
+    return bytes;
+  }
+
+  clone(id: Buffer): Buffer {
+    return Buffer.from(id);
+  }
+
+  fromBytes(bytes: Uint8Array): Buffer {
+    return Buffer.from(bytes);
+  }
+
+  toBytes(id: Buffer): Uint8Array {
+    return new Uint8Array(id);
+  }
+
+  equals(a: Buffer, b: Buffer): boolean {
+    return a.equals(b);
+  }
+
+  idToString(id: Buffer): string {
+    return this.serialize(this.toBytes(id));
+  }
+
+  idFromString(str: string): Buffer {
+    return this.fromBytes(this.deserialize(str));
+  }
+}
 
 class MockMember implements IMember {
+  private static _idProvider = new MockBufferIdProvider();
+  public readonly idProvider = MockMember._idProvider;
+
   constructor(
     public readonly id: Buffer,
     public readonly publicKey: Buffer,
     public readonly votingPublicKey: any,
     public readonly votingPrivateKey: any,
   ) {}
+
+  get idBytes(): Buffer {
+    return this.id;
+  }
+
+  get idProvider(): IIdProvider<Buffer> {
+    return MockMember._idProvider;
+  }
+
   sign(_data: Buffer): Buffer {
     return Buffer.alloc(64);
   }

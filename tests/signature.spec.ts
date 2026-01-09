@@ -1,14 +1,28 @@
-import { ECIESError, ECIESErrorTypeEnum } from '@digitaldefiance/ecies-lib';
+import {
+  ECIESError,
+  ECIESErrorTypeEnum,
+  IECIESConfig,
+} from '@digitaldefiance/ecies-lib';
 
+import { Constants } from '../src/constants';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { EciesSignature } from '../src/services/ecies/signature';
 
 describe('EciesSignature', () => {
   let cryptoCore: EciesCryptoCore;
   let signature: EciesSignature;
+  let config: IECIESConfig;
 
   beforeEach(() => {
-    cryptoCore = new EciesCryptoCore();
+    config = {
+      curveName: Constants.ECIES.CURVE_NAME,
+      primaryKeyDerivationPath: Constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: Constants.ECIES.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: Constants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: Constants.ECIES.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: Constants.ECIES.SYMMETRIC.MODE,
+    };
+    cryptoCore = new EciesCryptoCore(config);
     signature = new EciesSignature(cryptoCore);
   });
 

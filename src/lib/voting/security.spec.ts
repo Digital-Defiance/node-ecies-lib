@@ -1,14 +1,28 @@
 /**
  * VotingSecurityValidator Tests - Node.js
+ * Tests for VotingSecurityValidator that extends ecies-lib
  */
-import {
-  VotingSecurityValidator,
-  SecurityLevel,
-  VOTING_SECURITY,
-} from './security';
-import { VotingMethod } from './types';
+import { VotingSecurityValidator, VOTING_SECURITY } from './security';
+import { SecurityLevel, VotingMethod } from './enumerations';
 
 describe('VotingSecurityValidator', () => {
+  describe('Inheritance from ecies-lib', () => {
+    test('should extend ecies-lib VotingSecurityValidator', () => {
+      // Verify the class has the expected static methods
+      expect(typeof VotingSecurityValidator.isFullySecure).toBe('function');
+      expect(typeof VotingSecurityValidator.requiresMultipleRounds).toBe(
+        'function',
+      );
+      expect(typeof VotingSecurityValidator.getSecurityLevel).toBe('function');
+      expect(typeof VotingSecurityValidator.validate).toBe('function');
+    });
+
+    test('should re-export VOTING_SECURITY constant', () => {
+      expect(VOTING_SECURITY).toBeDefined();
+      expect(typeof VOTING_SECURITY).toBe('object');
+    });
+  });
+
   describe('Security Level Classification', () => {
     test('should classify fully homomorphic methods', () => {
       expect(VOTING_SECURITY[VotingMethod.Plurality]).toBe(

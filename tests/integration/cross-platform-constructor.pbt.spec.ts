@@ -59,10 +59,10 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
             expect(nodeService.config.curveName).toBe(config.ECIES.CURVE_NAME);
 
             expect(browserService.config.symmetricAlgorithm).toBe(
-              config.ECIES.SYMMETRIC.ALGORITHM,
+              config.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
             );
             expect(nodeService.config.symmetricAlgorithm).toBe(
-              config.ECIES.SYMMETRIC.ALGORITHM,
+              config.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
             );
 
             expect(browserService.config.symmetricKeyBits).toBe(
@@ -248,7 +248,8 @@ describe('Property-Based Test: Cross-Platform Constructor Consistency', () => {
               primaryKeyDerivationPath:
                 constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
               mnemonicStrength: constants.ECIES.MNEMONIC_STRENGTH,
-              symmetricAlgorithm: constants.ECIES.SYMMETRIC.ALGORITHM,
+              symmetricAlgorithm:
+                constants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
               symmetricKeyBits: constants.ECIES.SYMMETRIC.KEY_BITS,
               symmetricKeyMode: constants.ECIES.SYMMETRIC.MODE,
             });

@@ -48,10 +48,10 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Step 4: Verify the fix - ID should be 16 bytes
       expect(config.MEMBER_ID_LENGTH).toBe(16);
-      expect(result.member.id.length).toBe(16);
+      expect(result.member.idBytes.length).toBe(16);
 
       // Step 5: Verify GuidV4.fromBuffer succeeds (this was failing before the fix)
-      const guid = GuidV4.fromBuffer(Buffer.from(result.member.id));
+      const guid = GuidV4.fromBuffer(result.member.idBytes);
       expect(guid).toBeDefined();
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -74,8 +74,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Verify Member ID is UUID-compatible
-      expect(result.member.id.length).toBe(16);
-      const guid = GuidV4.fromBuffer(Buffer.from(result.member.id));
+      expect(result.member.idBytes.length).toBe(16);
+      const guid = GuidV4.fromBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -119,7 +119,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
         'Test User',
         new EmailString('test@example.com'),
       );
-      const originalId = Buffer.from(result.member.id);
+      const originalId = result.member.idBytes;
       expect(originalId.length).toBe(16);
 
       // Step 3: Convert to UUID string
@@ -135,13 +135,15 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Step 5: Deserialize Member from JSON
       const deserialized = Member.fromJson(json, service);
-      expect(deserialized.id.length).toBe(16);
+      expect(deserialized.idBytes.length).toBe(16);
 
       // Step 6: Verify ID is preserved
-      expect(Buffer.from(deserialized.id)).toEqual(originalId);
+      expect(Buffer.from(deserialized.idBytes)).toEqual(
+        Buffer.from(originalId),
+      );
 
       // Step 7: Convert deserialized ID to UUID string
-      const deserializedGuid = GuidV4.fromBuffer(Buffer.from(deserialized.id));
+      const deserializedGuid = GuidV4.fromBuffer(deserialized.idBytes);
       expect(deserializedGuid.asFullHexGuid).toBe(uuidString);
     });
 
@@ -159,7 +161,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
         'Test User',
         new EmailString('test@example.com'),
       );
-      const originalId = Buffer.from(result.member.id);
+      const originalId = result.member.idBytes;
       expect(originalId.length).toBe(12);
 
       // Step 3: Convert to ObjectID string
@@ -173,14 +175,16 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Step 5: Deserialize Member from JSON
       const deserialized = Member.fromJson(json, service);
-      expect(deserialized.id.length).toBe(12);
+      expect(deserialized.idBytes.length).toBe(12);
 
       // Step 6: Verify ID is preserved
-      expect(Buffer.from(deserialized.id)).toEqual(originalId);
+      expect(Buffer.from(deserialized.idBytes)).toEqual(
+        Buffer.from(originalId),
+      );
 
       // Step 7: Convert deserialized ID to ObjectID string
       const deserializedObjectIdString = config.idProvider.serialize(
-        Buffer.from(deserialized.id),
+        deserialized.idBytes,
       );
       expect(deserializedObjectIdString).toBe(objectIdString);
     });
@@ -198,7 +202,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
         'Test User',
         new EmailString('test@example.com'),
       );
-      const originalId = Buffer.from(result.member.id);
+      const originalId = result.member.idBytes;
 
       // Multiple round-trips
       let member = result.member;
@@ -208,11 +212,11 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       }
 
       // Verify ID is still preserved
-      expect(Buffer.from(member.id)).toEqual(originalId);
-      expect(member.id.length).toBe(16);
+      expect(member.idBytes).toEqual(originalId);
+      expect(member.idBytes.length).toBe(16);
 
       // Verify UUID conversion still works
-      const guid = GuidV4.fromBuffer(Buffer.from(member.id));
+      const guid = GuidV4.fromBuffer(member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -238,11 +242,11 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
         .generateMnemonic()
         .build();
 
-      expect(result.member.id.length).toBe(16);
+      expect(result.member.idBytes.length).toBe(16);
       expect(result.mnemonic).toBeDefined();
 
       // Verify UUID compatibility
-      const guid = GuidV4.fromBuffer(Buffer.from(result.member.id));
+      const guid = GuidV4.fromBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -272,17 +276,15 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
         .build();
 
       // Verify both have 16-byte IDs
-      expect(admin.member.id.length).toBe(16);
-      expect(user.member.id.length).toBe(16);
+      expect(admin.member.idBytes.length).toBe(16);
+      expect(user.member.idBytes.length).toBe(16);
 
       // Verify createdBy relationship
-      expect(Buffer.from(user.member.creatorId)).toEqual(
-        Buffer.from(admin.member.id),
-      );
+      expect(user.member.creatorId).toEqual(admin.member.id);
 
       // Verify both IDs are UUID-compatible
-      const adminGuid = GuidV4.fromBuffer(Buffer.from(admin.member.id));
-      const userGuid = GuidV4.fromBuffer(Buffer.from(user.member.id));
+      const adminGuid = GuidV4.fromBuffer(admin.member.idBytes);
+      const userGuid = GuidV4.fromBuffer(user.member.idBytes);
       expect(adminGuid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -313,10 +315,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       const deserialized = Member.fromJson(json, service);
 
       // Verify ID preserved
-      expect(Buffer.from(deserialized.id)).toEqual(
-        Buffer.from(result.member.id),
-      );
-      expect(deserialized.id.length).toBe(16);
+      expect(deserialized.idBytes).toEqual(result.member.idBytes);
+      expect(deserialized.idBytes.length).toBe(16);
 
       // Verify all properties preserved
       expect(deserialized.name).toBe('Builder User');
@@ -349,12 +349,12 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify all have 16-byte IDs
       for (const member of members) {
-        expect(member.id.length).toBe(16);
+        expect(member.idBytes.length).toBe(16);
       }
 
       // Verify all IDs are unique
       const idStrings = members.map(
-        (m) => GuidV4.fromBuffer(Buffer.from(m.id)).asFullHexGuid,
+        (m) => GuidV4.fromBuffer(m.idBytes).asFullHexGuid,
       );
       const uniqueIds = new Set(idStrings);
       expect(uniqueIds.size).toBe(members.length);
@@ -386,12 +386,12 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify all have 12-byte IDs
       for (const member of members) {
-        expect(member.id.length).toBe(12);
+        expect(member.idBytes.length).toBe(12);
       }
 
       // Verify all IDs are unique
       const idStrings = members.map((m) =>
-        config.idProvider.serialize(Buffer.from(m.id)),
+        config.idProvider.serialize(m.idBytes),
       );
       const uniqueIds = new Set(idStrings);
       expect(uniqueIds.size).toBe(members.length);
@@ -437,17 +437,17 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Verify different ID lengths
-      expect(guidMember.member.id.length).toBe(16);
-      expect(objectIdMember.member.id.length).toBe(12);
+      expect(guidMember.member.idBytes.length).toBe(16);
+      expect(objectIdMember.member.idBytes.length).toBe(12);
 
       // Verify each ID is compatible with its provider
-      const guid = GuidV4.fromBuffer(Buffer.from(guidMember.member.id));
+      const guid = GuidV4.fromBuffer(guidMember.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
 
       const objectIdString = objectIdConfig.idProvider.serialize(
-        Buffer.from(objectIdMember.member.id),
+        objectIdMember.member.idBytes,
       );
       expect(objectIdString.length).toBe(24);
       expect(objectIdString).toMatch(/^[0-9a-f]{24}$/i);
@@ -479,10 +479,10 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Verify expected ID lengths
-      expect(members[0].member.id.length).toBe(16); // GuidV4
-      expect(members[1].member.id.length).toBe(12); // ObjectId
-      expect(members[2].member.id.length).toBe(16); // GuidV4
-      expect(members[3].member.id.length).toBe(12); // Default (ObjectId)
+      expect(members[0].member.idBytes.length).toBe(16); // GuidV4
+      expect(members[1].member.idBytes.length).toBe(12); // ObjectId
+      expect(members[2].member.idBytes.length).toBe(16); // GuidV4
+      expect(members[3].member.idBytes.length).toBe(12); // Default (ObjectId)
     });
 
     it('should allow interleaved Member creation with different services', () => {
@@ -526,11 +526,11 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Verify correct ID lengths
-      expect(m1.member.id.length).toBe(16);
-      expect(m2.member.id.length).toBe(12);
-      expect(m3.member.id.length).toBe(16);
-      expect(m4.member.id.length).toBe(12);
-      expect(m5.member.id.length).toBe(16);
+      expect(m1.member.idBytes.length).toBe(16);
+      expect(m2.member.idBytes.length).toBe(12);
+      expect(m3.member.idBytes.length).toBe(16);
+      expect(m4.member.idBytes.length).toBe(12);
+      expect(m5.member.idBytes.length).toBe(16);
     });
   });
 
@@ -560,8 +560,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Verify both have 16-byte IDs
-      expect(sender.member.id.length).toBe(16);
-      expect(recipient.member.id.length).toBe(16);
+      expect(sender.member.idBytes.length).toBe(16);
+      expect(recipient.member.idBytes.length).toBe(16);
 
       // Encrypt message for recipient
       const message = Buffer.from('Secret message');

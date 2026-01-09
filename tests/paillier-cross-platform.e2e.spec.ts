@@ -20,6 +20,7 @@ import {
   SecureString,
   EmailString as BackendEmailString,
 } from '@digitaldefiance/ecies-lib';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 import { createECDH, randomBytes } from 'crypto';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
@@ -718,72 +719,80 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
   describe('Performance Comparison', () => {
     it('should have comparable key generation performance', async () => {
-      const iterations = 2; // Reduced from 5 for performance
-      const seed = randomBytes(64);
+      await withConsoleMocks({ mute: true }, async () => {
+        const iterations = 2; // Reduced from 5 for performance
+        const seed = randomBytes(64);
 
-      const backendStart = Date.now();
-      for (let i = 0; i < iterations; i++) {
-        await backendVotingService.generateDeterministicKeyPair(
-          seed,
-          2048,
-          128,
+        const backendStart = Date.now();
+        for (let i = 0; i < iterations; i++) {
+          await backendVotingService.generateDeterministicKeyPair(
+            seed,
+            2048,
+            128,
+          );
+        }
+        const backendTime = Date.now() - backendStart;
+
+        const frontendStart = Date.now();
+        for (let i = 0; i < iterations; i++) {
+          await frontendVotingService.generateDeterministicKeyPair(
+            new Uint8Array(seed),
+            2048,
+            128,
+          );
+        }
+        const frontendTime = Date.now() - frontendStart;
+
+        // Log for informational purposes
+        console.log(
+          `Backend: ${backendTime}ms for ${iterations} key generations`,
         );
-      }
-      const backendTime = Date.now() - backendStart;
-
-      const frontendStart = Date.now();
-      for (let i = 0; i < iterations; i++) {
-        await frontendVotingService.generateDeterministicKeyPair(
-          new Uint8Array(seed),
-          2048,
-          128,
+        console.log(
+          `Frontend: ${frontendTime}ms for ${iterations} key generations`,
         );
-      }
-      const frontendTime = Date.now() - frontendStart;
 
-      // Log for informational purposes
-      console.log(
-        `Backend: ${backendTime}ms for ${iterations} key generations`,
-      );
-      console.log(
-        `Frontend: ${frontendTime}ms for ${iterations} key generations`,
-      );
-
-      // Both should complete in reasonable time (less than 15 seconds per iteration)
-      expect(backendTime / iterations).toBeLessThan(15000);
-      expect(frontendTime / iterations).toBeLessThan(18000);
+        // Both should complete in reasonable time (less than 15 seconds per iteration)
+        expect(backendTime / iterations).toBeLessThan(15000);
+        expect(frontendTime / iterations).toBeLessThan(18000);
+      });
     });
 
     it('should have comparable encryption/decryption performance', async () => {
-      const keyPair = await backendVotingService.generateDeterministicKeyPair(
-        testSeed,
-        2048,
-        128,
-      );
-      const iterations = 100; // Reduced from 1000 for performance
-      const message = 42n;
+      await withConsoleMocks({ mute: true }, async () => {
+        const keyPair = await backendVotingService.generateDeterministicKeyPair(
+          testSeed,
+          2048,
+          128,
+        );
+        const iterations = 100; // Reduced from 1000 for performance
+        const message = 42n;
 
-      const encryptStart = Date.now();
-      for (let i = 0; i < iterations; i++) {
-        keyPair.publicKey.encrypt(message);
-      }
-      const encryptTime = Date.now() - encryptStart;
+        const encryptStart = Date.now();
+        for (let i = 0; i < iterations; i++) {
+          keyPair.publicKey.encrypt(message);
+        }
+        const encryptTime = Date.now() - encryptStart;
 
-      const ciphertexts = Array(iterations)
-        .fill(null)
-        .map(() => keyPair.publicKey.encrypt(message));
+        const ciphertexts = Array(iterations)
+          .fill(null)
+          .map(() => keyPair.publicKey.encrypt(message));
 
-      const decryptStart = Date.now();
-      for (const ciphertext of ciphertexts) {
-        keyPair.privateKey.decrypt(ciphertext);
-      }
-      const decryptTime = Date.now() - decryptStart;
+        const decryptStart = Date.now();
+        for (const ciphertext of ciphertexts) {
+          keyPair.privateKey.decrypt(ciphertext);
+        }
+        const decryptTime = Date.now() - decryptStart;
 
-      console.log(`Encryption: ${encryptTime}ms for ${iterations} operations`);
-      console.log(`Decryption: ${decryptTime}ms for ${iterations} operations`);
+        console.log(
+          `Encryption: ${encryptTime}ms for ${iterations} operations`,
+        );
+        console.log(
+          `Decryption: ${decryptTime}ms for ${iterations} operations`,
+        );
 
-      expect(encryptTime).toBeLessThan(10000);
-      expect(decryptTime).toBeLessThan(10000);
+        expect(encryptTime).toBeLessThan(10000);
+        expect(decryptTime).toBeLessThan(10000);
+      });
     });
   });
 });

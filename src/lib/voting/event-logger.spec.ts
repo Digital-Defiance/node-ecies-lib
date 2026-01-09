@@ -9,12 +9,73 @@ import {
   type EventLogEntry,
   type PollConfiguration,
 } from './event-logger';
+import type { IIdProvider } from '@digitaldefiance/ecies-lib';
+
+/**
+ * Simple ID provider for test purposes
+ * Handles 4-byte Buffer IDs used in voting tests
+ */
+class TestBufferIdProvider implements IIdProvider<Buffer> {
+  readonly byteLength = 4;
+  readonly name = 'TestBuffer';
+
+  generate(): Uint8Array {
+    const buffer = new Uint8Array(4);
+    crypto.getRandomValues(buffer);
+    return buffer;
+  }
+
+  validate(id: Uint8Array): boolean {
+    return id.length === 4;
+  }
+
+  serialize(id: Uint8Array): string {
+    return Array.from(id)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  deserialize(str: string): Uint8Array {
+    if (str.length !== 8) throw new Error('Invalid hex string length');
+    const bytes = new Uint8Array(4);
+    for (let i = 0; i < 4; i++) {
+      bytes[i] = parseInt(str.substr(i * 2, 2), 16);
+    }
+    return bytes;
+  }
+
+  clone(id: Buffer): Buffer {
+    return Buffer.from(id);
+  }
+
+  fromBytes(bytes: Uint8Array): Buffer {
+    return Buffer.from(bytes);
+  }
+
+  toBytes(id: Buffer): Uint8Array {
+    return new Uint8Array(id);
+  }
+
+  equals(a: Buffer, b: Buffer): boolean {
+    return a.equals(b);
+  }
+
+  idToString(id: Buffer): string {
+    return this.serialize(this.toBytes(id));
+  }
+
+  idFromString(str: string): Buffer {
+    return this.fromBytes(this.deserialize(str));
+  }
+}
 
 describe('PollEventLogger', () => {
-  let logger: PollEventLogger;
+  let logger: PollEventLogger<Buffer>;
+  let idProvider: TestBufferIdProvider;
 
   beforeEach(() => {
-    logger = new PollEventLogger();
+    idProvider = new TestBufferIdProvider();
+    logger = new PollEventLogger<Buffer>(idProvider);
   });
 
   describe('Poll Creation Logging', () => {

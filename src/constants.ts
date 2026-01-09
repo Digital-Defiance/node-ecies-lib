@@ -5,7 +5,6 @@ import type {
   IPBkdf2Consts,
 } from '@digitaldefiance/ecies-lib';
 import {
-  Constants as BaseConstants,
   OBJECT_ID_LENGTH,
   ObjectIdProvider,
   registerRuntimeConfiguration,
@@ -74,10 +73,18 @@ export type NodeRuntimeOverrides = Parameters<
   typeof registerRuntimeConfiguration
 >[1];
 
+/**
+ * Default ID provider instance (singleton).
+ * Uses MongoDB ObjectID format (12 bytes).
+ */
+const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
+
 export const NODE_DEFAULTS_OVERRIDES: NodeRuntimeOverrides = Object.freeze({
   PBKDF2: {
     ALGORITHM: 'sha256',
   },
+  // Register the ID provider to ensure MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE are synced
+  idProvider: DEFAULT_ID_PROVIDER,
 });
 
 let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
@@ -114,6 +121,7 @@ export function registerNodeRuntimeConfiguration(
   return runtimeDefaults;
 }
 
+// Use runtime defaults for base constants
 export const CHECKSUM: IChecksumConsts = runtimeDefaults.CHECKSUM;
 
 export const KEYRING: IKeyringConsts = Object.freeze({
@@ -177,12 +185,6 @@ export const KEYRING_ALGORITHM_CONFIGURATION =
   `${KEYRING.ALGORITHM}-${KEYRING.KEY_BITS}-${KEYRING.MODE}` as CipherGCMTypes;
 
 /**
- * Default ID provider instance (singleton).
- * Uses MongoDB ObjectID format (12 bytes).
- */
-const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
-
-/**
  * Constants for encrypted data
  */
 export const ENCRYPTION: IEncryptionConsts = Object.freeze({
@@ -191,26 +193,7 @@ export const ENCRYPTION: IEncryptionConsts = Object.freeze({
 } as const);
 
 export const Constants: IConstants = Object.freeze({
-  ...BaseConstants,
-  ECIES: {
-    ...BaseConstants.ECIES,
-    // Override public key length for compressed keys
-    PUBLIC_KEY_LENGTH: 33,
-    // Override IV size for AES-GCM (standard is 12 bytes)
-    IV_SIZE: 12,
-    SINGLE: {
-      ...BaseConstants.ECIES.SINGLE,
-      FIXED_OVERHEAD_SIZE: 72,
-    },
-    SIMPLE: {
-      ...BaseConstants.ECIES.SIMPLE,
-      FIXED_OVERHEAD_SIZE: 64,
-    },
-    MULTIPLE: {
-      ...BaseConstants.ECIES.MULTIPLE,
-      ENCRYPTED_KEY_SIZE: 60,
-    },
-  },
+  ...runtimeDefaults,
   // Node-specific overrides and additions
   /**
    * PBKDF2 constants (Node.js crypto implementation)
@@ -252,6 +235,28 @@ export const Constants: IConstants = Object.freeze({
    * Size of ECIES cipher suite field in bytes
    */
   ECIES_CIPHER_SUITE_SIZE: 1,
+  // Override specific ECIES constants for Node.js
+  ECIES: {
+    ...runtimeDefaults.ECIES,
+    // Override public key length for compressed keys
+    PUBLIC_KEY_LENGTH: 33,
+    // Override IV size for AES-GCM (standard is 12 bytes)
+    IV_SIZE: 12,
+    SINGLE: {
+      ...runtimeDefaults.ECIES.SINGLE,
+      FIXED_OVERHEAD_SIZE: 72,
+    },
+    SIMPLE: {
+      ...runtimeDefaults.ECIES.SIMPLE,
+      FIXED_OVERHEAD_SIZE: 64,
+    },
+    MULTIPLE: {
+      ...runtimeDefaults.ECIES.MULTIPLE,
+      ENCRYPTED_KEY_SIZE: 60,
+      // Keep MAX_DATA_SIZE aligned with base config (1MB guardrail)
+      MAX_DATA_SIZE: runtimeDefaults.ECIES.MULTIPLE.MAX_DATA_SIZE,
+    },
+  },
 } as const);
 
 /**

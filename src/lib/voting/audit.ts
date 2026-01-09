@@ -1,200 +1,172 @@
 /**
  * Immutable Audit Log for Government-Grade Voting
- * Node.js optimized with native crypto
+ * Node.js optimized - extends ecies-lib ImmutableAuditLog with Buffer support
  */
-import { createHash } from 'crypto';
+import {
+  ImmutableAuditLog as BaseImmutableAuditLog,
+  type IMember as BaseIMember,
+} from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
-import type { SignatureBuffer } from '../../types';
 
-export enum AuditEventType {
-  PollCreated = 'poll_created',
-  VoteCast = 'vote_cast',
-  PollClosed = 'poll_closed',
+import type { AuditEntry } from './interfaces';
+
+// Re-export types and interfaces from the interfaces directory
+export type { AuditEntry, AuditLog } from './interfaces';
+
+/**
+ * Converts Uint8Array fields in an audit entry to Buffer
+ */
+function convertAuditEntryToBuffer<TID extends PlatformID>(
+  entry: AuditEntry<TID>,
+): AuditEntry<TID> {
+  return {
+    ...entry,
+    previousHash:
+      entry.previousHash instanceof Uint8Array &&
+      !(entry.previousHash instanceof Buffer)
+        ? Buffer.from(entry.previousHash)
+        : entry.previousHash,
+    entryHash:
+      entry.entryHash instanceof Uint8Array &&
+      !(entry.entryHash instanceof Buffer)
+        ? Buffer.from(entry.entryHash)
+        : entry.entryHash,
+    signature:
+      entry.signature instanceof Uint8Array &&
+      !(entry.signature instanceof Buffer)
+        ? Buffer.from(entry.signature)
+        : entry.signature,
+    voterIdHash:
+      entry.voterIdHash instanceof Uint8Array &&
+      !(entry.voterIdHash instanceof Buffer)
+        ? Buffer.from(entry.voterIdHash)
+        : entry.voterIdHash,
+  } as AuditEntry<TID>;
 }
 
-export interface AuditEntry<TID extends PlatformID = Buffer> {
-  /** Sequence number (monotonically increasing) */
-  readonly sequence: number;
-  /** Event type */
-  readonly eventType: AuditEventType;
-  /** Microsecond-precision timestamp */
-  readonly timestamp: number;
-  /** Poll identifier */
-  readonly pollId: TID;
-  /** Hash of voter ID (for vote events) */
-  readonly voterIdHash?: Buffer;
-  /** Authority/creator ID (for creation/closure events) */
-  readonly authorityId?: TID;
-  /** Hash of previous entry (chain integrity) */
-  readonly previousHash: Buffer;
-  /** Hash of this entry's data */
-  readonly entryHash: Buffer;
-  /** Digital signature from authority */
-  readonly signature: Buffer;
-  /** Additional event metadata */
-  readonly metadata?: Record<string, unknown>;
-}
-
-export interface AuditLog<TID extends PlatformID = Buffer> {
-  getEntries(): readonly AuditEntry<TID>[];
-  getEntriesForPoll(pollId: TID): readonly AuditEntry<TID>[];
-  verifyChain(): boolean;
-  verifyEntry(entry: AuditEntry<TID>): boolean;
-}
-
+/**
+ * Node.js ImmutableAuditLog that extends ecies-lib ImmutableAuditLog
+ * Keeps the generic TID parameter for flexibility, defaulting to Buffer
+ *
+ * The base class handles all the logic, we override methods to convert
+ * Uint8Array to Buffer for Node.js compatibility.
+ */
 export class ImmutableAuditLog<
   TID extends PlatformID = Buffer,
-> implements AuditLog<TID> {
-  private readonly entries: AuditEntry<TID>[] = [];
-  private readonly authority: IMember<TID>;
-  private sequence = 0;
-
+> extends BaseImmutableAuditLog<TID> {
   constructor(authority: IMember<TID>) {
-    this.authority = authority;
+    // Create an adapter that bridges the Buffer-based Member with Uint8Array-based ecies-lib
+    const authorityAdapter: BaseIMember<TID, Uint8Array> = {
+      ...authority,
+      // Convert the sign method from Buffer-based to Uint8Array-based
+      sign: (data: Uint8Array): Uint8Array => {
+        const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
+        const signature = authority.sign(bufferData);
+        return signature instanceof Uint8Array
+          ? signature
+          : new Uint8Array(signature);
+      },
+      // Convert the verify method from Buffer-based to Uint8Array-based
+      verify: (signature: Uint8Array, data: Uint8Array): boolean => {
+        const bufferSignature = Buffer.isBuffer(signature)
+          ? signature
+          : Buffer.from(signature);
+        const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
+        // Type assertion is safe here as we know SignatureBuffer extends Buffer
+        return authority.verify(
+          bufferSignature as import('../../types').SignatureBuffer,
+          bufferData,
+        );
+      },
+      // Ensure publicKey is Uint8Array
+      publicKey:
+        authority.publicKey instanceof Uint8Array
+          ? authority.publicKey
+          : new Uint8Array(authority.publicKey),
+      // Ensure idBytes is Uint8Array
+      idBytes:
+        authority.idBytes instanceof Uint8Array
+          ? authority.idBytes
+          : new Uint8Array(authority.idBytes),
+      // Type assertions are safe here as the methods won't be used in audit log context
+      // and the underlying implementations are compatible
+      encryptDataStream: authority.encryptDataStream as BaseIMember<
+        TID,
+        Uint8Array
+      >['encryptDataStream'],
+      decryptDataStream: authority.decryptDataStream as BaseIMember<
+        TID,
+        Uint8Array
+      >['decryptDataStream'],
+      // Cast the encrypt/decrypt methods to handle the sync/async differences
+      encryptData: authority.encryptData as BaseIMember<
+        TID,
+        Uint8Array
+      >['encryptData'],
+      decryptData: authority.decryptData as BaseIMember<
+        TID,
+        Uint8Array
+      >['decryptData'],
+    };
+
+    super(authorityAdapter);
   }
 
+  /**
+   * Record poll creation event
+   * Overrides base method to convert Uint8Array to Buffer
+   */
   recordPollCreated(
     pollId: TID,
     metadata?: Record<string, unknown>,
   ): AuditEntry<TID> {
-    return this.appendEntry({
-      eventType: AuditEventType.PollCreated,
-      pollId,
-      authorityId: this.authority.id,
-      metadata,
-    });
+    const entry = super.recordPollCreated(pollId, metadata);
+    return convertAuditEntryToBuffer(entry);
   }
 
+  /**
+   * Record vote cast event
+   * Overrides base method to convert Uint8Array to Buffer
+   * Note: voterIdHash is Uint8Array for compatibility with base class
+   */
   recordVoteCast(
     pollId: TID,
-    voterIdHash: Buffer,
+    voterIdHash: Uint8Array,
     metadata?: Record<string, unknown>,
   ): AuditEntry<TID> {
-    return this.appendEntry({
-      eventType: AuditEventType.VoteCast,
-      pollId,
-      voterIdHash,
-      metadata,
-    });
+    const entry = super.recordVoteCast(pollId, voterIdHash, metadata);
+    return convertAuditEntryToBuffer(entry);
   }
 
+  /**
+   * Record poll closed event
+   * Overrides base method to convert Uint8Array to Buffer
+   */
   recordPollClosed(
     pollId: TID,
     metadata?: Record<string, unknown>,
   ): AuditEntry<TID> {
-    return this.appendEntry({
-      eventType: AuditEventType.PollClosed,
-      pollId,
-      authorityId: this.authority.id,
-      metadata,
-    });
+    const entry = super.recordPollClosed(pollId, metadata);
+    return convertAuditEntryToBuffer(entry);
   }
 
-  getEntries(): readonly AuditEntry<TID>[] {
-    return Object.freeze([...this.entries]);
+  /**
+   * Get all audit entries
+   * Overrides base method to convert Uint8Array to Buffer
+   */
+  getEntries(): ReadonlyArray<AuditEntry<TID>> {
+    const entries = super.getEntries();
+    return entries.map((entry) => convertAuditEntryToBuffer(entry));
   }
 
-  getEntriesForPoll(pollId: TID): readonly AuditEntry<TID>[] {
-    const pollIdStr = Buffer.from(pollId as Buffer).toString('hex');
-    return Object.freeze(
-      this.entries.filter(
-        (e) => Buffer.from(e.pollId as Buffer).toString('hex') === pollIdStr,
-      ),
-    );
-  }
-
-  verifyChain(): boolean {
-    if (this.entries.length === 0) return true;
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-      const computedHash = this.computeEntryHash(entry);
-      if (!computedHash.equals(entry.entryHash)) return false;
-      if (!this.verifyEntry(entry)) return false;
-      if (i > 0) {
-        const prevEntry = this.entries[i - 1];
-        if (!entry.previousHash.equals(prevEntry.entryHash)) return false;
-      }
-    }
-    return true;
-  }
-
-  verifyEntry(entry: AuditEntry<TID>): boolean {
-    const data = this.serializeEntryForSigning(entry);
-    return this.authority.verify(
-      entry.signature as unknown as SignatureBuffer,
-      data,
-    );
-  }
-
-  private appendEntry(
-    partial: Omit<
-      AuditEntry<TID>,
-      'sequence' | 'timestamp' | 'previousHash' | 'entryHash' | 'signature'
-    >,
-  ): AuditEntry<TID> {
-    const previousHash =
-      this.entries.length > 0
-        ? this.entries[this.entries.length - 1].entryHash
-        : Buffer.alloc(32);
-    const entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'> = {
-      sequence: this.sequence++,
-      timestamp: this.getMicrosecondTimestamp(),
-      previousHash,
-      ...partial,
-    };
-    const entryHash = this.computeEntryHash(entry);
-    const data = this.serializeEntryForSigning({ ...entry, entryHash });
-    const signature = this.authority.sign(data);
-    const finalEntry: AuditEntry<TID> = { ...entry, entryHash, signature };
-    this.entries.push(finalEntry);
-    return finalEntry;
-  }
-
-  private computeEntryHash(
-    entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'>,
-  ): Buffer {
-    const data = this.serializeEntryForHashing(entry);
-    return createHash('sha256').update(data).digest();
-  }
-
-  private serializeEntryForHashing(
-    entry: Omit<AuditEntry<TID>, 'entryHash' | 'signature'>,
-  ): Buffer {
-    const parts: Buffer[] = [
-      this.encodeNumber(entry.sequence),
-      Buffer.from(entry.eventType, 'utf8'),
-      this.encodeNumber(entry.timestamp),
-      Buffer.from(entry.pollId as Buffer),
-      entry.previousHash,
-    ];
-    if (entry.voterIdHash) parts.push(entry.voterIdHash);
-    if (entry.authorityId) parts.push(Buffer.from(entry.authorityId as Buffer));
-    if (entry.metadata)
-      parts.push(Buffer.from(JSON.stringify(entry.metadata), 'utf8'));
-    return Buffer.concat(parts);
-  }
-
-  private serializeEntryForSigning(
-    entry: Omit<AuditEntry<TID>, 'signature'>,
-  ): Buffer {
-    return Buffer.concat([
-      this.serializeEntryForHashing(entry),
-      entry.entryHash,
-    ]);
-  }
-
-  private getMicrosecondTimestamp(): number {
-    // Get milliseconds since epoch and convert to microseconds
-    // performance.now() is relative to process start, not epoch, so we only use Date.now()
-    const now = Date.now();
-    return now * 1000;
-  }
-
-  private encodeNumber(n: number): Buffer {
-    const buf = Buffer.alloc(8);
-    buf.writeBigUInt64BE(BigInt(n));
-    return buf;
+  /**
+   * Get entries for a specific poll
+   * Overrides base method to convert Uint8Array to Buffer
+   */
+  getEntriesForPoll(pollId: TID): ReadonlyArray<AuditEntry<TID>> {
+    const entries = super.getEntriesForPoll(pollId);
+    return entries.map((entry) => convertAuditEntryToBuffer(entry));
   }
 }

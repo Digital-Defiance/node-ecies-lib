@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { randomBytes } from 'crypto';
 
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+
 import { Constants } from '../src/constants';
+import { BufferIdProvider } from '../src/lib/id-providers/buffer-provider';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import {
   IMultiRecipient,
@@ -11,31 +14,46 @@ import {
 describe('MultiRecipientProcessor', () => {
   let processor: MultiRecipientProcessor;
   let cryptoCore: EciesCryptoCore;
+  let config: IECIESConfig;
+  let idProvider: BufferIdProvider;
   let recipient1: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
   let recipient2: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
   let recipient3: { id: Buffer; publicKey: Buffer; privateKey: Buffer };
 
   beforeEach(async () => {
-    cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-    processor = new MultiRecipientProcessor(cryptoCore);
+    config = {
+      curveName: Constants.ECIES.CURVE_NAME,
+      primaryKeyDerivationPath: Constants.ECIES.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: Constants.ECIES.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: Constants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: Constants.ECIES.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: Constants.ECIES.SYMMETRIC.MODE,
+    };
+    cryptoCore = new EciesCryptoCore(config);
+
+    // Use BufferIdProvider for Buffer-based IDs in tests
+    idProvider = new BufferIdProvider(
+      Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+    );
+    processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
     const keyPair1 = await cryptoCore.generateEphemeralKeyPair();
     recipient1 = {
-      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      id: idProvider.generate(),
       publicKey: Buffer.from(keyPair1.publicKey),
       privateKey: Buffer.from(keyPair1.privateKey),
     };
 
     const keyPair2 = await cryptoCore.generateEphemeralKeyPair();
     recipient2 = {
-      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      id: idProvider.generate(),
       publicKey: Buffer.from(keyPair2.publicKey),
       privateKey: Buffer.from(keyPair2.privateKey),
     };
 
     const keyPair3 = await cryptoCore.generateEphemeralKeyPair();
     recipient3 = {
-      id: randomBytes(Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE),
+      id: idProvider.generate(),
       publicKey: Buffer.from(keyPair3.publicKey),
       privateKey: Buffer.from(keyPair3.privateKey),
     };

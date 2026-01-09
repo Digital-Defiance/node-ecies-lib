@@ -1,9 +1,24 @@
+import { ObjectIdProvider } from '@digitaldefiance/ecies-lib';
 import {
   getNodeRuntimeConfiguration,
   registerNodeRuntimeConfiguration,
 } from '../src/constants';
 
 describe('Node ECIES Runtime Configuration Registry', () => {
+  let originalConfig: ReturnType<typeof getNodeRuntimeConfiguration>;
+
+  beforeEach(() => {
+    // Save original configuration
+    originalConfig = getNodeRuntimeConfiguration();
+  });
+
+  afterEach(() => {
+    // Restore original configuration to prevent test interference
+    registerNodeRuntimeConfiguration({
+      idProvider: new ObjectIdProvider(),
+    });
+  });
+
   it('should return the default configuration', () => {
     const config = getNodeRuntimeConfiguration();
     expect(config).toBeDefined();

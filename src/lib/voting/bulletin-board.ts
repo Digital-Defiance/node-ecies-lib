@@ -1,439 +1,163 @@
 /**
  * Public Bulletin Board for Government-Grade Voting
- * Node.js optimized with native crypto
+ * Node.js optimized - extends ecies-lib PublicBulletinBoard with Buffer support
  * Implements requirement 1.2: Append-only, publicly verifiable vote publication
  */
-import { createHash } from 'crypto';
+import {
+  PublicBulletinBoard as BasePublicBulletinBoard,
+  type IMember as BaseIMember,
+} from '@digitaldefiance/ecies-lib';
 
-import { getNodeRuntimeConfiguration } from '../../constants';
-import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
-import type { SignatureBuffer } from '../../types';
-const Constants = getNodeRuntimeConfiguration();
 
-export interface BulletinBoardEntry<TID extends PlatformID = Buffer> {
-  /** Sequence number (monotonically increasing) */
-  readonly sequence: number;
-  /** Microsecond-precision timestamp */
-  readonly timestamp: number;
-  /** Poll identifier */
-  readonly pollId: TID;
-  /** Encrypted vote data */
-  readonly encryptedVote: bigint[];
-  /** Hash of voter ID (anonymized) */
-  readonly voterIdHash: Buffer;
-  /** Merkle root of all entries up to this point */
-  readonly merkleRoot: Buffer;
-  /** Hash of this entry */
-  readonly entryHash: Buffer;
-  /** Authority signature */
-  readonly signature: Buffer;
-}
+import type { BulletinBoardEntry, TallyProof } from './interfaces';
 
-export interface TallyProof<TID extends PlatformID = Buffer> {
-  /** Poll identifier */
-  readonly pollId: TID;
-  /** Final tallies */
-  readonly tallies: bigint[];
-  /** Choice names */
-  readonly choices: string[];
-  /** Timestamp of tally */
-  readonly timestamp: number;
-  /** Hash of all encrypted votes */
-  readonly votesHash: Buffer;
-  /** Cryptographic proof of correct decryption */
-  readonly decryptionProof: Buffer;
-  /** Authority signature */
-  readonly signature: Buffer;
-}
-
-export interface BulletinBoard<TID extends PlatformID = Buffer> {
-  /** Publish encrypted vote to bulletin board */
-  publishVote(
-    pollId: TID,
-    encryptedVote: bigint[],
-    voterIdHash: Buffer,
-  ): BulletinBoardEntry<TID>;
-
-  /** Publish tally with cryptographic proof */
-  publishTally(
-    pollId: TID,
-    tallies: bigint[],
-    choices: string[],
-    encryptedVotes: bigint[][],
-  ): TallyProof<TID>;
-
-  /** Get all entries for a poll */
-  getEntries(pollId: TID): readonly BulletinBoardEntry<TID>[];
-
-  /** Get all entries (entire bulletin board) */
-  getAllEntries(): readonly BulletinBoardEntry<TID>[];
-
-  /** Get tally proof for a poll */
-  getTallyProof(pollId: TID): TallyProof<TID> | undefined;
-
-  /** Verify entry signature and hash */
-  verifyEntry(entry: BulletinBoardEntry): boolean;
-
-  /** Verify tally proof */
-  verifyTallyProof(proof: TallyProof<TID>): boolean;
-
-  /** Verify Merkle tree integrity */
-  verifyMerkleTree(): boolean;
-
-  /** Export complete bulletin board for archival */
-  export(): Buffer;
-}
+// Re-export types and interfaces from the interfaces directory
+export type {
+  BulletinBoardEntry,
+  TallyProof,
+  BulletinBoard,
+} from './interfaces';
 
 /**
- * Append-only public bulletin board with cryptographic verification
+ * Node.js PublicBulletinBoard that extends ecies-lib PublicBulletinBoard
+ * Uses Buffer for binary data instead of Uint8Array
+ *
+ * The base class handles all the logic, we just provide Node.js-specific defaults
+ * and ensure Buffer is used by default instead of Uint8Array.
  */
-export class PublicBulletinBoard<
-  TID extends PlatformID = Buffer,
-> implements BulletinBoard<TID> {
-  private readonly entries: BulletinBoardEntry<TID>[] = [];
-  private readonly tallyProofs = new Map<string, TallyProof<TID>>();
-  private readonly authority: IMember<TID>;
-  private sequence = 0;
-
-  constructor(authority: IMember<TID>) {
-    this.authority = authority;
+export class PublicBulletinBoard extends BasePublicBulletinBoard {
+  constructor(authority: IMember<Buffer>) {
+    // Cast to the ecies-lib IMember type which has a different signature
+    // The node-ecies-lib IMember is compatible but has a different signature
+    super(authority as unknown as BaseIMember<Buffer, Uint8Array>);
   }
 
+  /**
+   * Override publishVote to ensure Buffer types are returned
+   */
   publishVote(
-    pollId: TID,
+    pollId: Buffer,
     encryptedVote: bigint[],
     voterIdHash: Buffer,
-  ): BulletinBoardEntry<TID> {
-    const timestamp = this.getMicrosecondTimestamp();
-    const merkleRoot = this.computeMerkleRoot([...this.entries]);
-
-    const entryData = this.serializeEntryData({
-      sequence: this.sequence,
-      timestamp,
-      pollId: Buffer.from(Constants.idProvider.toBytes(pollId)),
+  ): BulletinBoardEntry<Buffer> {
+    // Convert Buffer arguments to Uint8Array for parent class
+    const entry = super.publishVote(
+      new Uint8Array(pollId),
       encryptedVote,
-      voterIdHash,
-      merkleRoot,
-    });
+      new Uint8Array(voterIdHash),
+    );
 
-    const entryHash = this.sha256(entryData);
-    const signature = this.authority.sign(entryHash);
-
-    const entry: BulletinBoardEntry<TID> = {
-      sequence: this.sequence++,
-      timestamp,
-      pollId,
-      encryptedVote,
-      voterIdHash,
-      merkleRoot,
-      entryHash,
-      signature,
+    // Convert Uint8Array fields to Buffer
+    return {
+      ...entry,
+      pollId: Buffer.from(entry.pollId),
+      voterIdHash: Buffer.from(entry.voterIdHash),
+      entryHash: Buffer.from(entry.entryHash),
+      signature: Buffer.from(entry.signature),
+      merkleRoot: Buffer.from(entry.merkleRoot),
     };
-
-    this.entries.push(entry);
-    return entry;
   }
 
+  /**
+   * Override publishTally to ensure Buffer types are returned
+   */
   publishTally(
-    pollId: TID,
+    pollId: Buffer,
     tallies: bigint[],
     choices: string[],
     encryptedVotes: bigint[][],
-  ): TallyProof<TID> {
-    const timestamp = this.getMicrosecondTimestamp();
-    const votesHash = this.hashEncryptedVotes(encryptedVotes);
-    const decryptionProof = this.generateDecryptionProof(
+  ): TallyProof<Buffer> {
+    // Convert Buffer argument to Uint8Array for parent class
+    const proof = super.publishTally(
+      new Uint8Array(pollId),
+      tallies,
+      choices,
       encryptedVotes,
-      tallies,
     );
 
-    const proofData = this.serializeTallyProof({
-      pollId: Buffer.from(Constants.idProvider.toBytes(pollId)),
-      tallies,
-      choices,
-      timestamp,
-      votesHash,
-      decryptionProof,
-    });
-
-    const signature = this.authority.sign(proofData);
-
-    const proof: TallyProof<TID> = {
-      pollId,
-      tallies,
-      choices,
-      timestamp,
-      votesHash,
-      decryptionProof,
-      signature,
+    // Convert Uint8Array fields to Buffer
+    return {
+      ...proof,
+      pollId: Buffer.from(proof.pollId),
+      votesHash: Buffer.from(proof.votesHash),
+      decryptionProof: Buffer.from(proof.decryptionProof),
+      signature: Buffer.from(proof.signature),
     };
-
-    this.tallyProofs.set(pollId.toString('hex'), proof);
-    return proof;
   }
 
-  getEntries(pollId: TID): readonly BulletinBoardEntry<TID>[] {
-    const pollIdStr = Buffer.from(
-      Constants.idProvider.toBytes(pollId),
-    ).toString('hex');
-    return Object.freeze(
-      this.entries.filter((e) => e.pollId.toString('hex') === pollIdStr),
-    );
+  /**
+   * Override getEntries to ensure Buffer types are returned and array is immutable
+   */
+  getEntries(pollId: Buffer): readonly BulletinBoardEntry<Buffer>[] {
+    // Convert Buffer argument to Uint8Array for parent class
+    const entries = super.getEntries(new Uint8Array(pollId));
+    const bufferEntries = entries.map((entry) => ({
+      ...entry,
+      pollId: Buffer.from(entry.pollId),
+      voterIdHash: Buffer.from(entry.voterIdHash),
+      entryHash: Buffer.from(entry.entryHash),
+      signature: Buffer.from(entry.signature),
+      merkleRoot: Buffer.from(entry.merkleRoot),
+    }));
+    return Object.freeze(bufferEntries);
   }
 
-  getAllEntries(): readonly BulletinBoardEntry<TID>[] {
-    return Object.freeze([...this.entries]);
+  /**
+   * Override getAllEntries to ensure Buffer types are returned and array is immutable
+   */
+  getAllEntries(): readonly BulletinBoardEntry<Buffer>[] {
+    const entries = super.getAllEntries();
+    const bufferEntries = entries.map((entry) => ({
+      ...entry,
+      pollId: Buffer.from(entry.pollId),
+      voterIdHash: Buffer.from(entry.voterIdHash),
+      entryHash: Buffer.from(entry.entryHash),
+      signature: Buffer.from(entry.signature),
+      merkleRoot: Buffer.from(entry.merkleRoot),
+    }));
+    return Object.freeze(bufferEntries);
   }
 
-  getTallyProof(pollId: TID): TallyProof<TID> | undefined {
-    return this.tallyProofs.get(pollId.toString('hex'));
+  /**
+   * Override getTallyProof to ensure Buffer types are returned
+   */
+  getTallyProof(pollId: Buffer): TallyProof<Buffer> | undefined {
+    // Convert Buffer argument to Uint8Array for parent class
+    const proof = super.getTallyProof(new Uint8Array(pollId));
+    if (!proof) return undefined;
+
+    return {
+      ...proof,
+      pollId: Buffer.from(proof.pollId),
+      votesHash: Buffer.from(proof.votesHash),
+      decryptionProof: Buffer.from(proof.decryptionProof),
+      signature: Buffer.from(proof.signature),
+    };
   }
 
-  verifyEntry(entry: BulletinBoardEntry): boolean {
-    const entryData = this.serializeEntryData({
-      sequence: entry.sequence,
-      timestamp: entry.timestamp,
-      pollId: entry.pollId,
-      encryptedVote: entry.encryptedVote,
-      voterIdHash: entry.voterIdHash,
-      merkleRoot: entry.merkleRoot,
-    });
-
-    const computedHash = this.sha256(entryData);
-    if (!computedHash.equals(entry.entryHash)) {
-      return false;
-    }
-
-    return this.authority.verify(
-      entry.signature as SignatureBuffer,
-      entry.entryHash,
-    );
-  }
-
-  verifyTallyProof(proof: TallyProof<TID>): boolean {
-    const pollIdBytes = Buffer.from(Constants.idProvider.toBytes(proof.pollId));
-    const proofData = this.serializeTallyProof({
-      pollId: pollIdBytes,
-      tallies: proof.tallies,
-      choices: proof.choices,
-      timestamp: proof.timestamp,
-      votesHash: proof.votesHash,
-      decryptionProof: proof.decryptionProof,
-    });
-
-    return this.authority.verify(proof.signature as SignatureBuffer, proofData);
-  }
-
-  verifyMerkleTree(): boolean {
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-      const expectedRoot = this.computeMerkleRoot(this.entries.slice(0, i));
-
-      if (!entry.merkleRoot.equals(expectedRoot)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
+  /**
+   * Override export method to return Buffer instead of Uint8Array
+   */
   export(): Buffer {
-    const parts: Buffer[] = [];
-
-    // Export entries
-    parts.push(this.encodeNumber(this.entries.length));
-    for (const entry of this.entries) {
-      parts.push(this.serializeEntry(entry));
-    }
-
-    // Export tally proofs
-    parts.push(this.encodeNumber(this.tallyProofs.size));
-    for (const proof of this.tallyProofs.values()) {
-      parts.push(this.serializeTallyProofFull(proof));
-    }
-
-    return Buffer.concat(parts);
+    const exported = super.export();
+    return Buffer.from(exported);
   }
 
-  private computeMerkleRoot(entries: BulletinBoardEntry<TID>[]): Buffer {
-    if (entries.length === 0) {
-      return Buffer.alloc(32);
-    }
-
-    let hashes = entries.map((e) => e.entryHash);
-
-    while (hashes.length > 1) {
-      const nextLevel: Buffer[] = [];
-      for (let i = 0; i < hashes.length; i += 2) {
-        if (i + 1 < hashes.length) {
-          nextLevel.push(
-            this.sha256(Buffer.concat([hashes[i], hashes[i + 1]])),
-          );
-        } else {
-          nextLevel.push(hashes[i]);
-        }
-      }
-      hashes = nextLevel;
-    }
-
-    return hashes[0];
-  }
-
-  private hashEncryptedVotes(votes: bigint[][]): Buffer {
-    const parts: Buffer[] = [];
-    for (const vote of votes) {
-      for (const value of vote) {
-        parts.push(this.encodeBigInt(value));
-      }
-    }
-    return this.sha256(Buffer.concat(parts));
-  }
-
-  private generateDecryptionProof(
-    encryptedVotes: bigint[][],
-    tallies: bigint[],
-  ): Buffer {
-    // Simplified proof: hash of encrypted votes + tallies
-    // In production, use ZK-SNARK or similar
-    const parts: Buffer[] = [];
-    for (const vote of encryptedVotes) {
-      for (const value of vote) {
-        parts.push(this.encodeBigInt(value));
-      }
-    }
-    for (const tally of tallies) {
-      parts.push(this.encodeBigInt(tally));
-    }
-    return this.sha256(Buffer.concat(parts));
-  }
-
-  private serializeEntryData(data: {
-    sequence: number;
-    timestamp: number;
+  /**
+   * Get all votes published to the bulletin board
+   * Returns the encrypted votes for verification
+   */
+  getVotes(): readonly {
     pollId: Buffer;
     encryptedVote: bigint[];
     voterIdHash: Buffer;
-    merkleRoot: Buffer;
-  }): Buffer {
-    const parts: Buffer[] = [
-      this.encodeNumber(data.sequence),
-      this.encodeNumber(data.timestamp),
-      data.pollId,
-      data.voterIdHash,
-      data.merkleRoot,
-    ];
-
-    for (const value of data.encryptedVote) {
-      parts.push(this.encodeBigInt(value));
-    }
-
-    return Buffer.concat(parts);
-  }
-
-  private serializeTallyProof(data: {
-    pollId: Buffer;
-    tallies: bigint[];
-    choices: string[];
-    timestamp: number;
-    votesHash: Buffer;
-    decryptionProof: Buffer;
-  }): Buffer {
-    const parts: Buffer[] = [
-      data.pollId,
-      this.encodeNumber(data.timestamp),
-      data.votesHash,
-      data.decryptionProof,
-    ];
-
-    for (const tally of data.tallies) {
-      parts.push(this.encodeBigInt(tally));
-    }
-
-    for (const choice of data.choices) {
-      parts.push(Buffer.from(choice, 'utf8'));
-    }
-
-    return Buffer.concat(parts);
-  }
-
-  private serializeEntry(entry: BulletinBoardEntry<TID>): Buffer {
-    const pollIdBytes = Buffer.from(Constants.idProvider.toBytes(entry.pollId));
-    const parts: Buffer[] = [
-      this.encodeNumber(entry.sequence),
-      this.encodeNumber(entry.timestamp),
-      this.encodeNumber(pollIdBytes.length),
-      pollIdBytes,
-      this.encodeNumber(entry.encryptedVote.length),
-    ];
-
-    for (const value of entry.encryptedVote) {
-      parts.push(this.encodeBigInt(value));
-    }
-
-    parts.push(
-      this.encodeNumber(entry.voterIdHash.length),
-      entry.voterIdHash,
-      this.encodeNumber(entry.merkleRoot.length),
-      entry.merkleRoot,
-      this.encodeNumber(entry.entryHash.length),
-      entry.entryHash,
-      this.encodeNumber(entry.signature.length),
-      entry.signature,
-    );
-
-    return Buffer.concat(parts);
-  }
-
-  private serializeTallyProofFull(proof: TallyProof<TID>): Buffer {
-    const pollIdBytes = Buffer.from(Constants.idProvider.toBytes(proof.pollId));
-    const parts: Buffer[] = [
-      this.encodeNumber(pollIdBytes.length),
-      pollIdBytes,
-      this.encodeNumber(proof.tallies.length),
-    ];
-
-    for (const tally of proof.tallies) {
-      parts.push(this.encodeBigInt(tally));
-    }
-
-    parts.push(this.encodeNumber(proof.choices.length));
-    for (const choice of proof.choices) {
-      const encoded = Buffer.from(choice, 'utf8');
-      parts.push(this.encodeNumber(encoded.length), encoded);
-    }
-
-    parts.push(
-      this.encodeNumber(proof.timestamp),
-      this.encodeNumber(proof.votesHash.length),
-      proof.votesHash,
-      this.encodeNumber(proof.decryptionProof.length),
-      proof.decryptionProof,
-      this.encodeNumber(proof.signature.length),
-      proof.signature,
-    );
-
-    return Buffer.concat(parts);
-  }
-
-  private getMicrosecondTimestamp(): number {
-    // Get milliseconds since epoch and convert to microseconds
-    // performance.now() is relative to process start, not epoch, so we only use Date.now()
-    const now = Date.now();
-    return now * 1000;
-  }
-
-  private sha256(data: Buffer): Buffer {
-    return createHash('sha256').update(data).digest();
-  }
-
-  private encodeNumber(n: number): Buffer {
-    const buffer = Buffer.alloc(8);
-    buffer.writeBigUInt64BE(BigInt(n));
-    return buffer;
-  }
-
-  private encodeBigInt(n: bigint): Buffer {
-    const hex = n.toString(16).padStart(64, '0');
-    return Buffer.from(hex, 'hex');
+  }[] {
+    const entries = this.getAllEntries();
+    return entries.map((entry) => ({
+      pollId: entry.pollId,
+      encryptedVote: entry.encryptedVote,
+      voterIdHash: Buffer.from(entry.voterIdHash), // Convert Uint8Array to Buffer
+    }));
   }
 }

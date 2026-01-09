@@ -18,6 +18,22 @@ import {
 import { InvariantValidator } from '../../src/lib/invariant-validator';
 
 describe('Recipient ID Consistency Integration Tests', () => {
+  let originalConfig: ReturnType<typeof registerNodeRuntimeConfiguration>;
+
+  beforeEach(() => {
+    // Save original configuration
+    originalConfig = registerNodeRuntimeConfiguration({
+      idProvider: new ObjectIdProvider(),
+    });
+  });
+
+  afterEach(() => {
+    // Restore original configuration to prevent test interference
+    registerNodeRuntimeConfiguration({
+      idProvider: new ObjectIdProvider(),
+    });
+  });
+
   describe('Critical: All constants must align with ID provider', () => {
     it('should enforce ECIES.MULTIPLE.RECIPIENT_ID_SIZE matches idProvider.byteLength', () => {
       const config = Constants;

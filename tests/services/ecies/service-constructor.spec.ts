@@ -117,7 +117,7 @@ describe('Unit Tests: ECIESService Constructor', () => {
         constants.ECIES.MNEMONIC_STRENGTH,
       );
       expect(service.config.symmetricAlgorithm).toBe(
-        constants.ECIES.SYMMETRIC.ALGORITHM,
+        constants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
       );
       expect(service.config.symmetricKeyBits).toBe(
         constants.ECIES.SYMMETRIC.KEY_BITS,
@@ -225,7 +225,7 @@ describe('Unit Tests: ECIESService Constructor', () => {
         constants.ECIES.MNEMONIC_STRENGTH,
       );
       expect(service.config.symmetricAlgorithm).toBe(
-        constants.ECIES.SYMMETRIC.ALGORITHM,
+        constants.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
       );
       expect(service.config.symmetricKeyBits).toBe(
         constants.ECIES.SYMMETRIC.KEY_BITS,

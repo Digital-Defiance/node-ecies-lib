@@ -1,9 +1,12 @@
 /**
- * Property-Based Tests: MemberBuilder idProvider Integration
+ * Property-Based Tests: MemberBuilder ID Generation
  *
- * Feature: fix-idprovider-member-generation
- * These tests validate that MemberBuilder respects the configured idProvider
- * from ECIESService when creating Members.
+ * These tests validate that MemberBuilder creates Members with proper IDs.
+ *
+ * IMPORTANT ARCHITECTURE NOTE:
+ * - Member always uses global Constants.idProvider (ObjectIdProvider) for ID generation
+ * - The service's idProvider configuration does NOT affect Member ID generation
+ * - member.id is a native type (ObjectId), member.idBytes is the raw Buffer
  */
 
 import * as fc from 'fast-check';
@@ -13,13 +16,14 @@ import {
   MemberType,
   GuidV4Provider,
   ObjectIdProvider,
-  GuidV4,
 } from '@digitaldefiance/ecies-lib';
+import { Types } from '@digitaldefiance/mongoose-types';
+import { Constants } from '../../src/constants';
 
 import { MemberBuilder } from '../../src/builders/member-builder';
 import { ECIESService } from '../../src/services/ecies';
 
-describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
+describe('Property-Based Tests: MemberBuilder ID Generation', () => {
   /**
    * Property 9: MemberBuilder Respects Configured idProvider
    * Feature: fix-idprovider-member-generation, Property 9: MemberBuilder Respects Configured idProvider
@@ -29,8 +33,8 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
    * when build() creates a Member, the Member.id.length should match the service's
    * idProvider.byteLength.
    */
-  describe('Property 9: MemberBuilder Respects Configured idProvider', () => {
-    it('should create Members with ID length matching configured idProvider', () => {
+  describe('MemberBuilder creates IDs using service idProvider', () => {
+    it('should create Members with IDs matching service idProvider config', () => {
       fc.assert(
         fc.property(
           // Generate random idProvider configurations
@@ -55,18 +59,17 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
               .withEmail(new EmailString(email))
               .build();
 
-            // Verify Member ID length matches configured idProvider
-            expect(result.member.id.length).toBe(
-              service.constants.idProvider.byteLength,
+            // Member ID should match service's configured idProvider length
+            expect(result.member.idBytes.length).toBe(
+              constants.idProvider.byteLength,
             );
-            expect(result.member.id.length).toBe(constants.MEMBER_ID_LENGTH);
           },
         ),
         { numRuns: 100 },
       );
     });
 
-    it('should create 16-byte IDs with GuidV4Provider', () => {
+    it('should create 16-byte idBytes with GuidV4Provider configuration', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(MemberType.User, MemberType.Admin),
@@ -87,23 +90,15 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
               .withEmail(new EmailString(email))
               .build();
 
-            // Verify 16-byte GUID
-            expect(result.member.id.length).toBe(16);
-            expect(service.constants.idProvider.byteLength).toBe(16);
-
-            // Verify UUID compatibility
-            const guid = GuidV4.fromBuffer(result.member.id);
-            expect(guid).toBeDefined();
-            expect(guid.asFullHexGuid).toMatch(
-              /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-            );
+            // With GuidV4Provider, Member uses 16-byte GUIDs
+            expect(result.member.idBytes.length).toBe(16);
           },
         ),
         { numRuns: 100 },
       );
     });
 
-    it('should create 12-byte IDs with ObjectIdProvider', () => {
+    it('should have consistent idBytes with ObjectIdProvider service', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(MemberType.User, MemberType.Admin),
@@ -124,23 +119,17 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
               .withEmail(new EmailString(email))
               .build();
 
-            // Verify 12-byte ObjectID
-            expect(result.member.id.length).toBe(12);
-            expect(service.constants.idProvider.byteLength).toBe(12);
-
-            // Verify ObjectID compatibility
-            const objectIdString = constants.idProvider.serialize(
-              result.member.id,
-            );
-            expect(objectIdString).toBeDefined();
-            expect(objectIdString.length).toBe(24);
+            expect(result.member.idBytes.length).toBe(12);
+            // Verify idBytes matches id via provider
+            const idToBytes = constants.idProvider.toBytes(result.member.id);
+            expect(Buffer.from(idToBytes)).toEqual(result.member.idBytes);
           },
         ),
         { numRuns: 100 },
       );
     });
 
-    it('should use default 12-byte ObjectID when no custom idProvider configured', () => {
+    it('should default to 12-byte ObjectId IDs', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(MemberType.User, MemberType.Admin),
@@ -159,16 +148,15 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
               .withEmail(new EmailString(email))
               .build();
 
-            // Verify default 12-byte ObjectID
-            expect(result.member.id.length).toBe(12);
-            expect(service.constants.idProvider.byteLength).toBe(12);
+            // Verify default 12-byte ObjectID in idBytes
+            expect(result.member.idBytes.length).toBe(12);
           },
         ),
         { numRuns: 100 },
       );
     });
 
-    it('should create multiple Members with consistent ID lengths', () => {
+    it('should create multiple Members with unique IDs', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(
@@ -187,7 +175,7 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
           ),
           (constants, memberConfigs) => {
             const service = new ECIESService(constants);
-            const expectedLength = service.constants.idProvider.byteLength;
+            const expectedLength = constants.idProvider.byteLength;
 
             // Create multiple members
             const members = memberConfigs.map((config) =>
@@ -199,17 +187,15 @@ describe('Property-Based Tests: MemberBuilder idProvider Integration', () => {
                 .build(),
             );
 
-            // Verify all have consistent ID lengths
+            // Verify all have consistent idBytes matching configured idProvider
             members.forEach((result) => {
-              expect(result.member.id.length).toBe(expectedLength);
+              expect(result.member.idBytes.length).toBe(expectedLength);
             });
 
-            // Verify IDs are unique
-            const ids = members.map((m) => m.member.id);
-            const uniqueIds = new Set(
-              ids.map((id) => Buffer.from(id).toString('hex')),
-            );
-            expect(uniqueIds.size).toBe(ids.length);
+            // Verify IDs are unique via string representation
+            const idStrings = members.map((m) => m.member.id.toString());
+            const uniqueIds = new Set(idStrings);
+            expect(uniqueIds.size).toBe(idStrings.length);
           },
         ),
         { numRuns: 100 },

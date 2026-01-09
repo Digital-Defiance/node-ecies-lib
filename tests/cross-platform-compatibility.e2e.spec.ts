@@ -1,5 +1,6 @@
 import { Constants } from '@digitaldefiance/ecies-lib';
 
+import { BufferIdProvider } from '../src/lib/id-providers/buffer-provider';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService } from '../src/services/ecies/service';
 import { EncryptionStream } from '../src/services/encryption-stream';
@@ -257,7 +258,10 @@ describe('Cross-Platform Compatibility', () => {
 
     it('should use correct byte order for multi-recipient header', async () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const idProvider = new BufferIdProvider(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+      );
+      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
       const recipients = [

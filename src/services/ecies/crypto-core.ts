@@ -42,6 +42,51 @@ export class EciesCryptoCore {
     config: IECIESConfig,
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
+    // Validate configuration parameters
+    if (!config) {
+      throw new Error('Configuration is required');
+    }
+
+    // Validate curve name
+    const validCurves = ['secp256k1', 'p256', 'p384', 'p521'];
+    if (config.curveName && !validCurves.includes(config.curveName)) {
+      throw new Error(
+        `Invalid curve name: ${config.curveName}. Valid curves: ${validCurves.join(', ')}`,
+      );
+    }
+
+    // Validate mnemonic strength
+    if (
+      config.mnemonicStrength &&
+      ![128, 160, 192, 224, 256].includes(config.mnemonicStrength)
+    ) {
+      throw new Error(
+        `Invalid mnemonic strength: ${config.mnemonicStrength}. Valid values: 128, 160, 192, 224, 256`,
+      );
+    }
+
+    // Validate symmetric algorithm
+    if (
+      config.symmetricAlgorithm &&
+      !['aes-256-gcm', 'aes-192-gcm', 'aes-128-gcm'].includes(
+        config.symmetricAlgorithm,
+      )
+    ) {
+      throw new Error(
+        `Invalid symmetric algorithm: ${config.symmetricAlgorithm}`,
+      );
+    }
+
+    // Validate symmetric key bits
+    if (
+      config.symmetricKeyBits &&
+      ![128, 192, 256].includes(config.symmetricKeyBits)
+    ) {
+      throw new Error(
+        `Invalid symmetric key bits: ${config.symmetricKeyBits}. Valid values: 128, 192, 256`,
+      );
+    }
+
     this._config = config;
     this._consts = eciesParams;
   }

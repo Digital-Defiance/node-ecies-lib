@@ -1,4 +1,5 @@
 import { ECIESError } from '@digitaldefiance/ecies-lib';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 import { Constants } from '../src/constants';
 import { AESGCMService } from '../src/services/aes-gcm';
@@ -70,23 +71,27 @@ describe('Security Fixes - Comprehensive', () => {
 
   describe('ECIES key validations', () => {
     it('should reject all-zeros public key', () => {
-      const zeroKey = Buffer.alloc(65);
-      zeroKey[0] = 0x04;
-      const data = Buffer.from('test');
+      withConsoleMocks({ mute: true }, () => {
+        const zeroKey = Buffer.alloc(65);
+        zeroKey[0] = 0x04;
+        const data = Buffer.from('test');
 
-      expect(() => {
-        ecies.encryptSimpleOrSingle(false, zeroKey, data);
-      }).toThrow(ECIESError);
+        expect(() => {
+          ecies.encryptSimpleOrSingle(false, zeroKey, data);
+        }).toThrow(ECIESError);
+      });
     });
 
     it('should reject all-zeros private key', () => {
-      const zeroKey = Buffer.alloc(32);
-      const data = Buffer.from('test');
-      const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, data);
+      withConsoleMocks({ mute: true }, () => {
+        const zeroKey = Buffer.alloc(32);
+        const data = Buffer.from('test');
+        const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, data);
 
-      expect(() => {
-        ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted);
-      }).toThrow(ECIESError);
+        expect(() => {
+          ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted);
+        }).toThrow(ECIESError);
+      });
     });
 
     it('should reject empty message', () => {
@@ -249,29 +254,33 @@ describe('Security Fixes - Comprehensive', () => {
 
   describe('Additional Security Validations', () => {
     it('should reject all-zeros public key', async () => {
-      const ecies = new ECIESService();
-      const message = Buffer.from('Test');
-      const zeroKey = Buffer.alloc(65);
+      withConsoleMocks({ mute: true }, () => {
+        const ecies = new ECIESService();
+        const message = Buffer.from('Test');
+        const zeroKey = Buffer.alloc(65);
 
-      expect(() =>
-        ecies.encryptSimpleOrSingle(false, zeroKey, message),
-      ).toThrow();
+        expect(() =>
+          ecies.encryptSimpleOrSingle(false, zeroKey, message),
+        ).toThrow();
+      });
     });
 
     it('should reject all-zeros private key', async () => {
-      const ecies = new ECIESService();
-      const mnemonic = ecies.generateNewMnemonic();
-      const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        Buffer.from('Test'),
-      );
-      const zeroKey = Buffer.alloc(32);
+      withConsoleMocks({ mute: true }, () => {
+        const ecies = new ECIESService();
+        const mnemonic = ecies.generateNewMnemonic();
+        const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
+        const encrypted = ecies.encryptSimpleOrSingle(
+          false,
+          keyPair.publicKey,
+          Buffer.from('Test'),
+        );
+        const zeroKey = Buffer.alloc(32);
 
-      expect(() =>
-        ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted),
-      ).toThrow();
+        expect(() =>
+          ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted),
+        ).toThrow();
+      });
     });
 
     it('should validate IV length strictly', () => {

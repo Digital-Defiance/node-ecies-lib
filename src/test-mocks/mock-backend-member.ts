@@ -5,9 +5,12 @@ import {
   MemberType,
   SecureBuffer,
   SecureString,
+  IIdProvider,
+  IECIESConstants,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
+import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { IMember } from '../interfaces';
 import { SignatureBuffer } from '../types';
@@ -23,7 +26,7 @@ const createMockWallet = (): Wallet =>
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
   }) as unknown as Wallet;
 
-export class MockBackendMember implements IMember<Buffer> {
+export class MockBackendMember implements IMember<Buffer, SignatureBuffer> {
   private _id: Buffer;
   private _type: MemberType;
   private _name: string;
@@ -35,6 +38,9 @@ export class MockBackendMember implements IMember<Buffer> {
   private _privateKey?: SecureBuffer;
   private _wallet?: Wallet;
   private _hasPrivateKey: boolean;
+  private _idProvider: IIdProvider<Buffer>;
+  private _votingPublicKey?: PublicKey;
+  private _votingPrivateKey?: PrivateKey;
 
   constructor(
     data: Partial<{
@@ -49,6 +55,9 @@ export class MockBackendMember implements IMember<Buffer> {
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
+      idProvider: IIdProvider<Buffer>;
+      votingPublicKey: PublicKey;
+      votingPrivateKey: PrivateKey;
     }> = {},
   ) {
     this._id = data.id || randomBytes(12);
@@ -68,6 +77,24 @@ export class MockBackendMember implements IMember<Buffer> {
       data.wallet ||
       (data.hasPrivateKey !== false ? createMockWallet() : undefined);
     this._hasPrivateKey = data.hasPrivateKey ?? !!this._privateKey;
+    this._idProvider =
+      data.idProvider ||
+      ({
+        byteLength: 12,
+        generate: () => randomBytes(12),
+        serialize: (id: Buffer) => id.toString('hex'),
+        deserialize: (str: string) => Buffer.from(str, 'hex'),
+        validate: () => true,
+        toBytes: (id: Buffer) => id,
+        fromBytes: (bytes: Uint8Array) => Buffer.from(bytes),
+        equals: (a: Buffer, b: Buffer) => a.equals(b),
+        clone: (id: Buffer) => Buffer.from(id),
+        idToString: (id: Buffer) => id.toString('hex'),
+        idFromString: (str: string) => Buffer.from(str, 'hex'),
+        name: 'MockIdProvider',
+      } as unknown as IIdProvider<Buffer>);
+    this._votingPublicKey = data.votingPublicKey;
+    this._votingPrivateKey = data.votingPrivateKey;
   }
 
   get id(): Buffer {
@@ -111,8 +138,68 @@ export class MockBackendMember implements IMember<Buffer> {
     return this._id;
   }
 
-  get constants(): import('@digitaldefiance/ecies-lib').IECIESConstants {
-    return {} as import('@digitaldefiance/ecies-lib').IECIESConstants;
+  get constants(): IECIESConstants {
+    return {} as IECIESConstants;
+  }
+
+  get idProvider(): IIdProvider<Buffer> {
+    return this._idProvider;
+  }
+
+  get walletOptional(): Wallet | undefined {
+    return this._wallet;
+  }
+
+  get hasVotingPrivateKey(): boolean {
+    return !!this._votingPrivateKey;
+  }
+
+  get votingPublicKey(): PublicKey | undefined {
+    return this._votingPublicKey;
+  }
+
+  get votingPrivateKey(): PrivateKey | undefined {
+    return this._votingPrivateKey;
+  }
+
+  loadVotingKeys(): void {
+    // Mock implementation - create mock Paillier keys
+    // In a real implementation, these would be proper Paillier key pairs
+    this._votingPublicKey = {
+      n: BigInt('123456789'),
+      g: BigInt('2'),
+      _n2: BigInt('15241578750190521'),
+      bitLength: 1024,
+      encrypt: () => BigInt('0'),
+      addition: () => BigInt('0'),
+      multiply: () => BigInt('0'),
+      plaintextAddition: () => BigInt('0'),
+    } as unknown as PublicKey;
+
+    this._votingPrivateKey = {
+      lambda: BigInt('987654321'),
+      mu: BigInt('456789123'),
+      publicKey: this._votingPublicKey,
+      bitLength: 1024,
+      decrypt: () => BigInt('0'),
+      getRandomGenerator: () => BigInt('2'),
+      n: BigInt('123456789'),
+      getRandomFactor: () => BigInt('1'),
+    } as unknown as PrivateKey;
+  }
+
+  unloadVotingKeys(): void {
+    this._votingPublicKey = undefined;
+    this._votingPrivateKey = undefined;
+  }
+
+  async deriveVotingKeys(): Promise<void> {
+    // Mock implementation
+    this.loadVotingKeys();
+  }
+
+  unloadVotingPrivateKey(): void {
+    this._votingPrivateKey = undefined;
   }
 
   getPublicKeyString(): string {
@@ -222,6 +309,9 @@ export class MockBackendMember implements IMember<Buffer> {
       dateCreated: Date;
       dateUpdated: Date;
       hasPrivateKey: boolean;
+      idProvider: IIdProvider<Buffer>;
+      votingPublicKey: PublicKey;
+      votingPrivateKey: PrivateKey;
     }> = {},
   ): MockBackendMember {
     return new MockBackendMember(overrides);

@@ -1,24 +1,65 @@
 /**
  * PollFactory Tests - Node.js
+ * Tests that PollFactory extends ecies-lib and returns node-ecies-lib Poll instances
  */
 import { generateRandomKeysSync as generateKeyPair } from 'paillier-bigint';
 import { PollFactory } from './factory';
-import { VotingMethod } from './types';
-import type { IMember } from './types';
+import { VotingMethod } from './enumerations';
+import { BufferIdProvider } from '../id-providers/buffer-provider';
+import type { IMember } from '../../interfaces/member';
+import type { PlatformID } from '../../interfaces';
 
 class MockMember implements IMember<Buffer> {
+  public readonly idProvider = new BufferIdProvider(32, 'MockBuffer');
+
   constructor(
     public readonly id: Buffer,
+    public readonly idBytes: Buffer,
     public readonly publicKey: Buffer,
     public readonly votingPublicKey: any,
     public readonly votingPrivateKey: any,
   ) {}
+
+  // Required properties from IMember
+  readonly type = 'user' as const;
+  readonly name = 'Test User';
+  readonly email = 'test@example.com' as any;
+  readonly wallet = null as any;
+  readonly constants = null as any;
+  readonly privateKey = undefined;
+
+  getPublicKeyString(): string {
+    return this.publicKey.toString('hex');
+  }
+
+  getIdString(): string {
+    return this.id.toString('hex');
+  }
+
   sign(_data: Buffer): Buffer {
     return Buffer.alloc(64);
   }
+
+  signData(_data: Buffer): Buffer {
+    return Buffer.alloc(64);
+  }
+
   verify(_signature: Buffer, _data: Buffer): boolean {
     return true;
   }
+
+  verifySignature(
+    _data: Buffer,
+    _signature: Buffer,
+    _publicKey: Buffer,
+  ): boolean {
+    return true;
+  }
+
+  encryptDataStream = null as any;
+  decryptDataStream = null as any;
+  encryptData = null as any;
+  decryptData = null as any;
 }
 
 describe('PollFactory', () => {
@@ -27,6 +68,7 @@ describe('PollFactory', () => {
   beforeAll(() => {
     const keyPair = generateKeyPair(512);
     authority = new MockMember(
+      Buffer.from([1]),
       Buffer.from([1]),
       Buffer.from([1]),
       keyPair.publicKey,
@@ -47,6 +89,12 @@ describe('PollFactory', () => {
       const poll2 = PollFactory.createPlurality(['A', 'B'], authority);
       expect(poll1.id).not.toEqual(poll2.id);
     });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.createPlurality(['A', 'B'], authority);
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
+      expect(poll.id).toBeInstanceOf(Buffer);
+    });
   });
 
   describe('createApproval', () => {
@@ -57,6 +105,11 @@ describe('PollFactory', () => {
       );
       expect(poll.method).toBe(VotingMethod.Approval);
       expect(poll.choices).toHaveLength(3);
+    });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.createApproval(['A', 'B'], authority);
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
     });
   });
 
@@ -71,6 +124,11 @@ describe('PollFactory', () => {
       const poll = PollFactory.createWeighted(['A', 'B'], authority, 100n);
       expect(poll).toBeDefined();
     });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.createWeighted(['A', 'B'], authority, 100n);
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
+    });
   });
 
   describe('createBorda', () => {
@@ -78,6 +136,11 @@ describe('PollFactory', () => {
       const poll = PollFactory.createBorda(['X', 'Y', 'Z'], authority);
       expect(poll.method).toBe(VotingMethod.Borda);
       expect(poll.choices).toEqual(['X', 'Y', 'Z']);
+    });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.createBorda(['A', 'B'], authority);
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
     });
   });
 
@@ -89,6 +152,11 @@ describe('PollFactory', () => {
       );
       expect(poll.method).toBe(VotingMethod.RankedChoice);
       expect(poll.choices).toHaveLength(4);
+    });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.createRankedChoice(['A', 'B', 'C'], authority);
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
     });
   });
 
@@ -111,11 +179,21 @@ describe('PollFactory', () => {
       );
       expect(poll.method).toBe(VotingMethod.Weighted);
     });
+
+    test('should return Poll instance with Buffer ID', () => {
+      const poll = PollFactory.create(
+        ['A', 'B'],
+        VotingMethod.Plurality,
+        authority,
+      );
+      expect(Buffer.isBuffer(poll.id)).toBe(true);
+    });
   });
 
   describe('Validation', () => {
     test('should reject authority without voting keys', () => {
       const badAuthority = new MockMember(
+        Buffer.from([1]),
         Buffer.from([1]),
         Buffer.from([1]),
         undefined,
@@ -177,6 +255,29 @@ describe('PollFactory', () => {
       const choices = ['Option #1', 'Option @2', 'Option $3'];
       const poll = PollFactory.createPlurality(choices, authority);
       expect(poll.choices).toEqual(choices);
+    });
+  });
+
+  describe('Buffer Type Verification', () => {
+    test('all factory methods should return polls with Buffer IDs', () => {
+      const methods = [
+        () => PollFactory.createPlurality(['A', 'B'], authority),
+        () => PollFactory.createApproval(['A', 'B'], authority),
+        () => PollFactory.createWeighted(['A', 'B'], authority, 100n),
+        () => PollFactory.createBorda(['A', 'B'], authority),
+        () => PollFactory.createRankedChoice(['A', 'B'], authority),
+      ];
+
+      methods.forEach((method) => {
+        const poll = method();
+        expect(Buffer.isBuffer(poll.id)).toBe(true);
+        expect(poll.id).toBeInstanceOf(Buffer);
+      });
+    });
+
+    test('poll IDs should be 16 bytes', () => {
+      const poll = PollFactory.createPlurality(['A', 'B'], authority);
+      expect(poll.id.length).toBe(16);
     });
   });
 });

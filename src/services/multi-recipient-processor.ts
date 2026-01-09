@@ -9,10 +9,11 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   IECIESConstants,
+  IIdProvider,
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
 
-import { Constants } from '../constants';
+import { getNodeRuntimeConfiguration } from '../constants';
 import type { PlatformID } from '../interfaces';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
@@ -50,20 +51,32 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
   private readonly eciesMultiRecipient: EciesMultiRecipient<TID>;
   private readonly constants: IMultiRecipientConstants;
   private readonly recipientIdSize: number;
+  private readonly idProvider: IIdProvider<TID>;
 
   constructor(
-    cryptoCore: EciesCryptoCore,
-    consts: IECIESConstants = Constants.ECIES,
+    cryptoCoreOrService: EciesCryptoCore | { core?: EciesCryptoCore },
+    idProvider?: IIdProvider<TID>,
+    consts?: IECIESConstants,
     aesGcm?: AESGCMService,
     eciesMultiRecipient?: EciesMultiRecipient<TID>,
   ) {
-    this.cryptoCore = cryptoCore;
-    this.consts = consts;
+    const core =
+      (cryptoCoreOrService as { core?: EciesCryptoCore })?.core ??
+      (cryptoCoreOrService as EciesCryptoCore);
+    this.cryptoCore = core;
+    this.consts = consts ?? core.consts;
+    const resolvedIdProvider =
+      idProvider ??
+      (getNodeRuntimeConfiguration().idProvider as IIdProvider<TID>);
+    this.idProvider = resolvedIdProvider;
+
     // Use injected dependencies or create defaults
     this.aesGcm = aesGcm ?? new AESGCMService();
     this.eciesMultiRecipient =
-      eciesMultiRecipient ?? new EciesMultiRecipient<TID>(cryptoCore);
-    this.recipientIdSize = consts.MULTIPLE.RECIPIENT_ID_SIZE;
+      eciesMultiRecipient ??
+      new EciesMultiRecipient<TID>(core, resolvedIdProvider);
+    this.recipientIdSize =
+      this.consts?.MULTIPLE?.RECIPIENT_ID_SIZE ?? resolvedIdProvider.byteLength;
     this.constants = getMultiRecipientConstants(this.recipientIdSize);
   }
 
@@ -79,14 +92,19 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
     // Convert IMultiRecipient to IMember-like objects
     // EciesMultiRecipient expects IMember[] which has id: Buffer and publicKey: Buffer
     // IMultiRecipient already matches this structure, so we can safely cast
-    const members: IMember<TID>[] = recipients.map(
-      (r) =>
-        ({
-          id: r.id,
-          publicKey: r.publicKey,
-          idBytes: Constants.idProvider.toBytes(r.id),
-        }) as IMember<TID>,
-    );
+    const members: IMember<TID>[] = recipients.map((r) => {
+      const idBytes = Buffer.isBuffer(r.id)
+        ? Buffer.from(r.id)
+        : r.id instanceof Uint8Array
+          ? Buffer.from(r.id)
+          : this.idProvider.toBytes(r.id);
+
+      return {
+        id: r.id,
+        publicKey: r.publicKey,
+        idBytes,
+      } as IMember<TID>;
+    });
 
     const result = this.eciesMultiRecipient.encryptMultiple(
       members,
@@ -124,7 +142,7 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
       dataToEncrypt = Buffer.concat([signature, data]);
     }
 
-    if (dataToEncrypt.length > this.consts.MAX_RAW_DATA_SIZE) {
+    if (dataToEncrypt.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
       throw new ECIESError(ECIESErrorTypeEnum.FileSizeTooLarge);
     }
 
@@ -224,9 +242,9 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
     const headerBytes = chunk.subarray(0, offset);
 
     // Encrypt data with AES-256-GCM using Header as AAD
-    const iv = randomBytes(this.consts.IV_SIZE);
+    const iv = randomBytes(this.cryptoCore.consts.IV_SIZE);
     const cipher = createCipheriv(
-      this.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
       iv,
     ) as AuthenticatedCipher;
@@ -367,7 +385,7 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
 
     // Decrypt with AAD
     const decipher = createDecipheriv(
-      this.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      this.cryptoCore.consts.SYMMETRIC_ALGORITHM_CONFIGURATION,
       symmetricKey,
       iv,
     ) as AuthenticatedDecipher;

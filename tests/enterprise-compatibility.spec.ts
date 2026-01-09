@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 import { getNodeRuntimeConfiguration } from '../src/constants';
 import { ECIESService } from '../src/services/ecies/service';
@@ -67,54 +68,64 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
 
   describe('Fuzzing & Robustness', () => {
     it('should handle random garbage data gracefully', () => {
-      const mnemonic = service.generateNewMnemonic();
-      const { wallet } = service.walletAndSeedFromMnemonic(mnemonic);
-      const privateKey = Buffer.from(wallet.getPrivateKey());
+      withConsoleMocks({ mute: true }, () => {
+        const mnemonic = service.generateNewMnemonic();
+        const { wallet } = service.walletAndSeedFromMnemonic(mnemonic);
+        const privateKey = Buffer.from(wallet.getPrivateKey());
 
-      for (let i = 0; i < 100; i++) {
-        const garbageLength = Math.floor(Math.random() * 1000) + 1;
-        const garbage = randomBytes(garbageLength);
+        for (let i = 0; i < 100; i++) {
+          const garbageLength = Math.floor(Math.random() * 1000) + 1;
+          const garbage = randomBytes(garbageLength);
 
-        expect(() => {
-          service.decryptSimpleOrSingleWithHeader(false, privateKey, garbage);
-        }).toThrow();
-      }
+          expect(() => {
+            service.decryptSimpleOrSingleWithHeader(false, privateKey, garbage);
+          }).toThrow();
+        }
+      });
     });
 
     it('should handle mutated valid ciphertexts', () => {
-      if (vectors.length === 0) return;
+      withConsoleMocks({ mute: true }, () => {
+        if (vectors.length === 0) return;
 
-      const vector = vectors[0];
-      const validEncrypted = Buffer.from(vector.encrypted, 'base64');
-      const privateKey = Buffer.from(vector.privateKey, 'hex');
+        const vector = vectors[0];
+        const validEncrypted = Buffer.from(vector.encrypted, 'base64');
+        const privateKey = Buffer.from(vector.privateKey, 'hex');
 
-      // Try flipping bits in various positions
-      for (let i = 0; i < 50; i++) {
-        const mutated = Buffer.from(validEncrypted);
-        const pos = Math.floor(Math.random() * mutated.length);
-        mutated[pos] ^= 0xff; // Flip bits
+        // Try flipping bits in various positions
+        for (let i = 0; i < 50; i++) {
+          const mutated = Buffer.from(validEncrypted);
+          const pos = Math.floor(Math.random() * mutated.length);
+          mutated[pos] ^= 0xff; // Flip bits
 
-        expect(() => {
-          service.decryptSimpleOrSingleWithHeader(false, privateKey, mutated);
-        }).toThrow();
-      }
+          expect(() => {
+            service.decryptSimpleOrSingleWithHeader(false, privateKey, mutated);
+          }).toThrow();
+        }
+      });
     });
 
     it('should handle truncated ciphertexts', () => {
-      if (vectors.length === 0) return;
+      withConsoleMocks({ mute: true }, () => {
+        if (vectors.length === 0) return;
 
-      const vector = vectors[0];
-      const validEncrypted = Buffer.from(vector.encrypted, 'base64');
-      const privateKey = Buffer.from(vector.privateKey, 'hex');
+        const vector = vectors[0];
+        const validEncrypted = Buffer.from(vector.encrypted, 'base64');
+        const privateKey = Buffer.from(vector.privateKey, 'hex');
 
-      // Try truncating at various lengths
-      for (let len = 0; len < validEncrypted.length; len += 5) {
-        const truncated = validEncrypted.subarray(0, len);
+        // Try truncating at various lengths
+        for (let len = 0; len < validEncrypted.length; len += 5) {
+          const truncated = validEncrypted.subarray(0, len);
 
-        expect(() => {
-          service.decryptSimpleOrSingleWithHeader(false, privateKey, truncated);
-        }).toThrow();
-      }
+          expect(() => {
+            service.decryptSimpleOrSingleWithHeader(
+              false,
+              privateKey,
+              truncated,
+            );
+          }).toThrow();
+        }
+      });
     });
   });
 

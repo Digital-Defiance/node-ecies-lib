@@ -1,7 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
 import { randomBytes } from 'crypto';
+import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 import { Constants } from '../src/constants';
+import { BufferIdProvider } from '../src/lib/id-providers/buffer-provider';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService } from '../src/services/ecies/service';
 import { MultiRecipientProcessor } from '../src/services/multi-recipient-processor';
@@ -102,7 +104,10 @@ describe('Cross-Platform Compatibility', () => {
   describe('Multi-Recipient Encryption Compatibility', () => {
     it('should produce consistent multi-recipient format', async () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const idProvider = new BufferIdProvider(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+      );
+      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
       const message = Buffer.from('Multi-recipient test');
       const keyPair1 = await cryptoCore.generateEphemeralKeyPair();
@@ -129,7 +134,10 @@ describe('Cross-Platform Compatibility', () => {
 
     it('should build header in consistent format', async () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const idProvider = new BufferIdProvider(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+      );
+      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
       const message = Buffer.from('Header format test');
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
@@ -156,7 +164,10 @@ describe('Cross-Platform Compatibility', () => {
 
     it('should parse header consistently', async () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const idProvider = new BufferIdProvider(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+      );
+      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
       const message = Buffer.from('Parse test');
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
@@ -253,7 +264,10 @@ describe('Cross-Platform Compatibility', () => {
   describe('Binary Format Consistency', () => {
     it('should use consistent byte ordering (big-endian)', async () => {
       const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const idProvider = new BufferIdProvider(
+        Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+      );
+      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
 
       const message = Buffer.from('Byte order test');
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
@@ -310,30 +324,32 @@ describe('Cross-Platform Compatibility', () => {
     });
 
     it('should validate key formats consistently', async () => {
-      const ecies = new ECIESService({ curveName: 'secp256k1' });
-      const message = Buffer.from('Test');
+      withConsoleMocks({ mute: true }, () => {
+        const ecies = new ECIESService({ curveName: 'secp256k1' });
+        const message = Buffer.from('Test');
 
-      const invalidPublicKey = Buffer.alloc(32);
-      expect(() =>
-        ecies.encryptSimpleOrSingle(false, invalidPublicKey, message),
-      ).toThrow();
+        const invalidPublicKey = Buffer.alloc(32);
+        expect(() =>
+          ecies.encryptSimpleOrSingle(false, invalidPublicKey, message),
+        ).toThrow();
 
-      const mnemonic = ecies.generateNewMnemonic();
-      const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-      const encrypted = ecies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
-
-      const invalidPrivateKey = Buffer.alloc(16);
-      expect(() =>
-        ecies.decryptSimpleOrSingleWithHeader(
+        const mnemonic = ecies.generateNewMnemonic();
+        const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
+        const encrypted = ecies.encryptSimpleOrSingle(
           false,
-          invalidPrivateKey,
-          encrypted,
-        ),
-      ).toThrow();
+          keyPair.publicKey,
+          message,
+        );
+
+        const invalidPrivateKey = Buffer.alloc(16);
+        expect(() =>
+          ecies.decryptSimpleOrSingleWithHeader(
+            false,
+            invalidPrivateKey,
+            encrypted,
+          ),
+        ).toThrow();
+      });
     });
   });
 });

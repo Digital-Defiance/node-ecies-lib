@@ -440,6 +440,60 @@ The voting system in node-ecies-lib is **100% compatible** with the browser-base
 
 Data encrypted in Node.js can be tallied in the browser and vice versa.
 
+## Documentation
+
+### Core Documentation
+
+- **README.md** (this file) - Overview and quick start
+- **docs/GOVERNMENT-REQUIREMENTS.md** - Complete EARS specification with implementation status
+- **docs/PHASE2-README.md** - Voter registration and eligibility system (design phase)
+- **docs/PHASE2-SUMMARY.md** - Executive summary of Phase 2 features
+
+### Examples
+
+The `examples.ts` file contains comprehensive usage examples:
+
+**Basic Voting Methods:**
+- `examplePlurality()` - Simple majority voting
+- `exampleRankedChoice()` - Instant runoff voting (IRV)
+- `exampleWeighted()` - Stakeholder voting with weights
+- `exampleBorda()` - Ranked voting with point allocation
+- `exampleApproval()` - Multi-choice approval voting
+- `exampleReceipts()` - Receipt generation and verification
+
+**Node.js-Specific Examples:**
+- `exampleFilePersistence()` - Save/load encrypted votes to/from disk
+- `exampleStreamProcessing()` - Process large voter datasets using streams
+- `exampleBufferCrypto()` - Cryptographic operations with Buffer
+- `exampleAuditLogExport()` - Export audit logs to JSON files
+
+```typescript
+import {
+  examplePlurality,
+  exampleFilePersistence,
+  exampleBufferCrypto
+} from '@digitaldefiance/node-ecies-lib/voting/examples';
+
+// Run examples
+await examplePlurality();
+await exampleFilePersistence();
+await exampleBufferCrypto();
+```
+
+### Platform Differences
+
+This Node.js implementation differs from the browser implementation in these ways:
+
+| Feature | Browser (ecies-lib) | Node.js (node-ecies-lib) |
+|---------|---------------------|--------------------------|
+| Binary Data | `Uint8Array` | `Buffer` |
+| Crypto API | Web Crypto API | Node.js `crypto` module |
+| File I/O | Not available | Native `fs` module |
+| Streams | Not available | Native Node.js streams |
+| Performance | Browser-optimized | V8-optimized |
+
+All cryptographic operations, security properties, and voting methods are identical between platforms.
+
 ## License
 
 MIT

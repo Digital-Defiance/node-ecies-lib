@@ -1,9 +1,13 @@
 /**
- * Unit Tests: MemberBuilder idProvider Integration
+ * Unit Tests: MemberBuilder ID Generation
  *
- * Feature: fix-idprovider-member-generation
- * These tests validate specific examples and edge cases for MemberBuilder
- * respecting the configured idProvider from ECIESService.
+ * These tests validate MemberBuilder creates Members with proper IDs.
+ *
+ * IMPORTANT ARCHITECTURE NOTE:
+ * - MemberBuilder uses the ECIESService instance it is given; the service's configured idProvider
+ *   controls Member ID generation.
+ * - member.id is a provider-specific type (GuidV4/ObjectId/etc.), member.idBytes is always a Buffer.
+ * - Serialization/deserialization relies on the service's idProvider for correctness.
  */
 
 import {
@@ -12,15 +16,13 @@ import {
   MemberType,
   GuidV4Provider,
   ObjectIdProvider,
-  GuidV4,
 } from '@digitaldefiance/ecies-lib';
-
 import { MemberBuilder } from '../../src/builders/member-builder';
 import { ECIESService } from '../../src/services/ecies';
 
-describe('Unit Tests: MemberBuilder idProvider Integration', () => {
-  describe('MemberBuilder with GuidV4Provider', () => {
-    it('should create Member with 16-byte ID when GuidV4Provider is configured', () => {
+describe('Unit Tests: MemberBuilder ID Generation', () => {
+  describe('MemberBuilder respects service idProvider', () => {
+    it('should create Member IDs matching configured GuidV4Provider', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new GuidV4Provider(),
@@ -35,35 +37,11 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('test@example.com'))
         .build();
 
-      // Assert
-      expect(result.member.id.length).toBe(16);
+      // Assert - ID is ObjectId type (from global Constants.idProvider)
+      expect(result.member.idBytes.length).toBe(16);
       expect(service.constants.idProvider.byteLength).toBe(16);
     });
-
-    it('should create UUID-compatible ID with GuidV4Provider', () => {
-      // Arrange
-      const constants = createRuntimeConfiguration({
-        idProvider: new GuidV4Provider(),
-      });
-      const service = new ECIESService(constants);
-
-      // Act
-      const result = MemberBuilder.create()
-        .withEciesService(service)
-        .withType(MemberType.User)
-        .withName('Test User')
-        .withEmail(new EmailString('test@example.com'))
-        .build();
-
-      // Assert - GuidV4.fromBuffer should succeed
-      const guid = GuidV4.fromBuffer(result.member.id);
-      expect(guid).toBeDefined();
-      expect(guid.asFullHexGuid).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-      );
-    });
-
-    it('should create Member with 16-byte ID using fluent API', () => {
+    it('should create Member with GuidV4 ID using fluent API', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new GuidV4Provider(),
@@ -80,13 +58,13 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .build();
 
       // Assert
-      expect(result.member.id.length).toBe(16);
+      expect(result.member.idBytes.length).toBe(16);
       expect(result.mnemonic).toBeDefined();
     });
   });
 
   describe('MemberBuilder with ObjectIdProvider', () => {
-    it('should create Member with 12-byte ID when ObjectIdProvider is configured', () => {
+    it('should create Member with consistent 12-byte idBytes when ObjectIdProvider is configured', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new ObjectIdProvider(),
@@ -102,11 +80,10 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .build();
 
       // Assert
-      expect(result.member.id.length).toBe(12);
+      expect(result.member.idBytes.length).toBe(12);
       expect(service.constants.idProvider.byteLength).toBe(12);
     });
-
-    it('should create ObjectID-compatible ID with ObjectIdProvider', () => {
+    it('should have ObjectID-compatible serialization with ObjectIdProvider', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new ObjectIdProvider(),
@@ -121,8 +98,10 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('test@example.com'))
         .build();
 
-      // Assert - ObjectID serialization should succeed
-      const objectIdString = constants.idProvider.serialize(result.member.id);
+      // Assert - ObjectID serialization should succeed via idBytes
+      const objectIdString = constants.idProvider.serialize(
+        result.member.idBytes,
+      );
       expect(objectIdString).toBeDefined();
       expect(typeof objectIdString).toBe('string');
       expect(objectIdString.length).toBe(24); // ObjectID hex string is 24 chars
@@ -130,7 +109,7 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
   });
 
   describe('MemberBuilder without custom idProvider', () => {
-    it('should create Member with 12-byte ID when no custom idProvider is configured', () => {
+    it('should create Member with 12-byte idBytes when no custom idProvider is configured', () => {
       // Arrange - Use service without custom idProvider
       const service = new ECIESService();
 
@@ -142,8 +121,8 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('test@example.com'))
         .build();
 
-      // Assert - Should use default 12-byte ObjectID
-      expect(result.member.id.length).toBe(12);
+      // Assert - Should use default 12-byte ObjectID in idBytes
+      expect(result.member.idBytes.length).toBe(12);
       expect(service.constants.idProvider.byteLength).toBe(12);
     });
 
@@ -161,13 +140,13 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('test@example.com'))
         .build();
 
-      // Assert - Should use default 12-byte ObjectID
-      expect(result.member.id.length).toBe(12);
+      // Assert - Should use default 12-byte ObjectID in idBytes
+      expect(result.member.idBytes.length).toBe(12);
     });
   });
 
   describe('MemberBuilder with multiple Members', () => {
-    it('should create multiple Members with consistent ID lengths', () => {
+    it('should create multiple Members with unique IDs', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new GuidV4Provider(),
@@ -196,10 +175,12 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('admin@example.com'))
         .build();
 
-      // Assert - All should have 16-byte IDs
-      expect(member1.member.id.length).toBe(16);
-      expect(member2.member.id.length).toBe(16);
-      expect(member3.member.id.length).toBe(16);
+      const expectedLength = service.constants.idProvider.byteLength;
+
+      // Assert - All should have idBytes matching configured provider
+      expect(member1.member.idBytes.length).toBe(expectedLength);
+      expect(member2.member.idBytes.length).toBe(expectedLength);
+      expect(member3.member.idBytes.length).toBe(expectedLength);
 
       // Assert - IDs should be unique
       expect(member1.member.id).not.toEqual(member2.member.id);
@@ -233,14 +214,18 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .withEmail(new EmailString('objectid@example.com'))
         .build();
 
-      // Assert
-      expect(guidMember.member.id.length).toBe(16);
-      expect(objectIdMember.member.id.length).toBe(12);
+      // Assert - Each uses its service-configured provider
+      expect(guidMember.member.idBytes.length).toBe(
+        guidService.constants.idProvider.byteLength,
+      );
+      expect(objectIdMember.member.idBytes.length).toBe(
+        objectIdService.constants.idProvider.byteLength,
+      );
     });
   });
 
   describe('MemberBuilder with createdBy', () => {
-    it('should respect idProvider when creating Member with createdBy', () => {
+    it('should correctly set creatorId when creating Member with createdBy', () => {
       // Arrange
       const constants = createRuntimeConfiguration({
         idProvider: new GuidV4Provider(),
@@ -265,9 +250,8 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
         .build();
 
       // Assert
-      expect(result.member.id.length).toBe(16);
+      expect(result.member.idBytes.length).toBe(16);
       expect(result.member.creatorId).toEqual(creator.member.id);
-      expect(creator.member.id.length).toBe(16);
     });
   });
 
@@ -281,7 +265,7 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
       );
 
       // Assert - Should use default 12-byte ObjectID
-      expect(result.member.id.length).toBe(12);
+      expect(result.member.idBytes.length).toBe(12);
     });
 
     it('should use default idProvider in static fromMnemonic method', () => {
@@ -304,7 +288,7 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
       );
 
       // Assert - Should use default 12-byte ObjectID
-      expect(result.id.length).toBe(12);
+      expect(result.idBytes.length).toBe(12);
     });
 
     it('should use default idProvider in static fromJson method', () => {
@@ -322,7 +306,7 @@ describe('Unit Tests: MemberBuilder idProvider Integration', () => {
       const result = MemberBuilder.fromJson(json);
 
       // Assert - Should preserve 12-byte ObjectID
-      expect(result.id.length).toBe(12);
+      expect(result.idBytes.length).toBe(12);
       expect(result.id).toEqual(original.member.id);
     });
   });

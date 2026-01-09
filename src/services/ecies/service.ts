@@ -8,16 +8,17 @@ import {
   IConstants,
   IECIESConfig,
   IECIESConstants,
+  IIdProvider,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 
-// Import all the modular components
-import { Constants } from '../../constants';
-import type { PlatformID } from '../../interfaces';
+import { Constants, getNodeRuntimeConfiguration } from '../../constants';
 import type { IMember } from '../../interfaces/member';
 import type { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import type { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
+import type { PlatformID } from '../../interfaces/platform-id';
+import type { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import type { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
 import type { IWalletSeed } from '../../interfaces/wallet-seed';
 import { SignatureBuffer, SignatureString } from '../../types';
@@ -29,7 +30,31 @@ import { EciesSingleRecipientCore } from './single-recipient';
 import { EciesUtilities } from './utilities';
 
 /**
- * Unified ECIES service that integrates all the modular components
+ * Node.js-compatible ECIES service that mirrors the browser-side functionality
+ * Uses Node.js crypto APIs and Buffer types for server-side compatibility
+ *
+ * ## Enhanced Type Safety (v3.8+)
+ *
+ * The service now provides stronger type guarantees and validation:
+ * - Generic TID parameter ensures type consistency between service and members
+ * - Construction-time validation verifies idProvider compatibility
+ * - Strongly typed `idProvider` getter returns `IIdProvider<TID>`
+ * - Comprehensive validation of all idProvider methods
+ *
+ * @template TID - The ID type used by the configured idProvider (e.g., ObjectId, Buffer)
+ *
+ * @example
+ * ```typescript
+ * // ObjectId-based service with type safety
+ * const service = new ECIESService<ObjectId>();
+ * const member = Member.newMember(service, ...);
+ * // member.id is typed as ObjectId
+ *
+ * // GUID-based service
+ * const guidConfig = createNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+ * const guidService = new ECIESService<Buffer>(guidConfig);
+ * // guidService.idProvider is typed as IIdProvider<Buffer>
+ * ```
  */
 export class ECIESService<TID extends PlatformID = Buffer> {
   protected readonly _config: IECIESConfig;
@@ -39,11 +64,17 @@ export class ECIESService<TID extends PlatformID = Buffer> {
   protected readonly singleRecipient: EciesSingleRecipientCore;
   protected readonly multiRecipient: EciesMultiRecipient<TID>;
   protected readonly utilities: EciesUtilities;
+  protected readonly eciesConsts: IECIESConstants;
+
+  // Cache validation results to avoid redundant validation
+  private static validatedProviders = new WeakSet<IIdProvider<unknown>>();
 
   constructor(
     config?: Partial<IECIESConfig> | IConstants,
     eciesParams: IECIESConstants = Constants.ECIES,
   ) {
+    this.eciesConsts = eciesParams;
+
     // Type guard to check if config is IConstants
     const isFullConfig = this.isIConstants(config);
 
@@ -51,7 +82,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     if (isFullConfig) {
       this._constants = config;
     } else {
-      this._constants = Constants;
+      this._constants = getNodeRuntimeConfiguration();
     }
 
     // Extract ECIES config from IConstants or use config directly
@@ -60,30 +91,155 @@ export class ECIESService<TID extends PlatformID = Buffer> {
           curveName: config.ECIES.CURVE_NAME,
           primaryKeyDerivationPath: config.ECIES.PRIMARY_KEY_DERIVATION_PATH,
           mnemonicStrength: config.ECIES.MNEMONIC_STRENGTH,
-          symmetricAlgorithm: config.ECIES.SYMMETRIC.ALGORITHM,
+          symmetricAlgorithm: config.ECIES.SYMMETRIC_ALGORITHM_CONFIGURATION,
           symmetricKeyBits: config.ECIES.SYMMETRIC.KEY_BITS,
           symmetricKeyMode: config.ECIES.SYMMETRIC.MODE,
         }
       : (config as Partial<IECIESConfig> | undefined) || {};
 
-    const eciesConsts = eciesParams || Constants.ECIES;
-
     this._config = {
-      curveName: eciesConsts.CURVE_NAME,
-      primaryKeyDerivationPath: eciesConsts.PRIMARY_KEY_DERIVATION_PATH,
-      mnemonicStrength: eciesConsts.MNEMONIC_STRENGTH,
-      symmetricAlgorithm: eciesConsts.SYMMETRIC.ALGORITHM,
-      symmetricKeyBits: eciesConsts.SYMMETRIC.KEY_BITS,
-      symmetricKeyMode: eciesConsts.SYMMETRIC.MODE,
+      curveName: this.eciesConsts.CURVE_NAME,
+      primaryKeyDerivationPath: this.eciesConsts.PRIMARY_KEY_DERIVATION_PATH,
+      mnemonicStrength: this.eciesConsts.MNEMONIC_STRENGTH,
+      symmetricAlgorithm: this.eciesConsts.SYMMETRIC_ALGORITHM_CONFIGURATION,
+      symmetricKeyBits: this.eciesConsts.SYMMETRIC.KEY_BITS,
+      symmetricKeyMode: this.eciesConsts.SYMMETRIC.MODE,
       ...eciesConfig,
     };
 
-    // Initialize all components
-    this.cryptoCore = new EciesCryptoCore(this._config, eciesParams);
+    // Initialize components
+    this.cryptoCore = new EciesCryptoCore(this._config, this.eciesConsts);
     this.signature = new EciesSignature(this.cryptoCore);
     this.singleRecipient = new EciesSingleRecipientCore(this._config);
-    this.multiRecipient = new EciesMultiRecipient(this.cryptoCore);
+    this.multiRecipient = new EciesMultiRecipient(
+      this.cryptoCore,
+      this._constants.idProvider as IIdProvider<TID>,
+    );
     this.utilities = new EciesUtilities();
+
+    // Validate idProvider configuration consistency
+    this.validateIdProviderConfiguration();
+  }
+
+  /**
+   * Validates that the idProvider configuration is consistent and will work correctly
+   * with the expected TID type. This catches configuration errors early.
+   * Uses caching to avoid redundant validation of the same idProvider instance.
+   */
+  private validateIdProviderConfiguration(): void {
+    const idProvider = this._constants.idProvider;
+    const memberIdLength = this._constants.idProvider.byteLength;
+
+    // Ensure idProvider exists
+    if (!idProvider) {
+      throw new Error(
+        'ID provider is required but not configured in service constants',
+      );
+    }
+
+    // Check if this idProvider has already been validated
+    if (
+      ECIESService.validatedProviders.has(idProvider as IIdProvider<unknown>)
+    ) {
+      // Still need to check byte length compatibility for this specific service
+      if (idProvider.byteLength !== memberIdLength) {
+        const message =
+          `ID provider byte length (${idProvider.byteLength}) does not match expected length (${memberIdLength}). This will cause runtime errors in Member creation. ` +
+          `Consider updating your configuration to use an idProvider with ${memberIdLength}-byte IDs, or update the configuration to ${idProvider.byteLength}.`;
+        throw new Error(message);
+      }
+      return; // Skip expensive validation
+    }
+
+    // Ensure idProvider byteLength matches expected length
+    if (idProvider.byteLength !== memberIdLength) {
+      const message =
+        `ID provider byte length (${idProvider.byteLength}) does not match expected length (${memberIdLength}). This will cause runtime errors in Member creation. ` +
+        `Consider updating your configuration to use an idProvider with ${memberIdLength}-byte IDs, or update the configuration to ${idProvider.byteLength}.`;
+      throw new Error(message);
+    }
+
+    // Validate that idProvider has required methods
+    const requiredMethods = [
+      'generate',
+      'serialize',
+      'deserialize',
+      'validate',
+      'toBytes',
+      'fromBytes',
+    ];
+    for (const method of requiredMethods) {
+      if (
+        typeof (idProvider as unknown as Record<string, unknown>)[method] !==
+        'function'
+      ) {
+        throw new Error(`ID provider is missing required method: ${method}`);
+      }
+    }
+
+    // Enhanced validation: Test that idProvider can generate and process IDs correctly
+    try {
+      const testId = idProvider.generate();
+      if (testId.length !== idProvider.byteLength) {
+        throw new Error(
+          `Generated ID length (${testId.length}) does not match declared byteLength (${idProvider.byteLength})`,
+        );
+      }
+
+      // Test validation method
+      if (!idProvider.validate(testId)) {
+        throw new Error('Generated ID failed validation check');
+      }
+
+      // Test round-trip serialization
+      const serialized = idProvider.serialize(testId);
+      if (typeof serialized !== 'string') {
+        throw new Error('Serialization must return a string');
+      }
+
+      const deserialized = idProvider.deserialize(serialized);
+      if (deserialized.length !== testId.length) {
+        throw new Error(
+          `Serialization round-trip failed: expected ${testId.length} bytes, got ${deserialized.length} bytes`,
+        );
+      }
+
+      // Test byte conversion methods with proper type conversion
+      // First convert the raw bytes to the native ID type
+      const nativeId = idProvider.fromBytes(testId);
+      const idAsBytes = idProvider.toBytes(nativeId);
+      if (idAsBytes.length !== idProvider.byteLength) {
+        throw new Error(
+          `toBytes() returned incorrect length: expected ${idProvider.byteLength}, got ${idAsBytes.length}`,
+        );
+      }
+
+      // Test round-trip conversion
+      const idFromBytes = idProvider.fromBytes(idAsBytes);
+      const backToBytes = idProvider.toBytes(idFromBytes);
+      if (backToBytes.length !== idAsBytes.length) {
+        throw new Error('Byte conversion round-trip failed');
+      }
+
+      // Enhanced: Test type consistency for TID
+      // Verify that the native ID type can be used as TID
+      const typedId = nativeId as TID;
+      const reConvertedBytes = idProvider.toBytes(typedId);
+      if (reConvertedBytes.length !== idProvider.byteLength) {
+        throw new Error(
+          `TID type conversion failed: expected ${idProvider.byteLength} bytes, got ${reConvertedBytes.length}`,
+        );
+      }
+
+      // Mark this idProvider as validated to avoid redundant checks
+      ECIESService.validatedProviders.add(idProvider as IIdProvider<unknown>);
+    } catch (error) {
+      const message =
+        `ID provider validation failed: ${error instanceof Error ? error.message : String(error)}. ` +
+        `Ensure your idProvider implementation correctly handles generate(), serialize(), deserialize(), validate(), toBytes(), and fromBytes() methods, ` +
+        `and that the TID type parameter matches the idProvider's native type.`;
+      throw new Error(message);
+    }
   }
 
   /**
@@ -111,11 +267,11 @@ export class ECIESService<TID extends PlatformID = Buffer> {
         'function' &&
       typeof (idProvider as Record<string, unknown>)['byteLength'] === 'number';
 
-    const hasMemberIdLength =
-      'MEMBER_ID_LENGTH' in configRecord &&
-      typeof configRecord['MEMBER_ID_LENGTH'] === 'number';
+    const hasOtherConstants =
+      'OBJECT_ID_LENGTH' in configRecord &&
+      typeof configRecord['OBJECT_ID_LENGTH'] === 'number';
 
-    return hasECIES && hasIdProvider && hasMemberIdLength;
+    return hasECIES && hasIdProvider && hasOtherConstants;
   }
 
   public get core(): EciesCryptoCore {
@@ -131,52 +287,50 @@ export class ECIESService<TID extends PlatformID = Buffer> {
   }
 
   /**
-   * The name of the elliptic curve used for ECIES encryption/decryption
+   * Get the ID provider configured for this service with strong typing.
+   * The returned provider is guaranteed to work with TID type.
    */
+  public get idProvider(): IIdProvider<TID> {
+    return this._constants.idProvider as IIdProvider<TID>;
+  }
+
   public get curveName(): string {
     return this._config.curveName;
   }
 
-  // === Key Management Methods ===
-
   public generateNewMnemonic(): SecureString {
     return this.cryptoCore.generateNewMnemonic();
-  }
-
-  public walletFromSeed(seed: Buffer): Wallet {
-    return this.cryptoCore.walletFromSeed(seed);
   }
 
   public walletAndSeedFromMnemonic(mnemonic: SecureString): IWalletSeed {
     return this.cryptoCore.walletAndSeedFromMnemonic(mnemonic);
   }
 
-  public walletToSimpleKeyPairBuffer(wallet: Wallet) {
+  public walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
     return this.cryptoCore.walletToSimpleKeyPairBuffer(wallet);
   }
 
-  public seedToSimpleKeyPairBuffer(seed: Buffer) {
+  public seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPairBuffer {
     return this.cryptoCore.seedToSimpleKeyPairBuffer(seed);
   }
 
-  public mnemonicToSimpleKeyPairBuffer(mnemonic: SecureString) {
+  public seedToSimpleKeyPair(seed: Buffer): ISimpleKeyPairBuffer {
+    return this.seedToSimpleKeyPairBuffer(seed);
+  }
+
+  public mnemonicToSimpleKeyPairBuffer(
+    mnemonic: SecureString,
+  ): ISimpleKeyPairBuffer {
     return this.cryptoCore.mnemonicToSimpleKeyPairBuffer(mnemonic);
   }
 
-  public mnemonicToSimpleKeyPair(mnemonic: SecureString) {
+  public mnemonicToSimpleKeyPair(mnemonic: SecureString): ISimpleKeyPairBuffer {
     return this.mnemonicToSimpleKeyPairBuffer(mnemonic);
   }
 
-  /**
-   * Get compressed public key from private key
-   * @param privateKey The private key
-   * @returns Compressed public key (33 bytes with prefix)
-   */
   public getPublicKey(privateKey: Buffer): Buffer {
     return this.cryptoCore.getPublicKey(privateKey);
   }
-
-  // === Core Encryption/Decryption Methods ===
 
   public encryptSimpleOrSingle(
     encryptSimple: boolean,
@@ -192,13 +346,36 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     );
   }
 
+  /**
+   * Generic encrypt method
+   */
+  public encrypt(
+    encryptionType: EciesEncryptionTypeEnum,
+    recipientPublicKey: Buffer,
+    message: Buffer,
+    preamble?: Buffer,
+  ): Buffer {
+    if (encryptionType === EciesEncryptionTypeEnum.Multiple) {
+      throw new Error(
+        getEciesI18nEngine().translate(
+          EciesComponentId,
+          EciesStringKey.Error_ECIESError_MultipleEncryptionTypeNotSupportedInSingleRecipientMode,
+        ),
+      );
+    }
+    return this.singleRecipient.encrypt(
+      encryptionType === EciesEncryptionTypeEnum.Simple,
+      recipientPublicKey,
+      message,
+      preamble,
+    );
+  }
+
   public parseSingleEncryptedHeader(
     encryptionType: EciesEncryptionTypeEnum,
     data: Buffer,
     preambleSize: number = 0,
-    options?: {
-      dataLength?: number;
-    },
+    options?: { dataLength?: number },
   ): ISingleEncryptedParsedHeader {
     const { header } = this.singleRecipient.parseEncryptedMessage(
       encryptionType,
@@ -214,9 +391,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     privateKey: Buffer,
     encryptedData: Buffer,
     preambleSize: number = 0,
-    options?: {
-      dataLength?: number;
-    },
+    options?: { dataLength?: number },
   ): Buffer {
     return this.singleRecipient.decryptWithHeader(
       decryptSimple
@@ -234,9 +409,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     privateKey: Buffer,
     encryptedData: Buffer,
     preambleSize: number = 0,
-    options?: {
-      dataLength?: number;
-    },
+    options?: { dataLength?: number },
   ): { decrypted: Buffer; consumedBytes: number } {
     return this.singleRecipient.decryptWithHeaderEx(
       encryptionType,
@@ -263,12 +436,8 @@ export class ECIESService<TID extends PlatformID = Buffer> {
       encrypted,
       aad,
     );
-
-    // Return an object with a 'decrypted' property for compatibility with existing code
     return { decrypted, ciphertextLength: encrypted.length };
   }
-
-  // === Signature Methods ===
 
   public signMessage(privateKey: Buffer, data: Buffer): SignatureBuffer {
     return this.signature.signMessage(privateKey, data);
@@ -294,13 +463,46 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     return this.signature.signatureBufferToSignatureString(signatureBuffer);
   }
 
-  // === Multi-Recipient Methods ===
   public async encryptMultiple(
     recipients: Array<IMember<TID>>,
     message: Buffer,
     preamble?: Buffer,
   ): Promise<IMultiEncryptedMessage<TID>> {
     return this.multiRecipient.encryptMultiple(recipients, message, preamble);
+  }
+
+  /**
+   * Encrypt a symmetric key for a recipient using an ephemeral private key
+   */
+  public async encryptKey(
+    receiverPublicKey: Buffer,
+    messageSymmetricKey: Buffer,
+    ephemeralPrivateKey: Buffer,
+    aad?: Buffer,
+  ): Promise<Buffer> {
+    return this.multiRecipient.encryptKey(
+      receiverPublicKey,
+      messageSymmetricKey,
+      ephemeralPrivateKey,
+      aad,
+    );
+  }
+
+  /**
+   * Decrypt a symmetric key using an ephemeral public key
+   */
+  public async decryptKey(
+    privateKey: Buffer,
+    encryptedKey: Buffer,
+    ephemeralPublicKey: Buffer,
+    aad?: Buffer,
+  ): Promise<Buffer> {
+    return this.multiRecipient.decryptKey(
+      privateKey,
+      encryptedKey,
+      ephemeralPublicKey,
+      aad,
+    );
   }
 
   public decryptMultipleECIEForRecipient(
@@ -339,49 +541,73 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     return this.multiRecipient.parseMultiEncryptedBuffer(data);
   }
 
-  // === Utility Methods ===
-
   public computeEncryptedLengthFromDataLength(
     dataLength: number,
     encryptionMode: EciesEncryptionType,
     recipientCount?: number,
   ): number {
-    return this.utilities.computeEncryptedLengthFromDataLength(
-      dataLength,
-      encryptionMode,
-      recipientCount,
-    );
+    if (dataLength < 0) {
+      const engine = getEciesI18nEngine();
+      throw new Error(
+        engine.translate(
+          EciesComponentId,
+          EciesStringKey.Error_Service_InvalidDataLength,
+        ),
+      );
+    }
+
+    switch (encryptionMode) {
+      case 'simple':
+        return dataLength + this.eciesConsts.SIMPLE.FIXED_OVERHEAD_SIZE;
+      case 'single':
+        return dataLength + this.eciesConsts.SINGLE.FIXED_OVERHEAD_SIZE;
+      case 'multiple':
+        // Basic calculation for multiple recipients
+        return (
+          dataLength +
+          this.eciesConsts.MULTIPLE.FIXED_OVERHEAD_SIZE +
+          (recipientCount ?? 1) * this.eciesConsts.MULTIPLE.ENCRYPTED_KEY_SIZE
+        );
+      default: {
+        const engine = getEciesI18nEngine();
+        throw new Error(
+          engine.translate(
+            EciesComponentId,
+            EciesStringKey.Error_Service_InvalidEncryptionType,
+          ),
+        );
+      }
+    }
   }
 
   public computeDecryptedLengthFromEncryptedDataLength(
     encryptedDataLength: number,
     padding?: number,
   ): number {
-    return this.utilities.computeDecryptedLengthFromEncryptedDataLength(
-      encryptedDataLength,
-      padding,
-    );
-  }
-
-  public encrypt(
-    encryptionType: EciesEncryptionType,
-    recipient: IMember<TID>,
-    message: Buffer,
-    preamble?: Buffer,
-  ): Buffer {
-    if (encryptionType === 'multiple') {
+    if (encryptedDataLength < 0) {
+      const engine = getEciesI18nEngine();
       throw new Error(
-        getEciesI18nEngine().translate(
+        engine.translate(
           EciesComponentId,
-          EciesStringKey.Error_ECIESError_MultipleEncryptionTypeNotSupportedInSingleRecipientMode,
+          EciesStringKey.Error_Service_InvalidEncryptedDataLength,
         ),
       );
     }
-    return this.singleRecipient.encrypt(
-      encryptionType === 'simple',
-      recipient.publicKey,
-      message,
-      preamble,
-    );
+
+    const overhead = this.eciesConsts.SINGLE.FIXED_OVERHEAD_SIZE;
+    const actualPadding = padding !== undefined ? padding : 0;
+    const decryptedLength = encryptedDataLength - overhead - actualPadding;
+
+    if (decryptedLength < 0) {
+      const engine = getEciesI18nEngine();
+      throw new Error(
+        engine.translate(
+          EciesComponentId,
+          EciesStringKey.Error_Service_ComputedDecryptedLengthNegative,
+        ),
+      );
+    }
+
+    return decryptedLength;
   }
 }

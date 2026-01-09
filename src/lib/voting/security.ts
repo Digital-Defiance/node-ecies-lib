@@ -1,63 +1,24 @@
 /**
  * Voting Security Validator
  * Enforces cryptographic security requirements
+ * Extends ecies-lib VotingSecurityValidator
  */
-import { VotingMethod } from './types';
+import {
+  VotingSecurityValidator as BaseVotingSecurityValidator,
+  VOTING_SECURITY as BASE_VOTING_SECURITY,
+} from '@digitaldefiance/ecies-lib';
 
-export enum SecurityLevel {
-  FullyHomomorphic = 'fully-homomorphic',
-  MultiRound = 'multi-round',
-  Insecure = 'insecure',
-}
+// Re-export SecurityLevel from enumerations
+export { SecurityLevel } from './enumerations';
 
-export const VOTING_SECURITY: Record<VotingMethod, SecurityLevel> = {
-  [VotingMethod.Plurality]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.Approval]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.Weighted]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.Borda]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.Score]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.YesNo]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.YesNoAbstain]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.Supermajority]: SecurityLevel.FullyHomomorphic,
-  [VotingMethod.RankedChoice]: SecurityLevel.MultiRound,
-  [VotingMethod.TwoRound]: SecurityLevel.MultiRound,
-  [VotingMethod.STAR]: SecurityLevel.MultiRound,
-  [VotingMethod.STV]: SecurityLevel.MultiRound,
-  [VotingMethod.Quadratic]: SecurityLevel.Insecure,
-  [VotingMethod.Consensus]: SecurityLevel.Insecure,
-  [VotingMethod.ConsentBased]: SecurityLevel.Insecure,
-};
+// Re-export the VOTING_SECURITY constant from ecies-lib
+export const VOTING_SECURITY = BASE_VOTING_SECURITY;
 
-export class VotingSecurityValidator {
-  static isFullySecure(method: VotingMethod): boolean {
-    return VOTING_SECURITY[method] === SecurityLevel.FullyHomomorphic;
-  }
-
-  static requiresMultipleRounds(method: VotingMethod): boolean {
-    return VOTING_SECURITY[method] === SecurityLevel.MultiRound;
-  }
-
-  static getSecurityLevel(method: VotingMethod): SecurityLevel {
-    return VOTING_SECURITY[method];
-  }
-
-  static validate(
-    method: VotingMethod,
-    options?: { requireFullySecure?: boolean; allowInsecure?: boolean },
-  ): void {
-    const level = VOTING_SECURITY[method];
-    if (level === SecurityLevel.Insecure && !options?.allowInsecure) {
-      throw new Error(
-        `Voting method ${method} is not cryptographically secure with Paillier. Set allowInsecure: true to use anyway (NOT RECOMMENDED).`,
-      );
-    }
-    if (
-      options?.requireFullySecure &&
-      level !== SecurityLevel.FullyHomomorphic
-    ) {
-      throw new Error(
-        `Voting method ${method} requires intermediate decryption. Use a fully homomorphic method for maximum security.`,
-      );
-    }
-  }
+/**
+ * Node.js VotingSecurityValidator that extends ecies-lib VotingSecurityValidator
+ * No Buffer-specific changes needed as this class doesn't handle binary data
+ */
+export class VotingSecurityValidator extends BaseVotingSecurityValidator {
+  // All methods are inherited from BaseVotingSecurityValidator
+  // No overrides needed as this class doesn't use Buffer/Uint8Array
 }
