@@ -163,7 +163,89 @@ const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encry
 console.log(decrypted.toString()); // "Hello, Secure World!"
 ```
 
-### 2. Using Custom ID Providers (e.g., GUID)
+### 2. Strong Typing with ID Providers (New in v4.10.7)
+
+The Node.js library now includes a comprehensive strong typing system for ID providers, eliminating the need for manual type casting and providing compile-time type safety.
+
+#### The Problem (Before v4.10.7)
+
+```typescript
+const Constants = getNodeRuntimeConfiguration();
+const id = Constants.idProvider.generate(); // Returns Uint8Array (no strong typing)
+const obj = Constants.idProvider.fromBytes(bytes); // Returns unknown (requires casting)
+```
+
+#### The Solution (v4.10.7+)
+
+**Enhanced Provider (Drop-in Replacement):**
+```typescript
+import { getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
+
+const provider = getEnhancedNodeIdProvider<ObjectId>();
+const id = provider.generateTyped(); // Returns ObjectId (strongly typed)
+const obj = provider.fromBytesTyped(bytes); // Returns ObjectId (no casting needed)
+
+// Original methods still work for backward compatibility
+const rawBytes = provider.generate(); // Returns Uint8Array
+```
+
+**Simple Typed Provider (Clean API):**
+```typescript
+import { getTypedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
+
+const provider = getTypedNodeIdProvider<ObjectId>();
+const id = provider.generateTyped(); // Returns ObjectId
+const bytes = provider.toBytesTyped(id); // Type-safe conversion
+const restored = provider.fromBytesTyped(bytes); // Type-safe restoration
+```
+
+**Complete Typed Configuration:**
+```typescript
+import { createNodeObjectIdConfiguration } from '@digitaldefiance/node-ecies-lib';
+
+const config = createNodeObjectIdConfiguration();
+const objectId = config.generateId(); // Returns ObjectId (strongly typed)
+const bytes = config.idToBytes(objectId); // Convert to bytes
+const restored = config.idFromBytes(bytes); // Convert back to ObjectId
+
+// Access full Node.js runtime configuration
+const constants = config.constants; // Complete IConstants with ObjectIdProvider
+```
+
+**Custom Provider Types:**
+```typescript
+import { 
+  createNodeTypedConfiguration,
+  GuidV4Provider,
+  UuidProvider 
+} from '@digitaldefiance/node-ecies-lib';
+
+// GUID configuration
+const guidConfig = createNodeTypedConfiguration<string>({
+  idProvider: new GuidV4Provider()
+});
+const guidId = guidConfig.generateId(); // Returns GUID object (strongly typed)
+
+// UUID configuration
+const uuidConfig = createNodeTypedConfiguration<string>({
+  idProvider: new UuidProvider()
+});
+const uuidId = uuidConfig.generateId(); // Returns UUID string (strongly typed)
+```
+
+**Integration with ECIESService:**
+```typescript
+import { ECIESService, createNodeObjectIdConfiguration } from '@digitaldefiance/node-ecies-lib';
+
+const config = createNodeObjectIdConfiguration();
+const service = new ECIESService(config.constants);
+
+// Service uses the configured typed provider
+console.log(service.idProvider.name); // "ObjectID"
+console.log(service.idProvider.byteLength); // 12
+```
+
+### 3. Using Custom ID Providers (e.g., GUID)
 
 ```typescript
 import { 
@@ -198,7 +280,7 @@ const ecies2 = new ECIESService({
 const ecies3 = new ECIESService();
 ```
 
-### 3. Streaming Encryption (Large Files)
+### 4. Streaming Encryption (Large Files)
 
 Encrypt gigabytes of data with minimal memory footprint (<10MB).
 
@@ -223,7 +305,7 @@ async function processFile(filePath: string, publicKey: Buffer) {
 }
 ```
 
-### 4. Voting System (Node.js Optimized)
+### 5. Voting System (Node.js Optimized)
 
 The Node.js voting system extends the browser implementation with Buffer support and mongoose integration:
 
@@ -311,7 +393,7 @@ console.log(member.id); // Buffer (size depends on provider)
 const encrypted = member.encryptData('My Secrets');
 ```
 
-### 5. Member System
+### 6. Member System
 
 ### Core Services
 
@@ -570,6 +652,46 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.10.7 - Strong Typing for ID Providers
+
+**Major Features:**
+- **Strong Typing System**: Added comprehensive strong typing for Node.js ID provider operations
+  - `getEnhancedNodeIdProvider<T>()`: Drop-in replacement with both original and typed methods
+  - `getTypedNodeIdProvider<T>()`: Simple typed provider with minimal API surface
+  - `createNodeTypedConfiguration<T>()`: Complete typed configuration wrapper
+  - `createNodeObjectIdConfiguration()`: Pre-configured ObjectId setup
+- **Type Safety Benefits**: Eliminates manual casting and provides compile-time type safety
+  - `generateTyped()`: Returns strongly-typed IDs (ObjectId, string, etc.)
+  - `fromBytesTyped()`: Type-safe byte conversion without casting
+  - `toBytesTyped()`, `serializeTyped()`, `deserializeTyped()`: Complete typed API
+- **Backward Compatibility**: Enhanced providers include original methods for seamless migration
+- **Integration Ready**: Works seamlessly with ECIESService and Member system
+
+**Usage Examples:**
+```typescript
+// Enhanced provider (drop-in replacement)
+const provider = getEnhancedNodeIdProvider<ObjectId>();
+const id = provider.generateTyped(); // Returns ObjectId (strongly typed)
+
+// Complete typed configuration
+const config = createNodeObjectIdConfiguration();
+const objectId = config.generateId(); // Returns ObjectId
+const bytes = config.idToBytes(objectId); // Type-safe conversion
+
+// Custom provider types
+const guidConfig = createNodeTypedConfiguration<string>({
+  idProvider: new GuidV4Provider()
+});
+const guidId = guidConfig.generateId(); // Returns GUID object (strongly typed)
+```
+
+**Breaking Changes:** None - fully backward compatible
+
+**Files Added:**
+- `src/typed-configuration.ts` - Main implementation
+- `src/typed-configuration.spec.ts` - Comprehensive tests
+- `src/examples/typed-configuration-usage.ts` - Usage examples
 
 ### v4.10.6 - Voting System & PlatformID Integration
 

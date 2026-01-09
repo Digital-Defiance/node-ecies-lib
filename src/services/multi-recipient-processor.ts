@@ -13,7 +13,6 @@ import {
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
 
-import { getNodeRuntimeConfiguration } from '../constants';
 import type { PlatformID } from '../interfaces';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
@@ -24,6 +23,7 @@ import {
   IMultiRecipientChunkHeader,
   IMultiRecipientConstants,
 } from '../interfaces/multi-recipient-chunk';
+import { getEnhancedNodeIdProvider } from '../typed-configuration';
 
 import { AESGCMService } from './aes-gcm';
 import { EciesCryptoCore } from './ecies/crypto-core';
@@ -65,9 +65,7 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
       (cryptoCoreOrService as EciesCryptoCore);
     this.cryptoCore = core;
     this.consts = consts ?? core.consts;
-    const resolvedIdProvider =
-      idProvider ??
-      (getNodeRuntimeConfiguration().idProvider as IIdProvider<TID>);
+    const resolvedIdProvider = idProvider ?? getEnhancedNodeIdProvider<TID>();
     this.idProvider = resolvedIdProvider;
 
     // Use injected dependencies or create defaults

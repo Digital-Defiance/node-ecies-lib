@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { IIdProvider } from '@digitaldefiance/ecies-lib';
 
 import {
   NodeEciesComponentId,
@@ -16,6 +15,7 @@ import {
   IStreamConfig,
 } from '../interfaces/stream-config';
 import { IStreamProgress } from '../interfaces/stream-progress';
+import { getEnhancedNodeIdProvider } from '../typed-configuration';
 
 import { ChunkProcessor } from './chunk-processor';
 import { ECIESService } from './ecies/service';
@@ -47,11 +47,13 @@ export class EncryptionStream {
   ) {
     // Use injected dependencies or create defaults
     this.processor = processor ?? new ChunkProcessor(ecies);
+    // Initialize multi-recipient processor with enhanced typed provider
+    const enhancedProvider = getEnhancedNodeIdProvider<Buffer>();
     this.multiRecipientProcessor =
       multiRecipientProcessor ??
       new MultiRecipientProcessor<Buffer>(
         ecies.core,
-        ecies.constants.idProvider as IIdProvider<Buffer>, // Type assertion needed for compatibility
+        enhancedProvider, // Use enhanced provider for better type safety
         ecies.constants.ECIES, // Pass ECIES constants instead of full constants
       );
   }
@@ -201,9 +203,10 @@ export class EncryptionStream {
           ),
         );
       }
+      const enhancedProvider = getEnhancedNodeIdProvider<Buffer>();
       if (
         !recipient.id ||
-        recipient.id.length !== this.ecies.constants.idProvider.byteLength
+        recipient.id.length !== enhancedProvider.byteLength
       ) {
         throw new Error(
           this.engine.translate(
@@ -372,10 +375,8 @@ export class EncryptionStream {
     privateKey: Buffer,
     options: IDecryptStreamOptions = {},
   ): AsyncGenerator<Buffer, void, unknown> {
-    if (
-      !recipientId ||
-      recipientId.length !== this.ecies.constants.idProvider.byteLength
-    ) {
+    const enhancedProvider = getEnhancedNodeIdProvider<Buffer>();
+    if (!recipientId || recipientId.length !== enhancedProvider.byteLength) {
       throw new Error(
         this.engine.translate(
           NodeEciesComponentId,

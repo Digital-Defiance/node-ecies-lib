@@ -19,6 +19,11 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Member } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
+import {
+  getEnhancedNodeIdProvider,
+  createNodeTypedConfiguration,
+  createNodeObjectIdConfiguration,
+} from '../src/typed-configuration';
 
 describe('Unit Tests: Member ID Generation (Node.js)', () => {
   describe('Member.newMember() respects service idProvider', () => {
@@ -218,6 +223,121 @@ describe('Unit Tests: Member ID Generation (Node.js)', () => {
       );
       expect(objectIdMember.member.idBytes.length).toBe(
         objectIdService.constants.idProvider.byteLength,
+      );
+    });
+  });
+
+  describe('Typed Configuration Integration', () => {
+    it('should work with enhanced Node.js ID provider for ObjectId', () => {
+      // Arrange - Use the new typed configuration system
+      const config = createNodeObjectIdConfiguration();
+      const service = new ECIESService(config.constants);
+      const enhancedProvider = getEnhancedNodeIdProvider<ObjectId>();
+
+      // Act
+      const result = Member.newMember(
+        service,
+        MemberType.User,
+        'Test User',
+        new EmailString('test@example.com'),
+      );
+
+      // Assert - Member uses the configured provider
+      expect(result.member.idBytes.length).toBe(12);
+      expect(enhancedProvider.byteLength).toBe(12);
+
+      // Test typed ID generation
+      const typedId = enhancedProvider.generateTyped();
+      expect(typedId).toBeDefined();
+
+      // Test round-trip with typed methods
+      const bytes = enhancedProvider.underlyingProvider.toBytes(typedId);
+      const restored = enhancedProvider.fromBytesTyped(bytes);
+      expect(restored).toEqual(typedId);
+    });
+
+    it('should work with typed configuration for GUID', () => {
+      // Arrange - Use typed configuration with GUID
+      const config = createNodeTypedConfiguration<string>({
+        idProvider: new GuidV4Provider(),
+      });
+      const service = new ECIESService(config.constants);
+
+      // Act
+      const result = Member.newMember(
+        service,
+        MemberType.User,
+        'GUID User',
+        new EmailString('guid@example.com'),
+      );
+
+      // Assert
+      expect(result.member.idBytes.length).toBe(16);
+      expect(config.constants.idProvider.byteLength).toBe(16);
+
+      // Test typed ID operations
+      const typedId = config.generateId();
+      expect(typedId).toBeDefined();
+      expect(typeof typedId).toBe('object'); // GuidV4Provider returns objects
+
+      const bytes = config.idToBytes(typedId);
+      expect(bytes.length).toBe(16);
+
+      const restored = config.idFromBytes(bytes);
+      expect(restored).toEqual(typedId);
+    });
+
+    it('should demonstrate type safety benefits', () => {
+      // Arrange - Create both ObjectId and GUID configurations
+      const objectIdConfig = createNodeObjectIdConfiguration();
+      const guidConfig = createNodeTypedConfiguration<string>({
+        idProvider: new GuidV4Provider(),
+      });
+
+      // Act - Generate typed IDs
+      const objectId = objectIdConfig.generateId(); // Strongly typed as ObjectId
+      const guidId = guidConfig.generateId(); // Strongly typed as GUID object
+
+      // Assert - Types are maintained
+      expect(objectId).toBeDefined();
+      expect(guidId).toBeDefined();
+
+      // Demonstrate type safety - no casting needed
+      const objectIdBytes = objectIdConfig.idToBytes(objectId);
+      const guidBytes = guidConfig.idToBytes(guidId);
+
+      expect(objectIdBytes.length).toBe(
+        objectIdConfig.constants.idProvider.byteLength,
+      );
+      expect(guidBytes.length).toBe(guidConfig.constants.idProvider.byteLength);
+    });
+  });
+
+  describe('Enhanced Provider Usage Examples', () => {
+    it('should demonstrate enhanced provider with both original and typed methods', () => {
+      // Arrange - Reset to ObjectId configuration
+      const config = createNodeObjectIdConfiguration();
+      const enhancedProvider = getEnhancedNodeIdProvider<ObjectId>();
+
+      // Act & Assert - Original methods still work
+      const rawBytes = enhancedProvider.generate();
+      expect(rawBytes).toBeInstanceOf(Uint8Array);
+      expect(rawBytes.length).toBe(enhancedProvider.byteLength);
+
+      const unknownObj = enhancedProvider.fromBytes(rawBytes); // Returns unknown
+      expect(unknownObj).toBeDefined();
+
+      // Act & Assert - New typed methods provide type safety
+      const typedId = enhancedProvider.generateTyped(); // Returns ObjectId
+      expect(typedId).toBeDefined();
+
+      const typedFromBytes = enhancedProvider.fromBytesTyped(rawBytes); // Returns ObjectId
+      expect(typedFromBytes).toBeDefined();
+
+      // Access to underlying provider
+      expect(enhancedProvider.underlyingProvider).toBeDefined();
+      expect(enhancedProvider.underlyingProvider.byteLength).toBe(
+        enhancedProvider.byteLength,
       );
     });
   });

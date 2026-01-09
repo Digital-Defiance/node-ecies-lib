@@ -16,17 +16,16 @@ import {
   IIdProvider,
 } from '@digitaldefiance/ecies-lib';
 
-import { getNodeRuntimeConfiguration } from '../../constants';
 import { PlatformID } from '../../interfaces';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import type { IMember } from '../../interfaces/member';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
+import { getEnhancedNodeIdProvider } from '../../typed-configuration';
 
 import { EciesCryptoCore } from './crypto-core';
 import { EciesSingleRecipientCore } from './single-recipient';
-const Constants = getNodeRuntimeConfiguration();
 
 /**
  * Multiple recipient encryption/decryption functions for ECIES
@@ -39,11 +38,11 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
   /**
    * Create a new multi-recipient ECIES instance.
    * @param cryptoCore ECIES crypto core
-   * @param idProvider ID provider for recipient IDs. Defaults to Constants.idProvider.
+   * @param idProvider ID provider for recipient IDs. Defaults to enhanced typed provider.
    */
   constructor(
     cryptoCore: EciesCryptoCore,
-    idProvider: IIdProvider<TID> = Constants.idProvider as IIdProvider<TID>,
+    idProvider: IIdProvider<TID> = getEnhancedNodeIdProvider<TID>(),
   ) {
     this.cryptoCore = cryptoCore;
     this.singleRecipientCore = new EciesSingleRecipientCore(cryptoCore.config);

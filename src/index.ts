@@ -32,3 +32,6 @@ export type {
   PublicKey,
   KeyPair as PaillierKeyPair,
 } from 'paillier-bigint';
+
+// Typed configuration system for strong typing with ID providers
+export * from './typed-configuration';

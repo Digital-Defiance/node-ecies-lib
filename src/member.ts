@@ -10,6 +10,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { Types } from '@digitaldefiance/mongoose-types';
 import { Wallet } from '@ethereumjs/wallet';
+import type { ObjectId } from 'mongodb';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { getNodeRuntimeConfiguration } from './constants';
@@ -61,6 +62,24 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   private _votingPublicKey?: PublicKey;
   private _votingPrivateKey?: PrivateKey;
 
+  /**
+   * Creates a new Member instance.
+   *
+   * @example Using with typed configuration:
+   * ```typescript
+   * import { createNodeObjectIdConfiguration, getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
+   *
+   * // Option 1: Use typed configuration
+   * const config = createNodeObjectIdConfiguration();
+   * const service = new ECIESService(config.constants);
+   * const { member } = Member.newMember(service, MemberType.User, 'Alice', email);
+   * // member.id is strongly typed as ObjectId
+   *
+   * // Option 2: Use enhanced provider for type-safe operations
+   * const provider = getEnhancedNodeIdProvider<ObjectId>();
+   * const typedId = provider.generateTyped(); // Returns ObjectId (strongly typed)
+   * ```
+   */
   constructor(
     // Add injected services as parameters
     eciesService: ECIESService,
@@ -667,6 +686,83 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         createdBy,
       ),
       mnemonic,
+    };
+  }
+
+  /**
+   * Example method demonstrating how to create a Member with strongly-typed ID providers.
+   * This shows the benefits of the new typed configuration system introduced in v4.10.7.
+   *
+   * @example
+   * ```typescript
+   * // ObjectId example with strong typing
+   * const { member } = Member.newMemberWithTypedId(
+   *   MemberType.User,
+   *   'Alice',
+   *   new EmailString('alice@example.com')
+   * );
+   * // member.id is strongly typed as ObjectId
+   *
+   * // GUID example with strong typing
+   * const { member: guidMember } = Member.newMemberWithTypedId<string>(
+   *   MemberType.User,
+   *   'Bob',
+   *   new EmailString('bob@example.com'),
+   *   { idProvider: new GuidV4Provider() }
+   * );
+   * // guidMember.id is strongly typed as GUID object
+   * ```
+   */
+  public static newMemberWithTypedId<TID extends PlatformID = ObjectId>(
+    type: MemberType,
+    name: string,
+    email: EmailString,
+    options?: {
+      idProvider?: IIdProvider<TID>;
+      forceMnemonic?: SecureString;
+      createdBy?: TID;
+    },
+  ): { member: Member<TID>; mnemonic: SecureString; typedId: TID } {
+    // Import the typed configuration functions dynamically to avoid circular dependencies
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+    const typedConfig = require('./typed-configuration');
+
+    // Create typed configuration
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const config = options?.idProvider
+      ? // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        typedConfig.createNodeTypedConfiguration({
+          idProvider: options.idProvider,
+        })
+      : // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+        typedConfig.createNodeObjectIdConfiguration();
+
+    // Create service with typed configuration
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+    const service = new ECIESService(config.constants);
+
+    // Create member using the standard method
+    const result = Member.newMember<TID>(
+      service,
+      type,
+      name,
+      email,
+      options?.forceMnemonic,
+      options?.createdBy,
+    );
+
+    // Get enhanced provider for type-safe operations
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const enhancedProvider = typedConfig.getEnhancedNodeIdProvider();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    const typedId = enhancedProvider.fromBytesTyped(
+      new Uint8Array(result.member.idBytes),
+    );
+
+    return {
+      member: result.member,
+      mnemonic: result.mnemonic,
+      typedId, // Strongly typed ID
     };
   }
 }
