@@ -20,7 +20,7 @@ import {
   createRuntimeConfiguration,
   GuidV4Provider,
   ObjectIdProvider,
-  GuidV4,
+  Guid,
   EmailString,
   MemberType,
   ECIESService as BrowserECIESService,
@@ -205,7 +205,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
 
       // Verify UUID compatibility
       expect(() => {
-        const guid = GuidV4.fromBuffer(result.member.idBytes);
+        const guid = Guid.fromPlatformBuffer(result.member.idBytes);
         expect(guid).toBeDefined();
         expect(guid.asFullHexGuid).toMatch(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -228,7 +228,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
 
       // Verify UUID compatibility
       expect(() => {
-        const guid = GuidV4.fromBuffer(result.member.idBytes);
+        const guid = Guid.fromPlatformBuffer(result.member.idBytes);
         expect(guid).toBeDefined();
         expect(guid.asFullHexGuid).toMatch(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -259,8 +259,8 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       );
 
       // Both should convert to valid UUIDs
-      const browserGuid = GuidV4.fromBuffer(browserResult.member.idBytes);
-      const nodeGuid = GuidV4.fromBuffer(nodeResult.member.idBytes);
+      const browserGuid = Guid.fromPlatformBuffer(browserResult.member.idBytes);
+      const nodeGuid = Guid.fromPlatformBuffer(nodeResult.member.idBytes);
 
       // Verify both match UUID v4 format
       const uuidV4Pattern =
@@ -383,11 +383,18 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       // Verify ID is preserved
       const browserIdBuffer = browserResult.member.idBytes;
       const nodeIdBuffer = nodeMember.idBytes;
-      expect(nodeIdBuffer).toEqual(browserIdBuffer);
-      expect(nodeIdBuffer.length).toBe(16);
+      // Convert both to Buffer for cross-platform comparison
+      const nodeBufferNormalized = Buffer.isBuffer(nodeIdBuffer)
+        ? nodeIdBuffer
+        : Buffer.from(nodeIdBuffer);
+      const browserBufferNormalized = Buffer.isBuffer(browserIdBuffer)
+        ? browserIdBuffer
+        : Buffer.from(browserIdBuffer);
+      expect(nodeBufferNormalized).toEqual(browserBufferNormalized);
+      expect(nodeBufferNormalized.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = GuidV4.fromBuffer(nodeIdBuffer);
+      const guid = Guid.fromPlatformBuffer(nodeIdBuffer);
       expect(guid).toBeDefined();
     });
 
@@ -416,11 +423,18 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       // Verify ID is preserved
       const nodeIdBuffer = nodeResult.member.idBytes;
       const browserIdBuffer = browserMember.idBytes;
-      expect(browserIdBuffer).toEqual(nodeIdBuffer);
-      expect(browserIdBuffer.length).toBe(16);
+      // Convert both to Buffer for cross-platform comparison
+      const nodeBufferNormalized = Buffer.isBuffer(nodeIdBuffer)
+        ? nodeIdBuffer
+        : Buffer.from(nodeIdBuffer);
+      const browserBufferNormalized = Buffer.isBuffer(browserIdBuffer)
+        ? browserIdBuffer
+        : Buffer.from(browserIdBuffer);
+      expect(browserBufferNormalized).toEqual(nodeBufferNormalized);
+      expect(browserBufferNormalized.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = GuidV4.fromBuffer(browserIdBuffer);
+      const guid = Guid.fromPlatformBuffer(browserIdBuffer);
       expect(guid).toBeDefined();
     });
 
@@ -449,8 +463,15 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       // Verify ID is preserved
       const browserIdBuffer = browserResult.member.idBytes;
       const nodeIdBuffer = nodeMember.idBytes;
-      expect(nodeIdBuffer).toEqual(browserIdBuffer);
-      expect(nodeIdBuffer.length).toBe(12);
+      // Convert both to Buffer for cross-platform comparison
+      const nodeBufferNormalized = Buffer.isBuffer(nodeIdBuffer)
+        ? nodeIdBuffer
+        : Buffer.from(nodeIdBuffer);
+      const browserBufferNormalized = Buffer.isBuffer(browserIdBuffer)
+        ? browserIdBuffer
+        : Buffer.from(browserIdBuffer);
+      expect(nodeBufferNormalized).toEqual(browserBufferNormalized);
+      expect(nodeBufferNormalized.length).toBe(12);
 
       // Verify ObjectID compatibility maintained
       const objectIdString = config.idProvider.serialize(nodeIdBuffer);
@@ -521,7 +542,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       expect(finalId.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = GuidV4.fromBuffer(finalId);
+      const guid = Guid.fromPlatformBuffer(finalId);
       expect(guid).toBeDefined();
     });
   });
@@ -717,8 +738,17 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
             // Verify ID preserved
             const browserIdBuffer = browserResult.member.idBytes;
             const nodeIdBuffer = nodeMember.idBytes;
-            expect(nodeIdBuffer).toEqual(browserIdBuffer);
-            expect(nodeIdBuffer.length).toBe(constants.idProvider.byteLength);
+            // Convert both to Buffer for cross-platform comparison
+            const nodeBufferNormalized = Buffer.isBuffer(nodeIdBuffer)
+              ? nodeIdBuffer
+              : Buffer.from(nodeIdBuffer);
+            const browserBufferNormalized = Buffer.isBuffer(browserIdBuffer)
+              ? browserIdBuffer
+              : Buffer.from(browserIdBuffer);
+            expect(nodeBufferNormalized).toEqual(browserBufferNormalized);
+            expect(nodeBufferNormalized.length).toBe(
+              constants.idProvider.byteLength,
+            );
 
             // Verify conversion still works
             expect(() => {

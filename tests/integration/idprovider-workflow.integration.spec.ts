@@ -15,7 +15,7 @@ import {
   createRuntimeConfiguration,
   GuidV4Provider,
   ObjectIdProvider,
-  GuidV4,
+  Guid,
   EmailString,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
@@ -50,8 +50,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(config.MEMBER_ID_LENGTH).toBe(16);
       expect(result.member.idBytes.length).toBe(16);
 
-      // Step 5: Verify GuidV4.fromBuffer succeeds (this was failing before the fix)
-      const guid = GuidV4.fromBuffer(result.member.idBytes);
+      // Step 5: Verify Guid.fromBuffer succeeds (this was failing before the fix)
+      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
       expect(guid).toBeDefined();
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -75,7 +75,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify Member ID is UUID-compatible
       expect(result.member.idBytes.length).toBe(16);
-      const guid = GuidV4.fromBuffer(result.member.idBytes);
+      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -123,7 +123,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(originalId.length).toBe(16);
 
       // Step 3: Convert to UUID string
-      const originalGuid = GuidV4.fromBuffer(originalId);
+      const originalGuid = Guid.fromPlatformBuffer(originalId);
       const uuidString = originalGuid.asFullHexGuid;
       expect(uuidString).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -143,7 +143,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Step 7: Convert deserialized ID to UUID string
-      const deserializedGuid = GuidV4.fromBuffer(deserialized.idBytes);
+      const deserializedGuid = Guid.fromPlatformBuffer(deserialized.idBytes);
       expect(deserializedGuid.asFullHexGuid).toBe(uuidString);
     });
 
@@ -212,11 +212,18 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       }
 
       // Verify ID is still preserved
-      expect(member.idBytes).toEqual(originalId);
-      expect(member.idBytes.length).toBe(16);
+      // Convert both to Buffer for comparison (handle Node Buffer vs Uint8Array)
+      const memberBufferNormalized = Buffer.isBuffer(member.idBytes)
+        ? member.idBytes
+        : Buffer.from(member.idBytes);
+      const originalBufferNormalized = Buffer.isBuffer(originalId)
+        ? originalId
+        : Buffer.from(originalId);
+      expect(memberBufferNormalized).toEqual(originalBufferNormalized);
+      expect(memberBufferNormalized.length).toBe(16);
 
       // Verify UUID conversion still works
-      const guid = GuidV4.fromBuffer(member.idBytes);
+      const guid = Guid.fromPlatformBuffer(member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -246,7 +253,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(result.mnemonic).toBeDefined();
 
       // Verify UUID compatibility
-      const guid = GuidV4.fromBuffer(result.member.idBytes);
+      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -283,8 +290,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(user.member.creatorId).toEqual(admin.member.id);
 
       // Verify both IDs are UUID-compatible
-      const adminGuid = GuidV4.fromBuffer(admin.member.idBytes);
-      const userGuid = GuidV4.fromBuffer(user.member.idBytes);
+      const adminGuid = Guid.fromPlatformBuffer(admin.member.idBytes);
+      const userGuid = Guid.fromPlatformBuffer(user.member.idBytes);
       expect(adminGuid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -315,8 +322,15 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       const deserialized = Member.fromJson(json, service);
 
       // Verify ID preserved
-      expect(deserialized.idBytes).toEqual(result.member.idBytes);
-      expect(deserialized.idBytes.length).toBe(16);
+      // Convert both to Buffer for comparison (handle Node Buffer vs Uint8Array)
+      const deserializedBufferNormalized = Buffer.isBuffer(deserialized.idBytes)
+        ? deserialized.idBytes
+        : Buffer.from(deserialized.idBytes);
+      const resultBufferNormalized = Buffer.isBuffer(result.member.idBytes)
+        ? result.member.idBytes
+        : Buffer.from(result.member.idBytes);
+      expect(deserializedBufferNormalized).toEqual(resultBufferNormalized);
+      expect(deserializedBufferNormalized.length).toBe(16);
 
       // Verify all properties preserved
       expect(deserialized.name).toBe('Builder User');
@@ -354,7 +368,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify all IDs are unique
       const idStrings = members.map(
-        (m) => GuidV4.fromBuffer(m.idBytes).asFullHexGuid,
+        (m) => Guid.fromPlatformBuffer(m.idBytes).asFullHexGuid,
       );
       const uniqueIds = new Set(idStrings);
       expect(uniqueIds.size).toBe(members.length);
@@ -441,7 +455,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(objectIdMember.member.idBytes.length).toBe(12);
 
       // Verify each ID is compatible with its provider
-      const guid = GuidV4.fromBuffer(guidMember.member.idBytes);
+      const guid = Guid.fromPlatformBuffer(guidMember.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );

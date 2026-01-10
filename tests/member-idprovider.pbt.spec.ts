@@ -12,7 +12,7 @@ import {
   MemberType,
   GuidV4Provider,
   ObjectIdProvider,
-  GuidV4,
+  Guid,
   createRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
 import { Member } from '../src/member';
@@ -204,7 +204,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
    * Validates: Requirements 4.1, 5.3
    *
    * For any ECIESService configured with GuidV4Provider, when Member.newMember()
-   * creates a Member, GuidV4.fromBuffer(member.id) should successfully convert to
+   * creates a Member, Guid.fromBuffer(member.id) should successfully convert to
    * a valid UUID without throwing errors.
    */
   describe('Property 6: GuidV4 Members Are UUID-Compatible', () => {
@@ -229,9 +229,9 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
               new EmailString(email),
             );
 
-            // Verify GuidV4.fromBuffer succeeds
+            // Verify Guid.fromBuffer succeeds
             expect(() => {
-              const guid = GuidV4.fromBuffer(result.member.idBytes);
+              const guid = Guid.fromPlatformBuffer(result.member.idBytes);
               expect(guid).toBeDefined();
               expect(guid.asFullHexGuid).toMatch(
                 /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -445,7 +445,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             expect(deserializedBuffer.length).toBe(16);
 
             // Verify UUID compatibility maintained
-            const guid = GuidV4.fromBuffer(deserializedBuffer);
+            const guid = Guid.fromPlatformBuffer(deserializedBuffer);
             expect(guid).toBeDefined();
           },
         ),

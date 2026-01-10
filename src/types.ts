@@ -1,4 +1,4 @@
-import { HexString } from '@digitaldefiance/ecies-lib';
+import { GuidBrandType, HexString } from '@digitaldefiance/ecies-lib';
 import { Brand } from 'ts-brand';
 
 import { IKeyPairBufferWithUnEncryptedPrivateKey } from './interfaces/keypair-buffer-with-un-encrypted-private-key';
@@ -33,6 +33,17 @@ export type SignatureBuffer = Buffer & Brand<Buffer, 'SignatureBuffer'>;
 export type ChecksumBuffer = Buffer &
   Brand<Buffer, 'Sha3Checksum', 'ChecksumBuffer'>;
 export type ChecksumString = Brand<HexString, 'Sha3Checksum', 'ChecksumString'>;
+
+/**
+ * GUID stored as a raw buffer
+ */
+export type RawGuidPlatformBuffer = Buffer &
+  Brand<Buffer, 'GuidV4', GuidBrandType.RawGuidPlatformBuffer>;
+
+/**
+ * Alias for RawGuidPlatformBuffer for backward compatibility
+ */
+export type RawGuidBuffer = RawGuidPlatformBuffer;
 
 /**
  * Extended Buffer type for data
