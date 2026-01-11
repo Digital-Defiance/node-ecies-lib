@@ -8,6 +8,7 @@ import {
   NodeEciesStringKey,
 } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
+import { PlatformID } from '../interfaces';
 import { IEncryptedChunk } from '../interfaces/encrypted-chunk';
 import { IMultiRecipientChunk } from '../interfaces/multi-recipient-chunk';
 import {
@@ -34,24 +35,24 @@ export interface IDecryptStreamOptions {
   onProgress?: (progress: IStreamProgress) => void;
 }
 
-export class EncryptionStream {
-  private readonly processor: ChunkProcessor;
-  private readonly multiRecipientProcessor: MultiRecipientProcessor<Buffer>;
+export class EncryptionStream<TID extends PlatformID = Buffer> {
+  private readonly processor: ChunkProcessor<TID>;
+  private readonly multiRecipientProcessor: MultiRecipientProcessor<TID>;
   private readonly engine = getNodeEciesI18nEngine();
 
   constructor(
-    private readonly ecies: ECIESService<Buffer>,
+    private readonly ecies: ECIESService<TID>,
     private readonly config: IStreamConfig = DEFAULT_STREAM_CONFIG,
-    processor?: ChunkProcessor,
-    multiRecipientProcessor?: MultiRecipientProcessor<Buffer>,
+    processor?: ChunkProcessor<TID>,
+    multiRecipientProcessor?: MultiRecipientProcessor<TID>,
   ) {
     // Use injected dependencies or create defaults
-    this.processor = processor ?? new ChunkProcessor(ecies);
+    this.processor = processor ?? new ChunkProcessor<TID>(ecies);
     // Initialize multi-recipient processor with enhanced typed provider
-    const enhancedProvider = getEnhancedNodeIdProvider<Buffer>();
+    const enhancedProvider = getEnhancedNodeIdProvider<TID>();
     this.multiRecipientProcessor =
       multiRecipientProcessor ??
-      new MultiRecipientProcessor<Buffer>(
+      new MultiRecipientProcessor<TID>(
         ecies.core,
         enhancedProvider, // Use enhanced provider for better type safety
         ecies.constants.ECIES, // Pass ECIES constants instead of full constants

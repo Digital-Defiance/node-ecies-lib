@@ -117,7 +117,7 @@ export class MemberBuilder {
     forceMnemonic?: SecureString,
     createdBy?: TID,
   ): IBackendMemberWithMnemonic<TID> {
-    const service = new ECIESService(Constants);
+    const service = new ECIESService<TID>(Constants);
     const emailObj = typeof email === 'string' ? new EmailString(email) : email;
 
     return Member.newMember<TID>(

@@ -44,7 +44,7 @@ export class NodeMemberError extends Error {
  * A member of an ECIES interchange
  */
 export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
-  private readonly _eciesService: ECIESService;
+  private readonly _eciesService: ECIESService<TID>;
   private readonly _id: TID;
   private readonly _idBytes: Buffer;
   private readonly _type: MemberType;
@@ -82,7 +82,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
    */
   constructor(
     // Add injected services as parameters
-    eciesService: ECIESService,
+    eciesService: ECIESService<TID>,
     // Original parameters
     type: MemberType,
     name: string,
@@ -502,7 +502,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     },
   ): AsyncGenerator<IEncryptedChunk, void, unknown> {
     const targetPublicKey = options?.recipientPublicKey || this._publicKey;
-    const stream = new EncryptionStream(this._eciesService);
+    const stream = new EncryptionStream<TID>(this._eciesService);
 
     for await (const chunk of stream.encryptStream(source, targetPublicKey, {
       onProgress: options?.onProgress,
@@ -528,7 +528,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       );
     }
 
-    const stream = new EncryptionStream(this._eciesService);
+    const stream = new EncryptionStream<TID>(this._eciesService);
 
     for await (const chunk of stream.decryptStream(
       source,
@@ -545,7 +545,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public static fromJson<TID extends PlatformID = Buffer>(
     json: string,
     // Add injected services as parameters
-    eciesService: ECIESService,
+    eciesService: ECIESService<TID>,
   ): Member<TID> {
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
@@ -594,7 +594,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
 
   public static fromMnemonic<TID extends PlatformID = Buffer>(
     mnemonic: SecureString,
-    eciesService: ECIESService,
+    eciesService: ECIESService<TID>,
     memberType = MemberType.User,
     name = 'Test User',
     email = new EmailString('test@example.com'),
@@ -618,7 +618,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
 
   public static newMember<TID extends PlatformID = Buffer>(
     // Add injected services as parameters
-    eciesService: ECIESService,
+    eciesService: ECIESService<TID>,
     // Original parameters
     type: MemberType,
     name: string,
@@ -739,7 +739,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
 
     // Create service with typed configuration
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-    const service = new ECIESService(config.constants);
+    const service = new ECIESService<TID>(config.constants);
 
     // Create member using the standard method
     const result = Member.newMember<TID>(

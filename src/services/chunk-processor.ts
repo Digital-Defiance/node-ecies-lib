@@ -1,9 +1,10 @@
+import { PlatformID } from '../interfaces';
 import { IEncryptedChunk } from '../interfaces/encrypted-chunk';
 
 import { ECIESService } from './ecies/service';
 
-export class ChunkProcessor {
-  constructor(private readonly ecies: ECIESService) {}
+export class ChunkProcessor<TID extends PlatformID = Buffer> {
+  constructor(private readonly ecies: ECIESService<TID>) {}
 
   public async encryptChunk(
     data: Buffer,
