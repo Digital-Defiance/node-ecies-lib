@@ -6,6 +6,8 @@ import {
   randomBytes,
 } from 'crypto';
 
+import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+
 import { Constants } from '../constants';
 import {
   getEciesPluginI18nEngine,
@@ -15,19 +17,24 @@ import {
 import { IConstants } from '../interfaces/constants';
 
 export class AESGCMService {
+  public static readonly ALGORITHM_NAME = 'AES-GCM';
+  private readonly configuration: IConstants;
+  private readonly engine: PluginI18nEngine<CoreLanguageCode>;
   private readonly algorithmName: string;
   private readonly mode: string;
   private readonly keyBits: number;
   private readonly ivSize: number;
   private readonly keyringAlgorithmConfiguration: CipherGCMTypes;
 
-  constructor(constants: IConstants = Constants) {
-    this.algorithmName = constants.KEYRING.ALGORITHM;
-    this.mode = constants.KEYRING.MODE;
-    this.keyBits = constants.KEYRING.KEY_BITS;
-    this.ivSize = constants.WRAPPED_KEY.IV_SIZE;
+  constructor(constants?: IConstants) {
+    this.configuration = constants ?? Constants;
+    this.engine = getEciesPluginI18nEngine();
+    this.algorithmName = this.configuration.KEYRING.ALGORITHM;
+    this.mode = this.configuration.KEYRING.MODE;
+    this.keyBits = this.configuration.KEYRING.KEY_BITS;
+    this.ivSize = this.configuration.WRAPPED_KEY.IV_SIZE;
     this.keyringAlgorithmConfiguration =
-      constants.KEYRING_ALGORITHM_CONFIGURATION;
+      this.configuration.KEYRING_ALGORITHM_CONFIGURATION;
   }
 
   public get ALGORITHM_NAME(): string {
@@ -58,9 +65,8 @@ export class AESGCMService {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
     if (key.length !== requiredKeyLength) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_InvalidAESKeyLength,
         ),
@@ -69,9 +75,8 @@ export class AESGCMService {
 
     // Security fix 11: Data null/undefined check
     if (data === null || data === undefined) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_CannotEncryptEmptyData,
         ),
@@ -80,9 +85,8 @@ export class AESGCMService {
 
     // Security fix 12: Data size validation (max 2GB)
     if (data.length > 0x7fffffff) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_MessageTooLarge,
         ),
@@ -170,10 +174,8 @@ export class AESGCMService {
     const minLength = ivLength + (hasAuthTag ? 16 : 0);
 
     if (combinedData.length < minLength) {
-      const pluginEngine = getEciesPluginI18nEngine();
-
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_CombinedDataTooShort,
         ),
@@ -205,9 +207,8 @@ export class AESGCMService {
     // Security fix 9: Key length validation - must match algorithm requirements
     const requiredKeyLength = this.keyBits / 8;
     if (key.length !== requiredKeyLength) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_InvalidAESKeyLength,
         ),
@@ -216,9 +217,8 @@ export class AESGCMService {
 
     // Security fix 10: IV length validation
     if (iv.length !== 16) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_InvalidIVLength,
         ),
@@ -227,9 +227,8 @@ export class AESGCMService {
 
     // Security fix 13: Decrypt input validation
     if (encryptedData === null || encryptedData === undefined) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_CannotDecryptEmptyData,
         ),
@@ -237,9 +236,8 @@ export class AESGCMService {
     }
 
     if (encryptedData.length > 0x7fffffff) {
-      const pluginEngine = getEciesPluginI18nEngine();
       throw new Error(
-        pluginEngine.translate(
+        this.engine.translate(
           NodeEciesComponentId,
           NodeEciesStringKey.Error_MessageTooLarge,
         ),
@@ -263,5 +261,39 @@ export class AESGCMService {
     decipher.setAuthTag(tag);
 
     return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  }
+
+  /**
+   * Encrypt the given data as JSON
+   * @param data The data to encrypt
+   * @param key The key to use for encryption
+   * @returns Encrypted data as Buffer
+   */
+  public encryptJson<T>(data: T, key: Buffer): Buffer {
+    const jsonString = JSON.stringify(data);
+    const encodedData = Buffer.from(jsonString, 'utf8');
+    const { iv, encrypted, tag } = this.encrypt(
+      encodedData,
+      key,
+      true,
+      undefined,
+    );
+    if (!tag) {
+      throw new Error('Authentication tag missing after encryption');
+    }
+    return this.combineIvTagAndEncryptedData(iv, encrypted, tag);
+  }
+
+  /**
+   * Decrypt the given buffer with AES and parse as JSON
+   * @param encryptedData The encrypted data to decrypt
+   * @param key The key to use for decryption
+   * @returns Decrypted data parsed as type T
+   */
+  public decryptJson<T>(encryptedData: Buffer, key: Buffer): T {
+    const iv = encryptedData.subarray(0, this.ivSize);
+    const encryptedContent = encryptedData.subarray(this.ivSize);
+    const decrypted = this.decrypt(iv, encryptedContent, key, true, undefined);
+    return JSON.parse(decrypted.toString('utf8')) as T;
   }
 }

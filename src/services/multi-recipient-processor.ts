@@ -69,6 +69,8 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
     this.idProvider = resolvedIdProvider;
 
     // Use injected dependencies or create defaults
+    // Note: AESGCMService needs IConstants, but we only have IECIESConstants from core
+    // We'll let it use the default getNodeRuntimeConfiguration()
     this.aesGcm = aesGcm ?? new AESGCMService();
     this.eciesMultiRecipient =
       eciesMultiRecipient ??

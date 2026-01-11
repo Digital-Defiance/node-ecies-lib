@@ -139,7 +139,8 @@ When you configure an ID provider, the library automatically:
 ```typescript
 import { 
   ECIESService, 
-  registerNodeRuntimeConfiguration 
+  registerNodeRuntimeConfiguration,
+  AESGCMService
 } from '@digitaldefiance/node-ecies-lib';
 import { ObjectIdProvider } from '@digitaldefiance/ecies-lib';
 
@@ -243,6 +244,24 @@ const service = new ECIESService(config.constants);
 // Service uses the configured typed provider
 console.log(service.idProvider.name); // "ObjectID"
 console.log(service.idProvider.byteLength); // 12
+
+// 7. AES-GCM Service (Instance-based)
+const aesGcm = new AESGCMService(); // Now instance-based, not static
+const key = crypto.getRandomValues(new Uint8Array(32));
+const data = new TextEncoder().encode('Sensitive Data');
+
+// Encrypt with authentication tag
+const { encrypted: aesEncrypted, iv, tag } = await aesGcm.encrypt(data, key, true);
+
+// Decrypt
+const combined = aesGcm.combineEncryptedDataAndTag(aesEncrypted, tag!);
+const aesDecrypted = await aesGcm.decrypt(iv, combined, key, true);
+
+// 8. JSON Encryption (NEW!)
+const userData = { name: 'Alice', email: 'alice@example.com', age: 30 };
+const encryptedJson = await aesGcm.encryptJson(userData, key);
+const decryptedJson = await aesGcm.decryptJson<typeof userData>(encryptedJson, key);
+console.log(decryptedJson); // { name: 'Alice', email: 'alice@example.com', age: 30 }
 ```
 
 ### 3. Using Custom ID Providers (e.g., GUID)
@@ -652,6 +671,53 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.12.0 - AESGCMService Refactoring & JSON Encryption
+
+**Breaking Changes:**
+- **AESGCMService is now instance-based**: Changed from abstract static class to regular instance-based class
+  - All methods are now instance methods instead of static methods
+  - Constructor accepts optional `IConstants` parameter for configuration
+  - Example: `const aesGcm = new AESGCMService(); aesGcm.encrypt(...)` instead of `AESGCMService.encrypt(...)`
+
+**New Features:**
+- **JSON Encryption Methods**: Added convenient methods for encrypting/decrypting JSON data
+  - `encryptJson<T>(data: T, key: Uint8Array): Promise<Uint8Array>` - Encrypts any JSON-serializable data
+  - `decryptJson<T>(encryptedData: Uint8Array, key: Uint8Array): Promise<T>` - Decrypts and parses JSON data
+  - Automatically handles JSON serialization, encryption with auth tags, and IV management
+  - Type-safe with TypeScript generics
+
+**Architecture Improvements:**
+- Added `configuration` and `engine` instance properties to AESGCMService
+- Improved dependency injection support with optional constants parameter
+- Enhanced error handling with i18n support
+- Better alignment with browser/Node.js architectural patterns
+
+**Migration Guide:**
+```typescript
+// BEFORE (v4.10.x and earlier)
+import { AESGCMService } from '@digitaldefiance/node-ecies-lib';
+
+const { encrypted, iv, tag } = await AESGCMService.encrypt(data, key, true);
+const combined = AESGCMService.combineEncryptedDataAndTag(encrypted, tag);
+
+// AFTER (v4.12.0+)
+import { AESGCMService } from '@digitaldefiance/node-ecies-lib';
+
+const aesGcm = new AESGCMService(); // Create instance
+const { encrypted, iv, tag } = await aesGcm.encrypt(data, key, true);
+const combined = aesGcm.combineEncryptedDataAndTag(encrypted, tag);
+
+// NEW: JSON encryption
+const userData = { name: 'Alice', email: 'alice@example.com' };
+const encrypted = await aesGcm.encryptJson(userData, key);
+const decrypted = await aesGcm.decryptJson<typeof userData>(encrypted, key);
+```
+
+**Testing:**
+- Added 17 comprehensive tests for JSON encryption methods
+- Added 3 e2e tests for real-world JSON scenarios
+- All 1,100+ existing tests updated and passing
 
 ### v4.10.7 - Strong Typing for ID Providers
 

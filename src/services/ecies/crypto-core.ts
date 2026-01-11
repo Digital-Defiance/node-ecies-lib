@@ -20,8 +20,9 @@ import {
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../../i18n/ecies-i18n-factory';
-import { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
-import { IWalletSeed } from '../../interfaces/wallet-seed';
+import { IWalletSeed as IWalletSeedMain } from '../../interfaces/wallet-seed';
+
+import { ISimpleKeyPair } from './interfaces/simple-keypair';
 
 /**
  * Core encryption and decryption functions for ECIES
@@ -29,13 +30,14 @@ import { IWalletSeed } from '../../interfaces/wallet-seed';
  */
 export class EciesCryptoCore {
   protected readonly _config: IECIESConfig;
-  protected readonly _consts: IECIESConstants;
+  protected readonly _eciesConsts: IECIESConstants;
+
   public get config(): IECIESConfig {
     return this._config;
   }
 
   public get consts(): IECIESConstants {
-    return this._consts;
+    return this._eciesConsts;
   }
 
   constructor(
@@ -88,7 +90,7 @@ export class EciesCryptoCore {
     }
 
     this._config = config;
-    this._consts = eciesParams;
+    this._eciesConsts = eciesParams;
   }
 
   /**
@@ -113,7 +115,7 @@ export class EciesCryptoCore {
     }
 
     const keyLength = publicKey.length;
-    // console.log('[normalizePublicKey] Magic:', this._consts.PUBLIC_KEY_MAGIC);
+    // console.log('[normalizePublicKey] Magic:', this._eciesConsts.PUBLIC_KEY_MAGIC);
 
     // Check for compressed key (33 bytes, starts with 0x02 or 0x03)
     if (keyLength === 33 && (publicKey[0] === 0x02 || publicKey[0] === 0x03)) {
@@ -134,14 +136,14 @@ export class EciesCryptoCore {
     // Note: This is ambiguous for compressed keys as we don't know Y parity.
     // But if we assume it's a raw X coordinate, we might default to 0x02?
     // Actually, RAW_PUBLIC_KEY_LENGTH is 32.
-    if (keyLength === this._consts.RAW_PUBLIC_KEY_LENGTH) {
+    if (keyLength === this._eciesConsts.RAW_PUBLIC_KEY_LENGTH) {
       // If we only have X, we can't fully reconstruct without knowing Y parity.
       // But maybe the intention of RAW_PUBLIC_KEY_LENGTH was for uncompressed without prefix (64 bytes)?
       // The constants say RAW_PUBLIC_KEY_LENGTH = 32.
       // So it expects X coordinate only.
       // We can try to prepend 0x02.
       return Buffer.concat([
-        Buffer.from([this._consts.PUBLIC_KEY_MAGIC]),
+        Buffer.from([this._eciesConsts.PUBLIC_KEY_MAGIC]),
         publicKey,
       ]);
     }
@@ -158,10 +160,10 @@ export class EciesCryptoCore {
           NodeEciesStringKey.Error_InvalidPublicKeyFormat,
         ),
         keyLength: String(keyLength),
-        expectedLength64: String(this._consts.RAW_PUBLIC_KEY_LENGTH),
-        expectedLength65: String(this._consts.PUBLIC_KEY_LENGTH),
+        expectedLength64: String(this._eciesConsts.RAW_PUBLIC_KEY_LENGTH),
+        expectedLength65: String(this._eciesConsts.PUBLIC_KEY_LENGTH),
         keyPrefix: keyLength > 0 ? String(publicKey[0]) : 'N/A',
-        expectedPrefix: String(this._consts.PUBLIC_KEY_MAGIC),
+        expectedPrefix: String(this._eciesConsts.PUBLIC_KEY_MAGIC),
       },
     );
   }
@@ -189,9 +191,9 @@ export class EciesCryptoCore {
   /**
    * Generate a new wallet and seed from a mnemonic
    * @param mnemonic {SecureString} The mnemonic to generate the wallet and seed from
-   * @returns {IWalletSeed} The new wallet and seed
+   * @returns {IWalletSeedMain} The new wallet and seed
    */
-  public walletAndSeedFromMnemonic(mnemonic: SecureString): IWalletSeed {
+  public walletAndSeedFromMnemonic(mnemonic: SecureString): IWalletSeedMain {
     if (!mnemonic.value || !validateMnemonic(mnemonic.value)) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidMnemonic);
     }
@@ -208,9 +210,9 @@ export class EciesCryptoCore {
   /**
    * Generate a new wallet and seed from a mnemonic
    * @param wallet {Wallet} The wallet to generate the key pair from
-   * @returns {ISimpleKeyPairBuffer} The new key pair
+   * @returns {ISimpleKeyPair} The new key pair
    */
-  public walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
+  public walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPair {
     const privateKey = Buffer.from(wallet.getPrivateKey());
     const publicKey = this.getPublicKey(privateKey);
 
@@ -223,9 +225,9 @@ export class EciesCryptoCore {
   /**
    * Create a simple key pair from a seed
    * @param seed {Buffer} The seed to generate the key pair from
-   * @returns {ISimpleKeyPairBuffer} The new key pair
+   * @returns {ISimpleKeyPair} The new key pair
    */
-  public seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPairBuffer {
+  public seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPair {
     const wallet = this.walletFromSeed(seed);
     return this.walletToSimpleKeyPairBuffer(wallet);
   }
@@ -233,11 +235,9 @@ export class EciesCryptoCore {
   /**
    * Create a simple key pair from a mnemonic
    * @param mnemonic {SecureString} The mnemonic to generate the key pair from
-   * @returns {ISimpleKeyPairBuffer} The new key pair
+   * @returns {ISimpleKeyPair} The new key pair
    */
-  public mnemonicToSimpleKeyPairBuffer(
-    mnemonic: SecureString,
-  ): ISimpleKeyPairBuffer {
+  public mnemonicToSimpleKeyPairBuffer(mnemonic: SecureString): ISimpleKeyPair {
     const { seed } = this.walletAndSeedFromMnemonic(mnemonic);
     return this.seedToSimpleKeyPairBuffer(Buffer.from(seed.value));
   }

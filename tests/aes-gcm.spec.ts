@@ -135,4 +135,187 @@ describe('AESGCMService', () => {
       expect(() => aesGcmService.splitEncryptedData(tooShort, true)).toThrow();
     });
   });
+
+  describe('encryptJson and decryptJson', () => {
+    it('should encrypt and decrypt simple object', () => {
+      const data = { name: 'Alice', age: 30 };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should encrypt and decrypt complex nested object', () => {
+      const data = {
+        user: { name: 'Bob', email: 'bob@example.com' },
+        settings: { theme: 'dark', notifications: true },
+        items: [1, 2, 3, 4, 5],
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should encrypt and decrypt array', () => {
+      const data = [1, 2, 3, 'test', { key: 'value' }];
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should encrypt and decrypt string', () => {
+      const data = 'Hello, World!';
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<string>(encrypted, key);
+
+      expect(decrypted).toBe(data);
+    });
+
+    it('should encrypt and decrypt number', () => {
+      const data = 42;
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<number>(encrypted, key);
+
+      expect(decrypted).toBe(data);
+    });
+
+    it('should encrypt and decrypt boolean', () => {
+      const data = true;
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<boolean>(encrypted, key);
+
+      expect(decrypted).toBe(data);
+    });
+
+    it('should encrypt and decrypt null', () => {
+      const data = null;
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<null>(encrypted, key);
+
+      expect(decrypted).toBe(data);
+    });
+
+    it('should encrypt and decrypt empty object', () => {
+      const data = {};
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should fail to decrypt with wrong key', () => {
+      const data = { secret: 'data' };
+      const key = randomBytes(32);
+      const wrongKey = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+
+      expect(() => aesGcmService.decryptJson(encrypted, wrongKey)).toThrow();
+    });
+
+    it('should fail to decrypt corrupted data', () => {
+      const data = { test: 'value' };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const corrupted = Buffer.from(encrypted);
+      corrupted[corrupted.length - 1] ^= 1;
+
+      expect(() => aesGcmService.decryptJson(corrupted, key)).toThrow();
+    });
+
+    it('should produce different ciphertext for same data', () => {
+      const data = { test: 'value' };
+      const key = randomBytes(32);
+
+      const encrypted1 = aesGcmService.encryptJson(data, key);
+      const encrypted2 = aesGcmService.encryptJson(data, key);
+
+      expect(encrypted1).not.toEqual(encrypted2);
+    });
+
+    it('should handle large JSON objects', () => {
+      const data = {
+        items: Array.from({ length: 1000 }, (_, i) => ({
+          id: i,
+          name: `Item ${i}`,
+          value: Math.random(),
+        })),
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should handle special characters in strings', () => {
+      const data = {
+        text: 'Hello 世界 🌍 \n\t\r',
+        emoji: '😀😃😄😁',
+        unicode: '\u0048\u0065\u006C\u006C\u006F',
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<typeof data>(encrypted, key);
+
+      expect(decrypted).toEqual(data);
+    });
+
+    it('should fail with invalid JSON during decryption', () => {
+      const key = randomBytes(32);
+      const invalidData = Buffer.from('not valid json {', 'utf8');
+
+      const { iv, encrypted, tag } = aesGcmService.encrypt(
+        invalidData,
+        key,
+        true,
+      );
+      const combined = aesGcmService.combineIvTagAndEncryptedData(
+        iv,
+        encrypted,
+        tag!,
+      );
+
+      expect(() => aesGcmService.decryptJson(combined, key)).toThrow();
+    });
+
+    it('should maintain type safety with TypeScript generics', () => {
+      interface User {
+        id: number;
+        name: string;
+        active: boolean;
+      }
+
+      const data: User = { id: 1, name: 'Alice', active: true };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(data, key);
+      const decrypted = aesGcmService.decryptJson<User>(encrypted, key);
+
+      expect(decrypted.id).toBe(1);
+      expect(decrypted.name).toBe('Alice');
+      expect(decrypted.active).toBe(true);
+    });
+  });
 });

@@ -207,4 +207,71 @@ describe('AES-GCM E2E Integration Tests', () => {
       expect(ivs.size).toBe(100);
     });
   });
+
+  describe('JSON encryption real-world scenarios', () => {
+    it('should encrypt and decrypt user credentials as JSON', () => {
+      const credentials = {
+        username: 'testuser@example.com',
+        password: 'SecurePassword123!',
+        timestamp: Date.now(),
+        metadata: {
+          loginAttempts: 0,
+          lastLogin: new Date().toISOString(),
+        },
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(credentials, key);
+      const decrypted = aesGcmService.decryptJson<typeof credentials>(
+        encrypted,
+        key,
+      );
+
+      expect(decrypted).toEqual(credentials);
+    });
+
+    it('should encrypt and decrypt API response as JSON', () => {
+      const apiResponse = {
+        status: 200,
+        data: {
+          users: [
+            { id: 1, name: 'Alice', role: 'admin' },
+            { id: 2, name: 'Bob', role: 'user' },
+          ],
+          pagination: { page: 1, total: 2, hasMore: false },
+        },
+        timestamp: Date.now(),
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(apiResponse, key);
+      const decrypted = aesGcmService.decryptJson<typeof apiResponse>(
+        encrypted,
+        key,
+      );
+
+      expect(decrypted).toEqual(apiResponse);
+    });
+
+    it('should handle JSON encryption in storage simulation', () => {
+      const sessionData = {
+        userId: 'user-123',
+        token: 'jwt-token-here',
+        expiresAt: Date.now() + 3600000,
+        permissions: ['read', 'write', 'delete'],
+      };
+      const key = randomBytes(32);
+
+      const encrypted = aesGcmService.encryptJson(sessionData, key);
+      const base64Stored = encrypted.toString('base64');
+
+      const retrieved = Buffer.from(base64Stored, 'base64');
+      const decrypted = aesGcmService.decryptJson<typeof sessionData>(
+        retrieved,
+        key,
+      );
+
+      expect(decrypted).toEqual(sessionData);
+    });
+  });
 });
