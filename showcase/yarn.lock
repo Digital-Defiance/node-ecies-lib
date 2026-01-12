@@ -209,9 +209,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:^4.12.7":
-  version: 4.12.7
-  resolution: "@digitaldefiance/ecies-lib@npm:4.12.7"
+"@digitaldefiance/ecies-lib@npm:^4.12.8":
+  version: 4.12.8
+  resolution: "@digitaldefiance/ecies-lib@npm:4.12.8"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
@@ -219,10 +219,11 @@ __metadata:
     "@noble/hashes": "npm:1.8.0"
     "@scure/bip32": "npm:1.7.0"
     bson: "npm:^6.10.4"
+    crc-32: "npm:^1.2.2"
     js-sha3: "npm:^0.9.3"
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/7369aa07dfb02e8758cc56799a896f4c646ed4baed7676baaf3568a553c54e1c8b19aa8073003c7d6883fd97e9b1caabc4a53f9a4c807ac607656052c90e72da
+  checksum: 10c0/e41e930ed239d88aacc0c990f42f04cb89fad20ed4d5684be95d9edb72f9de596551ca3a12581d1c6ab2d4f70a8905f1d00e2058da91e1996a5d50d18cf8d4f5
   languageName: node
   linkType: hard
 
@@ -1391,6 +1392,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"crc-32@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "crc-32@npm:1.2.2"
+  bin:
+    crc32: bin/crc32.njs
+  checksum: 10c0/11dcf4a2e77ee793835d49f2c028838eae58b44f50d1ff08394a610bfd817523f105d6ae4d9b5bef0aad45510f633eb23c903e9902e4409bed1ce70cb82b9bf0
+  languageName: node
+  linkType: hard
+
 "cross-spawn@npm:^7.0.6":
   version: 7.0.6
   resolution: "cross-spawn@npm:7.0.6"
@@ -2406,7 +2416,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "node-ecies-lib-showcase@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.12.7"
+    "@digitaldefiance/ecies-lib": "npm:^4.12.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@eslint/js": "npm:^9.39.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
