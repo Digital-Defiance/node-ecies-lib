@@ -53,6 +53,27 @@ export interface IEnhancedNodeIdProvider<TID> extends IIdProvider<TID> {
   fromBytesTyped(bytes: Uint8Array): TID;
 
   /**
+   * Validate an ID with strong typing.
+   * @param id The ID to validate
+   * @returns True if valid, false otherwise
+   */
+  validateTyped(id: TID): boolean;
+
+  /**
+   * Serialize strongly-typed ID to string.
+   * @param id The ID to serialize
+   * @returns The serialized ID
+   */
+  serializeTyped(id: TID): string;
+
+  /**
+   * Deserialize string to strongly-typed ID.
+   * @param serialized The serialized ID
+   * @returns The deserialized ID
+   */
+  deserializeTyped(serialized: string): TID;
+
+  /**
    * Access to the underlying provider for advanced operations.
    */
   readonly underlyingProvider: IIdProvider<TID>;
@@ -98,6 +119,13 @@ export interface ITypedNodeIdProvider<TID> {
    * @returns The deserialized ID
    */
   deserializeTyped(serialized: string): TID;
+
+  /**
+   * Validate an ID with strong typing.
+   * @param id The ID to validate
+   * @returns True if valid, false otherwise
+   */
+  validateTyped(id: TID): boolean;
 
   /**
    * The byte length of IDs produced by this provider.
@@ -217,6 +245,18 @@ class EnhancedNodeIdProvider<TID> implements IEnhancedNodeIdProvider<TID> {
     return this.provider.fromBytes(bytes) as TID;
   }
 
+  validateTyped(id: TID): boolean {
+    return this.provider.validate(this.provider.toBytes(id));
+  }
+
+  serializeTyped(id: TID): string {
+    return this.provider.idToString(id);
+  }
+
+  deserializeTyped(str: string): TID {
+    return this.provider.idFromString(str);
+  }
+
   get underlyingProvider(): IIdProvider<TID> {
     return this.provider;
   }
@@ -249,13 +289,15 @@ class TypedNodeIdProvider<TID> implements ITypedNodeIdProvider<TID> {
   }
 
   serializeTyped(id: TID): string {
-    return this.provider.serialize(this.provider.toBytes(id));
+    return this.provider.idToString(id);
   }
 
   deserializeTyped(serialized: string): TID {
-    return this.provider.fromBytes(
-      this.provider.deserialize(serialized),
-    ) as TID;
+    return this.provider.idFromString(serialized);
+  }
+
+  validateTyped(id: TID): boolean {
+    return this.provider.validate(this.provider.toBytes(id));
   }
 }
 
@@ -319,6 +361,33 @@ export function getEnhancedNodeIdProvider<TID>(): IEnhancedNodeIdProvider<TID> {
   return new EnhancedNodeIdProvider<TID>(
     constants.idProvider as IIdProvider<TID>,
   );
+}
+
+/**
+ * Ensure that the ID provider has the expected name and returns a typed wrapper.
+ * This is useful for ensuring that the correct ID provider is being used.
+ *
+ * @example
+ * ```typescript
+ * // For ObjectId configurations
+ * const config = ensureEnhancedNodeIdProvider<ObjectId>('ObjectId');
+ *
+ * // For GUID configurations
+ * const guidConfig = ensureEnhancedNodeIdProvider<GuidV4>('GuidV4');
+ * ```
+ * @param name Expected provider name
+ * @returns IEnhancedNodeIdProvider<TID>
+ */
+export function ensureEnhancedNodeIdProvider<TID>(
+  name: string,
+): IEnhancedNodeIdProvider<TID> {
+  const provider = getEnhancedNodeIdProvider<TID>();
+  if (provider.name !== name) {
+    throw new Error(
+      `Provider name mismatch. Expected ${name}, got ${provider.name}`,
+    );
+  }
+  return provider;
 }
 
 /**
