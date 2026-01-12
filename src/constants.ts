@@ -92,7 +92,21 @@ let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
   NODE_DEFAULTS_OVERRIDES,
 );
 
+/**
+ * Ensure the runtime configuration is initialized.
+ * This is called automatically at module load, but can be called explicitly if needed.
+ */
+export function ensureNodeRuntimeConfiguration(): void {
+  if (!runtimeDefaults || !runtimeDefaults.idProvider) {
+    runtimeDefaults = registerRuntimeConfiguration(
+      NODE_RUNTIME_CONFIGURATION_KEY,
+      NODE_DEFAULTS_OVERRIDES,
+    );
+  }
+}
+
 export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
+  ensureNodeRuntimeConfiguration();
   return runtimeDefaults;
 }
 

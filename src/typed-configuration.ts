@@ -311,6 +311,11 @@ class NodeTypedConfiguration<TID> implements INodeTypedConfiguration<TID> {
  */
 export function getEnhancedNodeIdProvider<TID>(): IEnhancedNodeIdProvider<TID> {
   const constants = getNodeRuntimeConfiguration();
+  if (!constants || !constants.idProvider) {
+    throw new Error(
+      'Node runtime configuration not initialized. Ensure @digitaldefiance/node-ecies-lib is properly imported before calling getEnhancedNodeIdProvider().',
+    );
+  }
   return new EnhancedNodeIdProvider<TID>(
     constants.idProvider as IIdProvider<TID>,
   );
@@ -333,6 +338,11 @@ export function getEnhancedNodeIdProvider<TID>(): IEnhancedNodeIdProvider<TID> {
  */
 export function getTypedNodeIdProvider<TID>(): ITypedNodeIdProvider<TID> {
   const constants = getNodeRuntimeConfiguration();
+  if (!constants || !constants.idProvider) {
+    throw new Error(
+      'Node runtime configuration not initialized. Ensure @digitaldefiance/node-ecies-lib is properly imported before calling getTypedNodeIdProvider().',
+    );
+  }
   return new TypedNodeIdProvider<TID>(constants.idProvider as IIdProvider<TID>);
 }
 
@@ -384,6 +394,11 @@ export function createNodeTypedConfiguration<TID>(
 export function createNodeObjectIdConfiguration(): INodeTypedConfiguration<ObjectId> {
   // Use the default configuration which already uses ObjectIdProvider
   const constants = getNodeRuntimeConfiguration();
+  if (!constants || !constants.idProvider) {
+    throw new Error(
+      'Node runtime configuration not initialized. Ensure @digitaldefiance/node-ecies-lib is properly imported before calling createNodeObjectIdConfiguration().',
+    );
+  }
   return new NodeTypedConfiguration<ObjectId>(constants);
 }
 
