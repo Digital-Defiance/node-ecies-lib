@@ -12,6 +12,9 @@ export * from './member';
 export * from './types';
 export * from './secure-buffer';
 
+// Transforms - stream transforms for encryption/decryption
+export * from './transforms';
+
 // Services - explicit exports to avoid conflicts
 export { AESGCMService } from './services/aes-gcm';
 export { ChunkProcessor } from './services/chunk-processor';
