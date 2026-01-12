@@ -192,7 +192,7 @@ export class CrcService {
   public verifyCrc32(data: Buffer, expectedCrc: Buffer | number): boolean {
     const crc32value = crc32(data);
     if (typeof expectedCrc === 'number') {
-      return crc32value === (expectedCrc >>> 0);
+      return crc32value === expectedCrc >>> 0;
     } else {
       const expectedCrc32 = expectedCrc.readUInt32BE();
       return crc32value === expectedCrc32;
