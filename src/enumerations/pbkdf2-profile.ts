@@ -1,3 +1,7 @@
+/**
+ * PBKDF2 profile enumeration.
+ * Defines different security profiles for password-based key derivation.
+ */
 export enum Pbkdf2ProfileEnum {
   USER_LOGIN = 'USER_LOGIN',
   KEY_WRAPPING = 'KEY_WRAPPING',

@@ -1,3 +1,7 @@
+/**
+ * Spanish (es) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in Spanish.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const spanishTranslations: Record<NodeEciesStringKey, string> = {

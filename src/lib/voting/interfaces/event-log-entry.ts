@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for event-log-entry.
+ */
 import type { EventLogEntry as BaseEventLogEntry } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

@@ -1,3 +1,6 @@
+/**
+ * Service implementation for single-recipient.
+ */
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 import {

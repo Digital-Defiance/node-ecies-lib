@@ -1,3 +1,8 @@
+/**
+ * Secure buffer implementation for Node.js with memory protection.
+ * Stores sensitive data encrypted in memory using XOR obfuscation with a random key,
+ * provides automatic disposal via Symbol.dispose, and includes checksum validation.
+ */
 import { randomFillSync } from 'crypto';
 
 import {

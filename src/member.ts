@@ -1,3 +1,11 @@
+/**
+ * Member class for Node.js ECIES library.
+ * Represents a cryptographic member with support for digital signatures, ECIES encryption/decryption,
+ * streaming encryption for large files, and Paillier homomorphic encryption for voting systems.
+ *
+ * Provides Node.js-specific features including Buffer support, Node.js crypto primitives,
+ * and integration with MongoDB ObjectIDs and other ID providers.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   EmailString,

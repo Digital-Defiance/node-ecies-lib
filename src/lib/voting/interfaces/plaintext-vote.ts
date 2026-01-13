@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for plaintext-vote.
+ */
 import type { PlaintextVote as BasePlaintextVote } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

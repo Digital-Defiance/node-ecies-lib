@@ -1,3 +1,11 @@
+/**
+ * IsolatedPrivateKey implementation for Node.js.
+ * Extends Paillier PrivateKey with instance isolation validation for secure voting systems.
+ *
+ * This class ensures that decryption only works with ciphertexts encrypted by the matching
+ * IsolatedPublicKey instance, preventing cross-instance decryption attacks through instance ID
+ * verification and HMAC validation.
+ */
 import { createHmac } from 'crypto';
 
 import { IIsolatedPrivateKey } from '@digitaldefiance/ecies-lib';

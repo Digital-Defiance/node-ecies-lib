@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for poll.
+ */
 import type { IPoll as BaseIPoll } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

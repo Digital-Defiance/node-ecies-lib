@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for state-snapshot.
+ */
 import type { PlatformID } from '../../../interfaces';
 
 import type { AggregatedTally } from './aggregated-tally';

@@ -1,3 +1,8 @@
+/**
+ * Dependency injection container for cryptographic services.
+ * Provides centralized access to ECIESService, Pbkdf2Service, and AESGCMService instances
+ * with consistent configuration across the library.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for vote-logger-extended.
+ */
 import type { IVoteLoggerExtended as BaseIVoteLoggerExtended } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

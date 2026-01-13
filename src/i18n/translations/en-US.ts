@@ -1,3 +1,8 @@
+/**
+ * English (US) translation strings for Node.js ECIES library.
+ * Contains all user-facing error messages, validation messages, and informational text
+ * for the Node.js-specific ECIES implementation.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 /**

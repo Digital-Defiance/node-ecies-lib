@@ -1,3 +1,19 @@
+/**
+ * Fluent builder for Member instances with Node.js-specific features.
+ * Provides a convenient way to configure and create Member instances with all required properties,
+ * including support for Buffer-based IDs and Node.js crypto primitives.
+ *
+ * @example
+ * ```typescript
+ * const { member, mnemonic } = MemberBuilder.create()
+ *   .withEciesService(service)
+ *   .withType(MemberType.User)
+ *   .withName('Alice')
+ *   .withEmail('alice@example.com')
+ *   .generateMnemonic()
+ *   .build();
+ * ```
+ */
 import {
   EmailString,
   MemberType,

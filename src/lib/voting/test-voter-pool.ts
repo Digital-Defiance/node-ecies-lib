@@ -1,3 +1,8 @@
+/**
+ * Test voter pool for performance testing and benchmarking.
+ * Pre-generates a pool of Member instances with voting keys for use in voting system tests,
+ * avoiding the overhead of key generation during test execution.
+ */
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
 
 import { Member } from '../../member';

@@ -1,3 +1,16 @@
+/**
+ * Node ECIES Library - Node.js implementation of ECIES with binary compatibility to browser ecies-lib.
+ *
+ * This library provides:
+ * - ECIES v4.0 protocol with HKDF key derivation
+ * - Binary compatibility with @digitaldefiance/ecies-lib
+ * - Node.js crypto primitives and Buffer support
+ * - Multi-recipient encryption
+ * - Streaming encryption for large files
+ * - Paillier homomorphic encryption for voting systems
+ * - Comprehensive internationalization support
+ */
+
 // V2 Architecture exports
 export * from './builders';
 export * from './core';

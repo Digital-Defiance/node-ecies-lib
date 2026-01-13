@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for authenticated-decipher.
+ */
 import type { Decipher } from 'crypto';
 
 /**

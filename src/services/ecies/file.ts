@@ -1,3 +1,6 @@
+/**
+ * Service implementation for file.
+ */
 import * as fs from 'fs';
 
 import { ECIESService } from './service';

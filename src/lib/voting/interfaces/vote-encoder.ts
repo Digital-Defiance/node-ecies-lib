@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for vote-encoder.
+ */
 import type { IVoteEncoder as BaseIVoteEncoder } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

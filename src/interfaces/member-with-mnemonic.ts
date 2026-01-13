@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for member-with-mnemonic.
+ */
 import type { SecureString } from '@digitaldefiance/ecies-lib';
 
 import type { IMember } from './member';

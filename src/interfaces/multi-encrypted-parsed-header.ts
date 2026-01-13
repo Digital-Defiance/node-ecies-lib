@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for multi-encrypted-parsed-header.
+ */
 import type { PlatformID } from './platform-id';
 
 export interface IMultiEncryptedParsedHeader<TID extends PlatformID = Buffer> {

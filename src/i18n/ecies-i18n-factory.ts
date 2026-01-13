@@ -1,3 +1,8 @@
+/**
+ * I18n factory for Node.js ECIES library.
+ * Provides component registration, translation engine creation, and helper functions
+ * for internationalized error messages and user-facing strings in Node.js environment.
+ */
 import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import {
   ComponentDefinition,

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for multi-encrypted-message.
+ */
 import type { IMultiEncryptedParsedHeader } from './multi-encrypted-parsed-header';
 import type { PlatformID } from './platform-id';
 

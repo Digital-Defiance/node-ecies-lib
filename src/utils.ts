@@ -1,3 +1,8 @@
+/**
+ * Utility functions for Node.js ECIES library.
+ * Provides length encoding/decoding for variable-length data in encrypted messages.
+ * Uses Node.js Buffer API for efficient binary operations.
+ */
 import {
   getLengthEncodingTypeForLength,
   getLengthEncodingTypeFromValue,

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for stream-config.
+ */
 export interface IStreamConfig {
   chunkSize: number;
   includeChecksums: boolean;

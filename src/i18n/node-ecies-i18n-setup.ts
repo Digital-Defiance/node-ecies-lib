@@ -1,3 +1,8 @@
+/**
+ * Node.js ECIES i18n setup and configuration.
+ * Manages i18n engine initialization, component registration, and translation string loading
+ * for Node.js-specific ECIES library strings across 8 supported languages.
+ */
 import { getEciesI18nEngine } from '@digitaldefiance/ecies-lib';
 import {
   ComponentConfig,

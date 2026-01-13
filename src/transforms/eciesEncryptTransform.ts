@@ -1,3 +1,8 @@
+/**
+ * ECIES encryption transform stream for processing plaintext data.
+ * Encrypts data in blocks using ECIES Simple encryption mode, handling buffering
+ * and block alignment automatically for streaming encryption operations.
+ */
 import { Transform, TransformCallback } from 'stream';
 
 import { ECIESService } from '../services';

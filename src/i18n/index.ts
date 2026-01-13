@@ -1,3 +1,6 @@
+/**
+ * Internationalization exports for the Node ECIES library.
+ */
 // V2 i18n exports
 export * from './node-ecies-i18n-setup';
 

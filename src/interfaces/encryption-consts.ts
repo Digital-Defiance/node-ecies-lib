@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for encryption-consts.
+ */
 export interface IEncryptionConsts {
   /**
    * The size of the encryption type in bytes

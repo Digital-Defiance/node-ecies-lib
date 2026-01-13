@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for platform-buffer.
+ */
 import type { PlatformBuffer as BasePlatformBuffer } from '@digitaldefiance/ecies-lib';
 
 /**

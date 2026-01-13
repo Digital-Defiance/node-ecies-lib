@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for audit-entry.
+ */
 import type { AuditEntry as BaseAuditEntry } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

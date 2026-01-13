@@ -1,3 +1,7 @@
+/**
+ * Ukrainian (uk) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in Ukrainian.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const ukrainianTranslations: Record<NodeEciesStringKey, string> = {

@@ -1,3 +1,8 @@
+/**
+ * Mock implementation of IMember for testing Node.js backend operations.
+ * Provides a fully-featured test double with configurable properties, Paillier voting keys,
+ * and cryptographic operations using faker-generated data.
+ */
 import { randomBytes } from 'crypto';
 
 import {

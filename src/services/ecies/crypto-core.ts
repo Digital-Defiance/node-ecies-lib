@@ -1,3 +1,6 @@
+/**
+ * Service implementation for crypto-core.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { createHash, hkdfSync } from 'crypto';

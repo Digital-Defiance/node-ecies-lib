@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for checksum-consts.
+ */
 export interface IChecksumConsts {
   /** Default hash bits for SHA3 */
   SHA3_DEFAULT_HASH_BITS: number;

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for multi-encrypted-message.
+ */
 import type { PlatformID } from '../../../interfaces';
 
 export interface IMultiEncryptedMessage<TID extends PlatformID = Buffer> {

@@ -1,3 +1,6 @@
+/**
+ * Service implementation for service.
+ */
 import {
   EciesComponentId,
   EciesEncryptionType,

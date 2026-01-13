@@ -1,3 +1,8 @@
+/**
+ * AES-GCM encryption service for Node.js.
+ * Provides authenticated encryption using AES-GCM with configurable key sizes (128/192/256-bit),
+ * initialization vector generation, and authentication tag handling for secure data encryption.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   CipherGCMTypes,

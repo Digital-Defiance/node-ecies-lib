@@ -1,3 +1,9 @@
+/**
+ * RFC 4122 compliant GUID implementation for Node.js.
+ * Provides comprehensive GUID/UUID operations including generation (v1, v3, v4, v5),
+ * validation, conversion between formats (hex, base64, bigint, Buffer), and type-safe
+ * branded types for compile-time format verification.
+ */
 import {
   Base64Guid,
   BigIntGuid,

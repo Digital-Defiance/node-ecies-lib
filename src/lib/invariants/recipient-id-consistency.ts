@@ -1,3 +1,8 @@
+/**
+ * Recipient ID consistency invariant validator.
+ * Ensures all recipient ID size configurations (MEMBER_ID_LENGTH, ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
+ * ENCRYPTION.RECIPIENT_ID_SIZE) match the ID provider's byte length to prevent configuration bugs.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */

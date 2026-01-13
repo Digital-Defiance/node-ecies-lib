@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for ecies-consts.
+ */
 export interface IECIESConsts {
   /** The elliptic curve to use for all ECDSA operations */
   CURVE_NAME: string;

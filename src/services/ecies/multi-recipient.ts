@@ -1,3 +1,6 @@
+/**
+ * Service implementation for multi-recipient.
+ */
 import {
   createCipheriv,
   createDecipheriv,

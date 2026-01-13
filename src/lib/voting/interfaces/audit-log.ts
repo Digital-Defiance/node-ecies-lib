@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for audit-log.
+ */
 import type { AuditLog as BaseAuditLog } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

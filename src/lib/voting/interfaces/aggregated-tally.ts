@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for aggregated-tally.
+ */
 import type { AggregatedTally as BaseAggregatedTally } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

@@ -1,3 +1,7 @@
+/**
+ * German (de) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in German.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const germanTranslations: Record<NodeEciesStringKey, string> = {

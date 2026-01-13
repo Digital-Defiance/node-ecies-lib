@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for signing-key-private-key-info.
+ */
 import type { ec } from 'elliptic';
 
 import type { IKeyPairBufferWithUnEncryptedPrivateKey } from './keypair-buffer-with-un-encrypted-private-key';

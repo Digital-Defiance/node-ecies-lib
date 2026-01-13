@@ -1,3 +1,6 @@
+/**
+ * Service implementation for crc.
+ */
 import { Readable } from 'stream';
 
 import { crc16ccitt, crc32, crc8 } from 'crc';

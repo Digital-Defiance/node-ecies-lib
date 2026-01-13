@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for bulletin-board-entry.
+ */
 import type { BulletinBoardEntry as BaseBulletinBoardEntry } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

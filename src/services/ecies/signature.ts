@@ -1,3 +1,6 @@
+/**
+ * Service implementation for signature.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   ECIESError,

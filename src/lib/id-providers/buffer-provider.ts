@@ -1,3 +1,8 @@
+/**
+ * Flexible Buffer-based ID provider for custom-length identifiers.
+ * Supports arbitrary byte lengths (1-255 bytes) with hexadecimal serialization,
+ * useful for non-standard ID formats like SHA hashes or custom application IDs.
+ */
 import { randomBytes } from 'crypto';
 
 import {

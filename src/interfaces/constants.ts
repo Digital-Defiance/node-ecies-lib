@@ -1,3 +1,8 @@
+/**
+ * Constants interface for Node.js ECIES library.
+ * Extends base ECIES constants with Node.js-specific additions including keyring configuration,
+ * wrapped key constants, encryption constants, and Node crypto-specific PBKDF2 profiles.
+ */
 import type { CipherGCMTypes } from 'crypto';
 
 import type { IConstants as IBaseConstants } from '@digitaldefiance/ecies-lib';

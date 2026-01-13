@@ -1,3 +1,8 @@
+/**
+ * XOR multiple readable streams together.
+ * Transform stream that performs bitwise XOR operations across multiple input streams,
+ * useful for multi-party encryption schemes and secret sharing.
+ */
 import { Readable, Transform, TransformCallback } from 'stream';
 
 export class XorMultipleTransformStream extends Transform {

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for guid.
+ */
 import type {
   Base64Guid,
   BigIntGuid,

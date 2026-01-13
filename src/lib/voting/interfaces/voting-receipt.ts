@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for voting-receipt.
+ */
 import type { VoteReceipt as BaseVoteReceipt } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

@@ -1,3 +1,8 @@
+/**
+ * XOR transform stream for bitwise operations.
+ * Accumulates chunks and performs XOR operations across all input data,
+ * emitting the final XOR result when the stream ends.
+ */
 import { Transform, TransformCallback } from 'stream';
 
 export class XorTransform extends Transform {

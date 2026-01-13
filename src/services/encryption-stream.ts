@@ -1,3 +1,6 @@
+/**
+ * Service implementation for encryption-stream.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-require-imports */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

@@ -1,3 +1,6 @@
+/**
+ * Service implementation for chunk-processor.
+ */
 import { PlatformID } from '../interfaces';
 import { IEncryptedChunk } from '../interfaces/encrypted-chunk';
 

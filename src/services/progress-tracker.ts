@@ -1,3 +1,6 @@
+/**
+ * Service implementation for progress-tracker.
+ */
 import { IStreamProgress } from '../interfaces/stream-progress';
 
 export class ProgressTracker {

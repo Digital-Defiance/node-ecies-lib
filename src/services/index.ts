@@ -1,3 +1,7 @@
+/**
+ * Service exports for the Node ECIES library.
+ * Contains all service classes for cryptographic operations, encryption, and key management.
+ */
 export * from './aes-gcm';
 export * from './chunk-processor';
 export * from './ecies';

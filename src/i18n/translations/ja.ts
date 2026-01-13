@@ -1,3 +1,7 @@
+/**
+ * Japanese (ja) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in Japanese.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const japaneseTranslations: Record<NodeEciesStringKey, string> = {

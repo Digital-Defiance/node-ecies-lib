@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for tally-proof.
+ */
 import type { TallyProof as BaseTallyProof } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for encrypted-chunk.
+ */
 export interface IChunkMetadata {
   totalChunks?: number;
   originalSize?: number;

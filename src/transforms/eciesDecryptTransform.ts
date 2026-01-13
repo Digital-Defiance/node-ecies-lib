@@ -1,3 +1,8 @@
+/**
+ * ECIES decryption transform stream for processing encrypted data.
+ * Decrypts data in blocks using ECIES Simple encryption mode, handling buffering
+ * and block alignment automatically for streaming decryption operations.
+ */
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 
 import { PlatformID } from '../interfaces';

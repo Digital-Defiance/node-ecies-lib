@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for multi-recipient-chunk.
+ */
 export interface IMultiRecipientChunkHeader {
   chunkIndex: number;
   flags: number;

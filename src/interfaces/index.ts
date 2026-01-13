@@ -1,3 +1,7 @@
+/**
+ * Interface exports for the Node ECIES library.
+ * Contains all TypeScript interfaces and type definitions used throughout the library.
+ */
 export * from './authenticated-cipher';
 export * from './authenticated-decipher';
 export * from './checksum-config';

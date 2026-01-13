@@ -1,3 +1,8 @@
+/**
+ * Configuration invariant validator for Node.js ECIES library.
+ * Validates configuration consistency at runtime to prevent bugs like recipient ID
+ * length mismatches. Supports custom invariant registration for application-specific validation.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */

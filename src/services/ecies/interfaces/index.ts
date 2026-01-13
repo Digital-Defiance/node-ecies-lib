@@ -1,3 +1,6 @@
+/**
+ * ECIES service interface exports.
+ */
 export type * from './multi-encrypted-message';
 export type * from './multi-encrypted-parsed-header';
 export type * from './multi-recipient';

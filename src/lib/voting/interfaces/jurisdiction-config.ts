@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for jurisdiction-config.
+ */
 import type { JurisdictionConfig as BaseJurisdictionConfig } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

@@ -1,3 +1,7 @@
+/**
+ * French (fr) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in French.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const frenchTranslations: Record<NodeEciesStringKey, string> = {

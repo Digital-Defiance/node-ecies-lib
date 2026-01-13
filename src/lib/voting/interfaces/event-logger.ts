@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for event-logger.
+ */
 import type { EventLogger as BaseEventLogger } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

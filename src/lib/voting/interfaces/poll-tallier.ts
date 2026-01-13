@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for poll-tallier.
+ */
 import type { IPollTallier as BaseIPollTallier } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

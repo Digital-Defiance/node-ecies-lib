@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for member.
+ */
 import type {
   EmailString,
   IECIESConstants,

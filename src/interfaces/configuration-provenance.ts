@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for configuration-provenance.
+ */
 import type { IConstants } from './constants';
 
 /**

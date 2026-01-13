@@ -1,3 +1,8 @@
+/**
+ * Type definitions for Node.js ECIES library.
+ * Contains branded types for type safety, Buffer-based types for Node.js,
+ * and cross-project compatibility types for cryptographic operations.
+ */
 import { GuidBrandType, HexString } from '@digitaldefiance/ecies-lib';
 import { Brand } from 'ts-brand';
 

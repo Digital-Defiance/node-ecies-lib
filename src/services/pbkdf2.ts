@@ -1,3 +1,6 @@
+/**
+ * Service implementation for pbkdf2.
+ */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { pbkdf2 as pbkdf2Async, pbkdf2Sync, randomBytes } from 'crypto';

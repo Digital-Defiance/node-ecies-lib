@@ -1,3 +1,8 @@
+/**
+ * Voting error class for Node.js ECIES library.
+ * Provides internationalized error messages for voting system operations including
+ * key derivation, prime generation, key pair validation, serialization, and instance isolation.
+ */
 import {
   buildReasonMap,
   HandleableErrorOptions,

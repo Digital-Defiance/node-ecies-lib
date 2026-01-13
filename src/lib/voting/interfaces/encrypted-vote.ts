@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for encrypted-vote.
+ */
 import type { EncryptedVote as BaseEncryptedVote } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';

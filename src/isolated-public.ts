@@ -1,3 +1,11 @@
+/**
+ * IsolatedPublicKey implementation for Node.js.
+ * Extends Paillier PublicKey with instance isolation capabilities for secure voting systems.
+ *
+ * Provides deterministic key IDs (SHA-256 of public key), unique instance IDs per key instance,
+ * and HMAC-tagged ciphertexts that bind encrypted values to specific key instances. This prevents
+ * ballot tampering by ensuring ciphertexts from one instance cannot be used with another.
+ */
 import { createHmac, createHash, randomBytes } from 'crypto';
 
 import { IIsolatedPublicKey } from '@digitaldefiance/ecies-lib';

@@ -1,3 +1,8 @@
+/**
+ * SHA3-512 checksum transform stream for data integrity verification.
+ * Computes cryptographic checksums while passing data through, emitting the final
+ * checksum when the stream ends.
+ */
 import { Transform, TransformCallback } from 'stream';
 
 import { Hasher, sha3_512 } from 'js-sha3';

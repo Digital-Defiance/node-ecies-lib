@@ -1,3 +1,7 @@
+/**
+ * English (GB) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in British English.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const britishEnglishTranslations: Record<NodeEciesStringKey, string> = {

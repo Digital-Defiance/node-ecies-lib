@@ -1,3 +1,7 @@
+/**
+ * Mandarin Chinese (zh-cn) translation strings for Node.js ECIES library.
+ * Contains all localized error messages and user-facing text in Simplified Chinese.
+ */
 import { NodeEciesStringKey } from '../node-keys';
 
 export const mandarinTranslations: Record<NodeEciesStringKey, string> = {

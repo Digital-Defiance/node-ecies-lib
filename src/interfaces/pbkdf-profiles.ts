@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for pbkdf-profiles.
+ */
 import type { IPbkdf2Config } from '@digitaldefiance/ecies-lib';
 
 import type { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';

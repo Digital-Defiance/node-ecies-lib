@@ -1,3 +1,6 @@
+/**
+ * Service implementation for utilities.
+ */
 import {
   EciesEncryptionType,
   ECIESError,

@@ -1,3 +1,9 @@
+/**
+ * Constants and configuration for Node.js ECIES library.
+ * Provides runtime configuration with Node.js-specific crypto settings, PBKDF2 profiles,
+ * keyring configuration, and encryption constants. Extends base ecies-lib constants
+ * with Node.js Buffer support and crypto module integration.
+ */
 import { CipherGCMTypes } from 'crypto';
 
 import type {

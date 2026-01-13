@@ -1,3 +1,6 @@
+/**
+ * Interface definitions for checkpoint-manager-extended.
+ */
 import type { ICheckpointManagerExtended as BaseICheckpointManagerExtended } from '@digitaldefiance/ecies-lib';
 
 import type { PlatformID } from '../../../interfaces';
