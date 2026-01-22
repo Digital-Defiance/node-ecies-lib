@@ -11,7 +11,7 @@ import {
   LanguageCodes,
 } from '@digitaldefiance/i18n-lib';
 
-import { NodeEciesComponentId } from './node-keys';
+import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
 import {
   britishEnglishTranslations,
   englishTranslations,
@@ -66,4 +66,20 @@ function createNodeEciesStrings(): Record<string, Record<string, string>> {
     [LanguageCodes.JA]: japaneseTranslations,
     [LanguageCodes.UK]: ukrainianTranslations,
   };
+}
+
+/**
+ * Helper to translate Node ECIES strings
+ */
+export function getNodeEciesTranslation(
+  stringKey: NodeEciesStringKey,
+  variables?: Record<string, string | number>,
+  language?: string,
+): string {
+  return getNodeEciesI18nEngine().translate(
+    NodeEciesComponentId,
+    stringKey,
+    variables,
+    language,
+  );
 }

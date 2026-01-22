@@ -96,8 +96,7 @@ export class VotingPoll<TID extends PlatformID = Buffer> {
     );
     const receipt = Buffer.concat([hash, signature]);
     // Encrypt to the poll's public key so the poll can decrypt and verify later
-    const encryptedReceipt = this.eciesService.encryptSimpleOrSingle(
-      false,
+    const encryptedReceipt = this.eciesService.encryptWithLength(
       this.ecKeyPair.publicKey,
       receipt,
     );
@@ -123,8 +122,7 @@ export class VotingPoll<TID extends PlatformID = Buffer> {
     if (!foundReceipt.equals(encryptedReceipt)) {
       return false;
     }
-    const decryptedReceipt = this.eciesService.decryptSimpleOrSingleWithHeader(
-      false,
+    const decryptedReceipt = this.eciesService.decryptWithLengthAndHeader(
       this.ecKeyPair.privateKey,
       encryptedReceipt,
     );

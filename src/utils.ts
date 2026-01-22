@@ -12,7 +12,7 @@ import {
 
 import {
   getEciesPluginI18nEngine,
-  getNodeEciesTranslation,
+  getLazyNodeEciesTranslation,
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
@@ -108,7 +108,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
       break;
     default:
       throw new LengthEncodingError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_LengthError_LengthIsInvalidType,
         ),
       );

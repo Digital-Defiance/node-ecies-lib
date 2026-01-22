@@ -21,6 +21,14 @@ import { PlatformBuffer } from '../interfaces';
 import { RawGuidPlatformBuffer } from '../types';
 
 /**
+ * Type representing a GuidBuffer with its RFC 4122 version attached.
+ * The version is determined at parse time and provides compile-time information.
+ */
+export type VersionedGuidBuffer<
+  V extends 1 | 3 | 4 | 5 | undefined = 1 | 3 | 4 | 5 | undefined,
+> = GuidBuffer & { readonly __version: V };
+
+/**
  * Guid represents a GUID (Globally Unique Identifier) that is compliant with the RFC 4122 standard.
  * Guid instances can be created from a variety of input types, including:
  * - FullHexGuid: A 36-character string representation of the GUID, including dashes
@@ -30,7 +38,7 @@ import { RawGuidPlatformBuffer } from '../types';
  * - RawGuidPlatformBuffer: A 16-byte Buffer representation of the GUID
  * Guid instances can be converted to any of these representations using the appropriate method.
  */
-export class Guid implements IGuid {
+export class GuidBuffer implements IGuid {
   /**
    * GUID is stored internally as a raw 16-byte Buffer.
    */
@@ -69,6 +77,11 @@ export class Guid implements IGuid {
   private _cachedBase64?: Base64Guid;
 
   /**
+   * The RFC 4122 version of this GUID (1, 3, 4, 5, or undefined for boundary/invalid)
+   */
+  public __version?: 1 | 3 | 4 | 5 | undefined;
+
+  /**
    * Regex for validating hex strings (case insensitive)
    */
   private static readonly HEX_PATTERN = /^[0-9a-f]+$/i;
@@ -96,22 +109,22 @@ export class Guid implements IGuid {
   /**
    * Cached empty/nil GUID constant (all zeros)
    */
-  private static _empty?: Guid;
+  private static _empty?: GuidBuffer;
 
   /**
    * Empty/nil GUID constant (all zeros)
    */
-  public static get Empty(): Guid {
-    if (!Guid._empty) {
-      Guid._empty = Object.freeze(
-        new Guid('00000000-0000-0000-0000-000000000000' as FullHexGuid),
-      ) as Guid;
+  public static get Empty(): GuidBuffer {
+    if (!GuidBuffer._empty) {
+      GuidBuffer._empty = Object.freeze(
+        new GuidBuffer('00000000-0000-0000-0000-000000000000' as FullHexGuid),
+      ) as GuidBuffer;
     }
-    return Guid._empty;
+    return GuidBuffer._empty;
   }
 
   constructor(value: GuidInput) {
-    const buffer = Guid.validateAndConvert(value);
+    const buffer = GuidBuffer.validateAndConvert(value);
     // Note: We cannot freeze a Buffer as it's an ArrayBuffer view
     // Instead, we ensure the buffer is never directly modified after construction
     this._value = buffer;
@@ -120,6 +133,7 @@ export class Guid implements IGuid {
     this._cachedFullHex = undefined;
     this._cachedShortHex = undefined;
     this._cachedBase64 = undefined;
+    this.__version = undefined;
 
     // Seal the instance to prevent property addition/deletion
     // Cache properties can still be set once since they were initialized
@@ -156,7 +170,7 @@ export class Guid implements IGuid {
         const isFullHex = value.length === 36 && value.includes('-');
         const isShortHex = value.length === 32 && !value.includes('-');
 
-        if (isFullHex && !Guid.FULL_HEX_PATTERN.test(value)) {
+        if (isFullHex && !GuidBuffer.FULL_HEX_PATTERN.test(value)) {
           const buffer = Buffer.from(value);
           throw new GuidError(
             GuidErrorType.InvalidGuidWithDetails,
@@ -164,7 +178,7 @@ export class Guid implements IGuid {
             value.length,
             buffer,
           );
-        } else if (isShortHex && !Guid.HEX_PATTERN.test(value)) {
+        } else if (isShortHex && !GuidBuffer.HEX_PATTERN.test(value)) {
           const buffer = Buffer.from(value);
           throw new GuidError(
             GuidErrorType.InvalidGuidWithDetails,
@@ -176,8 +190,8 @@ export class Guid implements IGuid {
       }
 
       // Determine and verify the brand/type
-      const expectedBrand = Guid.whichBrand(value);
-      const verifiedBrand = Guid.verifyGuid(expectedBrand, value);
+      const expectedBrand = GuidBuffer.whichBrand(value);
+      const verifiedBrand = GuidBuffer.verifyGuid(expectedBrand, value);
 
       if (!verifiedBrand) {
         const valueBuffer = Buffer.isBuffer(value)
@@ -192,12 +206,12 @@ export class Guid implements IGuid {
       }
 
       // Convert to raw buffer
-      const buffer = Guid.toRawGuidPlatformBuffer(value);
+      const buffer = GuidBuffer.toRawGuidPlatformBuffer(value);
 
       // Validate against UUID standard (skip for boundary values)
       const hexString = buffer.toString('hex');
-      const fullHex = Guid.toFullHexGuid(hexString);
-      const isBoundary = Guid.isBoundaryValue(fullHex);
+      const fullHex = GuidBuffer.toFullHexGuid(hexString);
+      const isBoundary = GuidBuffer.isBoundaryValue(fullHex);
 
       if (!isBoundary && !uuid.validate(fullHex)) {
         throw new GuidError(
@@ -239,8 +253,8 @@ export class Guid implements IGuid {
     return this.asBase64Guid;
   }
 
-  public static hydrate(value: string): Guid {
-    return new Guid(value as Base64Guid);
+  public static hydrate(value: string): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(value as Base64Guid));
   }
 
   private static readonly LengthMap: Record<GuidBrandType, number> = {
@@ -295,18 +309,31 @@ export class Guid implements IGuid {
   }
 
   /**
+   * Attaches the RFC 4122 version to a GuidBuffer instance.
+   * @param guid The GuidBuffer instance to attach version to
+   * @returns The same instance with __version property set
+   */
+  private static withVersion<T extends GuidBuffer>(
+    guid: T,
+  ): VersionedGuidBuffer {
+    const version = guid.getVersion() as 1 | 3 | 4 | 5 | undefined;
+    guid.__version = version;
+    return guid as VersionedGuidBuffer;
+  }
+
+  /**
    * Generates a new random v4 GUID.
    * @returns A new Guid instance with a randomly generated value
    */
-  public static generate(): Guid {
+  public static generate(): VersionedGuidBuffer<4> {
     try {
       const uuidStr = uuid.v4();
       if (!uuidStr) {
         throw new GuidError(GuidErrorType.InvalidGuid);
       }
-      return new Guid(uuidStr as FullHexGuid) as Guid & {
-        readonly __version: 4;
-      };
+      return GuidBuffer.withVersion(
+        new GuidBuffer(uuidStr as FullHexGuid),
+      ) as VersionedGuidBuffer<4>;
     } catch (error) {
       if (error instanceof GuidError) {
         throw error;
@@ -319,38 +346,38 @@ export class Guid implements IGuid {
    * Alias for generate() to create a v4 GUID.
    * @returns A new Guid instance with a randomly generated v4 value
    */
-  public static v4(): Guid {
-    return Guid.generate();
+  public static v4(): VersionedGuidBuffer<4> {
+    return GuidBuffer.generate();
   }
 
   /**
    * Alias for generate() for backward compatibility.
    * @deprecated Use generate() instead for clearer intent
    */
-  public static new(): Guid {
-    return Guid.generate();
+  public static new(): VersionedGuidBuffer<4> {
+    return GuidBuffer.generate();
   }
 
   /**
    * Parses a GUID from any valid format, throwing on invalid input.
    * This is the primary parsing method for when you expect valid input.
    * @param value The value to parse
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    * @throws {GuidError} If the value is not a valid GUID
    */
-  public static parse(value: GuidInput): Guid {
-    return new Guid(value);
+  public static parse(value: GuidInput): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(value));
   }
 
   /**
    * Attempts to parse a GUID, returning null on failure instead of throwing.
    * Use this when you're uncertain if the input is valid.
    * @param value The value to parse
-   * @returns A new Guid instance or null if parsing fails
+   * @returns A new Guid instance with __version attached, or null if parsing fails
    */
-  public static tryParse(value: GuidInput): Guid | null {
+  public static tryParse(value: GuidInput): VersionedGuidBuffer | null {
     try {
-      return new Guid(value);
+      return GuidBuffer.withVersion(new GuidBuffer(value));
     } catch {
       return null;
     }
@@ -365,7 +392,7 @@ export class Guid implements IGuid {
   public static isValid(value: unknown): boolean {
     if (!value) return false;
     try {
-      const guid = new Guid(value as GuidInput);
+      const guid = new GuidBuffer(value as GuidInput);
       return guid.isValidV4();
     } catch {
       return false;
@@ -375,56 +402,60 @@ export class Guid implements IGuid {
   /**
    * Factory method to create a GUID from a full hex string.
    * @param fullHex The full hex string (with dashes)
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromFullHex(fullHex: string): Guid {
-    return new Guid(fullHex as FullHexGuid);
+  public static fromFullHex(fullHex: string): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(fullHex as FullHexGuid));
   }
 
   /**
    * Factory method to create a GUID from a short hex string.
    * @param shortHex The short hex string (without dashes)
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromShortHex(shortHex: string): Guid {
-    return new Guid(shortHex as ShortHexGuid);
+  public static fromShortHex(shortHex: string): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(shortHex as ShortHexGuid));
   }
 
   /**
    * Factory method to create a GUID from a base64 string.
    * @param base64 The base64 encoded string
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromBase64(base64: string): Guid {
-    return new Guid(base64 as Base64Guid);
+  public static fromBase64(base64: string): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(base64 as Base64Guid));
   }
 
   /**
    * Factory method to create a GUID from a bigint.
    * @param bigint The bigint value
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromBigInt(bigint: bigint): Guid {
-    return new Guid(bigint as BigIntGuid);
+  public static fromBigInt(bigint: bigint): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(new GuidBuffer(bigint as BigIntGuid));
   }
 
   /**
    * Factory method to create a GUID from a raw buffer.
    * @param buffer The raw 16-byte buffer
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromBuffer(buffer: Buffer): Guid {
-    return new Guid(buffer as RawGuidPlatformBuffer);
+  public static fromBuffer(buffer: Buffer): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(
+      new GuidBuffer(buffer as RawGuidPlatformBuffer),
+    );
   }
 
   /**
    * Factory method to create a GUID from a raw Uint8Array.
    * This converts the Uint8Array to a Buffer first.
    * @param bytes The raw 16-byte Uint8Array
-   * @returns A new Guid instance
+   * @returns A new Guid instance with __version attached
    */
-  public static fromUint8Array(bytes: Uint8Array): Guid {
-    return new Guid(Buffer.from(bytes) as RawGuidPlatformBuffer);
+  public static fromUint8Array(bytes: Uint8Array): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(
+      new GuidBuffer(Buffer.from(bytes) as RawGuidPlatformBuffer),
+    );
   }
 
   /**
@@ -432,17 +463,22 @@ export class Guid implements IGuid {
    * Use this for deterministic GUIDs based on a namespace and name.
    * @param namespace The namespace GUID (e.g., uuid.v3.DNS)
    * @param name The name to hash within the namespace
-   * @returns A new Guid instance containing the v3 GUID
+   * @returns A new Guid instance containing the v3 GUID with __version attached
    * @example
    * const guid = Guid.v3('example.com', uuid.v3.DNS);
    */
-  public static v3(name: string, namespace: string | Buffer): Guid {
+  public static v3(
+    name: string,
+    namespace: string | Buffer,
+  ): VersionedGuidBuffer<3> {
     try {
       const namespaceStr = Buffer.isBuffer(namespace)
-        ? Guid.toFullHexGuid(namespace.toString('hex'))
+        ? GuidBuffer.toFullHexGuid(namespace.toString('hex'))
         : namespace;
       const v3Guid = uuid.v3(name, namespaceStr);
-      return new Guid(v3Guid as FullHexGuid);
+      return GuidBuffer.withVersion(
+        new GuidBuffer(v3Guid as FullHexGuid),
+      ) as VersionedGuidBuffer<3>;
     } catch (error) {
       if (error instanceof GuidError) {
         throw error;
@@ -457,17 +493,22 @@ export class Guid implements IGuid {
    * Preferred over v3 as SHA-1 is stronger than MD5.
    * @param namespace The namespace GUID (e.g., uuid.v5.DNS)
    * @param name The name to hash within the namespace
-   * @returns A new Guid instance containing the v5 GUID
+   * @returns A new Guid instance containing the v5 GUID with __version attached
    * @example
    * const guid = Guid.v5('example.com', uuid.v5.DNS);
    */
-  public static v5(name: string, namespace: string | Buffer): Guid {
+  public static v5(
+    name: string,
+    namespace: string | Buffer,
+  ): VersionedGuidBuffer<5> {
     try {
       const namespaceStr = Buffer.isBuffer(namespace)
-        ? Guid.toFullHexGuid(namespace.toString('hex'))
+        ? GuidBuffer.toFullHexGuid(namespace.toString('hex'))
         : namespace;
       const v5Guid = uuid.v5(name, namespaceStr);
-      return new Guid(v5Guid as FullHexGuid);
+      return GuidBuffer.withVersion(
+        new GuidBuffer(v5Guid as FullHexGuid),
+      ) as VersionedGuidBuffer<5>;
     } catch (error) {
       if (error instanceof GuidError) {
         throw error;
@@ -494,7 +535,7 @@ export class Guid implements IGuid {
   public get asFullHexGuid(): FullHexGuid {
     if (!this._cachedFullHex) {
       const hexString = this._value.toString('hex');
-      this._cachedFullHex = Guid.toFullHexGuid(hexString);
+      this._cachedFullHex = GuidBuffer.toFullHexGuid(hexString);
     }
     return this._cachedFullHex;
   }
@@ -518,7 +559,7 @@ export class Guid implements IGuid {
    */
   public get asShortHexGuid(): ShortHexGuid {
     if (!this._cachedShortHex) {
-      this._cachedShortHex = Guid.toShortHexGuid(this.asFullHexGuid);
+      this._cachedShortHex = GuidBuffer.toShortHexGuid(this.asFullHexGuid);
     }
     return this._cachedShortHex;
   }
@@ -563,10 +604,10 @@ export class Guid implements IGuid {
    */
   private static isBoundaryValue(value: string): boolean {
     return (
-      value === Guid.BOUNDARY_VALUES.ALL_ZEROS_FULL ||
-      value === Guid.BOUNDARY_VALUES.ALL_ZEROS_SHORT ||
-      value === Guid.BOUNDARY_VALUES.ALL_FS_FULL ||
-      value === Guid.BOUNDARY_VALUES.ALL_FS_SHORT
+      value === GuidBuffer.BOUNDARY_VALUES.ALL_ZEROS_FULL ||
+      value === GuidBuffer.BOUNDARY_VALUES.ALL_ZEROS_SHORT ||
+      value === GuidBuffer.BOUNDARY_VALUES.ALL_FS_FULL ||
+      value === GuidBuffer.BOUNDARY_VALUES.ALL_FS_SHORT
     );
   }
 
@@ -581,7 +622,7 @@ export class Guid implements IGuid {
       return false;
     }
     try {
-      const verifyFunc = Guid.VerifyFunctions[guidBrand];
+      const verifyFunc = GuidBuffer.VerifyFunctions[guidBrand];
       return verifyFunc(guid);
     } catch {
       return false;
@@ -594,7 +635,7 @@ export class Guid implements IGuid {
    * @returns The length of the GUID for the given brand.
    */
   public static guidBrandToLength(guidBrand: GuidBrandType): number {
-    const length = Guid.LengthMap[guidBrand];
+    const length = GuidBuffer.LengthMap[guidBrand];
     if (length <= 0) {
       throw new GuidError(GuidErrorType.InvalidGuidUnknownBrand, guidBrand);
     }
@@ -619,7 +660,7 @@ export class Guid implements IGuid {
       );
     }
 
-    const brand = Guid.ReverseLengthMap[length];
+    const brand = GuidBuffer.ReverseLengthMap[length];
 
     if (!brand || brand === GuidBrandType.Unknown) {
       throw new GuidError(
@@ -652,7 +693,9 @@ export class Guid implements IGuid {
       if (fullHexGuidValue === null || fullHexGuidValue === undefined) {
         return false;
       }
-      const expectedLength = Guid.guidBrandToLength(GuidBrandType.FullHexGuid);
+      const expectedLength = GuidBuffer.guidBrandToLength(
+        GuidBrandType.FullHexGuid,
+      );
       const strValue = String(fullHexGuidValue);
 
       if (strValue.length !== expectedLength) {
@@ -660,11 +703,11 @@ export class Guid implements IGuid {
       }
 
       // Boundary values are always valid
-      if (Guid.isBoundaryValue(strValue)) {
+      if (GuidBuffer.isBoundaryValue(strValue)) {
         return true;
       }
 
-      return Guid.validateUuid(strValue);
+      return GuidBuffer.validateUuid(strValue);
     } catch {
       return false;
     }
@@ -680,7 +723,9 @@ export class Guid implements IGuid {
       if (shortHexGuidValue === null || shortHexGuidValue === undefined) {
         return false;
       }
-      const expectedLength = Guid.guidBrandToLength(GuidBrandType.ShortHexGuid);
+      const expectedLength = GuidBuffer.guidBrandToLength(
+        GuidBrandType.ShortHexGuid,
+      );
       const strValue = String(shortHexGuidValue);
 
       if (strValue.length !== expectedLength) {
@@ -688,9 +733,9 @@ export class Guid implements IGuid {
       }
 
       try {
-        const fullHexGuid = Guid.toFullHexGuid(strValue);
+        const fullHexGuid = GuidBuffer.toFullHexGuid(strValue);
         // Boundary values are always valid
-        if (Guid.isBoundaryValue(fullHexGuid)) {
+        if (GuidBuffer.isBoundaryValue(fullHexGuid)) {
           return true;
         }
         return uuid.validate(fullHexGuid);
@@ -715,22 +760,23 @@ export class Guid implements IGuid {
       let valueLength: number;
       if (typeof value === 'bigint') {
         valueLength = value.toString(16).length;
-      } else if (Guid.isBufferLike(value)) {
+      } else if (GuidBuffer.isBufferLike(value)) {
         valueLength = value.length;
       } else {
         valueLength = String(value).length;
       }
 
       const result =
-        valueLength === Guid.guidBrandToLength(GuidBrandType.Base64Guid);
+        valueLength === GuidBuffer.guidBrandToLength(GuidBrandType.Base64Guid);
 
       if (result) {
         try {
-          const fromBase64: Uint8Array = Guid.toRawGuidPlatformBuffer(value);
+          const fromBase64: Uint8Array =
+            GuidBuffer.toRawGuidPlatformBuffer(value);
           const hexString = (fromBase64 as Buffer).toString('hex');
-          const fullHexGuid = Guid.toFullHexGuid(hexString);
+          const fullHexGuid = GuidBuffer.toFullHexGuid(hexString);
           // Boundary values are always valid
-          if (Guid.isBoundaryValue(fullHexGuid)) {
+          if (GuidBuffer.isBoundaryValue(fullHexGuid)) {
             return true;
           }
           return uuid.validate(fullHexGuid);
@@ -754,13 +800,13 @@ export class Guid implements IGuid {
       if (value === null || value === undefined) {
         return false;
       }
-      const expectedLength = Guid.guidBrandToLength(
+      const expectedLength = GuidBuffer.guidBrandToLength(
         GuidBrandType.RawGuidPlatformBuffer,
       );
       let valueLength: number;
       if (typeof value === 'bigint') {
         valueLength = value.toString(16).length;
-      } else if (Guid.isBufferLike(value)) {
+      } else if (GuidBuffer.isBufferLike(value)) {
         valueLength = value.length;
       } else {
         valueLength = String(value).length;
@@ -771,18 +817,18 @@ export class Guid implements IGuid {
       }
 
       try {
-        if (!Guid.isBufferLike(value)) {
+        if (!GuidBuffer.isBufferLike(value)) {
           return false;
         }
         // Convert Uint8Array to Buffer if needed
         const buffer = Buffer.isBuffer(value) ? value : Buffer.from(value);
         const hexString = buffer.toString('hex');
-        const fullHexGuid = Guid.toFullHexGuid(hexString);
+        const fullHexGuid = GuidBuffer.toFullHexGuid(hexString);
         // Boundary values are always valid
-        if (Guid.isBoundaryValue(fullHexGuid)) {
+        if (GuidBuffer.isBoundaryValue(fullHexGuid)) {
           return true;
         }
-        return Guid.validateUuid(fullHexGuid);
+        return GuidBuffer.validateUuid(fullHexGuid);
       } catch {
         return false;
       }
@@ -804,14 +850,14 @@ export class Guid implements IGuid {
       if (typeof value !== 'bigint') {
         return false;
       }
-      if (value < 0n || value > Guid.MAX_BIGINT_VALUE) {
+      if (value < 0n || value > GuidBuffer.MAX_BIGINT_VALUE) {
         return false;
       }
 
       try {
-        const fromBigInt = Guid.toFullHexFromBigInt(value);
+        const fromBigInt = GuidBuffer.toFullHexFromBigInt(value);
         // Boundary values are always valid
-        if (Guid.isBoundaryValue(fromBigInt)) {
+        if (GuidBuffer.isBoundaryValue(fromBigInt)) {
           return true;
         }
         return uuid.validate(fromBigInt);
@@ -837,12 +883,12 @@ export class Guid implements IGuid {
       return GuidBrandType.BigIntGuid;
     }
 
-    const isBuffer = Guid.isBufferLike(value);
+    const isBuffer = GuidBuffer.isBufferLike(value);
     const expectedLength = isBuffer
       ? (value as Buffer | Uint8Array).length
       : String(value).length;
 
-    return Guid.lengthToGuidBrand(expectedLength, isBuffer);
+    return GuidBuffer.lengthToGuidBrand(expectedLength, isBuffer);
   }
 
   /**
@@ -878,36 +924,38 @@ export class Guid implements IGuid {
     }
 
     if (typeof guid === 'bigint') {
-      return Guid.toFullHexFromBigInt(guid);
+      return GuidBuffer.toFullHexFromBigInt(guid);
     } else if (
-      Guid.isBufferLike(guid) &&
+      GuidBuffer.isBufferLike(guid) &&
       guid.length ===
-        Guid.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
+        GuidBuffer.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
     ) {
       const hexString = (guid as Buffer).toString('hex');
       const shortHex = hexString as ShortHexGuid;
-      return Guid.shortGuidToFullGuid(shortHex);
-    } else if (Guid.isBufferLike(guid)) {
+      return GuidBuffer.shortGuidToFullGuid(shortHex);
+    } else if (GuidBuffer.isBufferLike(guid)) {
       throw new GuidError(GuidErrorType.InvalidGuid);
     }
     // all remaining cases are string types
     const strValue = String(guid);
     if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.ShortHexGuid)
+      strValue.length ===
+      GuidBuffer.guidBrandToLength(GuidBrandType.ShortHexGuid)
     ) {
       // short hex guid
-      return Guid.shortGuidToFullGuid(strValue);
+      return GuidBuffer.shortGuidToFullGuid(strValue);
     } else if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.FullHexGuid)
+      strValue.length ===
+      GuidBuffer.guidBrandToLength(GuidBrandType.FullHexGuid)
     ) {
       // already a full hex guid
       return strValue as FullHexGuid;
     } else if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.Base64Guid)
+      strValue.length === GuidBuffer.guidBrandToLength(GuidBrandType.Base64Guid)
     ) {
       // base64 guid
       const shortGuid = Buffer.from(strValue, 'base64').toString('hex');
-      return Guid.shortGuidToFullGuid(shortGuid);
+      return GuidBuffer.shortGuidToFullGuid(shortGuid);
     } else {
       throw new GuidError(GuidErrorType.InvalidGuid);
     }
@@ -927,32 +975,34 @@ export class Guid implements IGuid {
     }
 
     if (typeof guid === 'bigint') {
-      const fullHex = Guid.toFullHexFromBigInt(guid);
+      const fullHex = GuidBuffer.toFullHexFromBigInt(guid);
       return fullHex.replace(/-/g, '') as ShortHexGuid;
     } else if (
-      Guid.isBufferLike(guid) &&
+      GuidBuffer.isBufferLike(guid) &&
       guid.length ===
-        Guid.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
+        GuidBuffer.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
     ) {
       return (guid as Buffer).toString('hex') as ShortHexGuid;
-    } else if (Guid.isBufferLike(guid)) {
+    } else if (GuidBuffer.isBufferLike(guid)) {
       throw new GuidError(GuidErrorType.InvalidGuid);
     }
     // all remaining cases are string types
     const strValue = String(guid);
 
     if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.ShortHexGuid)
+      strValue.length ===
+      GuidBuffer.guidBrandToLength(GuidBrandType.ShortHexGuid)
     ) {
       // already a short hex guid
       return strValue as ShortHexGuid;
     } else if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.FullHexGuid)
+      strValue.length ===
+      GuidBuffer.guidBrandToLength(GuidBrandType.FullHexGuid)
     ) {
       // full hex guid
       return strValue.replace(/-/g, '') as ShortHexGuid;
     } else if (
-      strValue.length === Guid.guidBrandToLength(GuidBrandType.Base64Guid)
+      strValue.length === GuidBuffer.guidBrandToLength(GuidBrandType.Base64Guid)
     ) {
       // base64 guid
       return Buffer.from(strValue, 'base64').toString('hex') as ShortHexGuid;
@@ -967,7 +1017,7 @@ export class Guid implements IGuid {
    * @returns The bigint as a full hex GUID.
    */
   public static toFullHexFromBigInt(bigInt: bigint): FullHexGuid {
-    if (bigInt < 0n || bigInt > Guid.MAX_BIGINT_VALUE) {
+    if (bigInt < 0n || bigInt > GuidBuffer.MAX_BIGINT_VALUE) {
       throw new GuidError(GuidErrorType.InvalidGuid);
     }
     const uuidBigInt = bigInt.toString(16).padStart(32, '0');
@@ -996,20 +1046,20 @@ export class Guid implements IGuid {
   public static toRawGuidPlatformBuffer(
     value: GuidInput,
   ): RawGuidPlatformBuffer {
-    const expectedBrand = Guid.whichBrand(value);
+    const expectedBrand = GuidBuffer.whichBrand(value);
     let rawGuidBufferResult: RawGuidPlatformBuffer = Buffer.alloc(
       0,
     ) as RawGuidPlatformBuffer;
     switch (expectedBrand) {
       case GuidBrandType.FullHexGuid:
         rawGuidBufferResult = Buffer.from(
-          Guid.toShortHexGuid(value as FullHexGuid),
+          GuidBuffer.toShortHexGuid(value as FullHexGuid),
           'hex',
         ) as RawGuidPlatformBuffer;
         break;
       case GuidBrandType.ShortHexGuid:
         rawGuidBufferResult = Buffer.from(
-          Guid.toShortHexGuid(value as ShortHexGuid),
+          GuidBuffer.toShortHexGuid(value as ShortHexGuid),
           'hex',
         ) as RawGuidPlatformBuffer;
         break;
@@ -1036,7 +1086,9 @@ export class Guid implements IGuid {
         break;
       case GuidBrandType.BigIntGuid:
         rawGuidBufferResult = Buffer.from(
-          Guid.toShortHexGuid(Guid.toFullHexFromBigInt(value as bigint)),
+          GuidBuffer.toShortHexGuid(
+            GuidBuffer.toFullHexFromBigInt(value as bigint),
+          ),
           'hex',
         ) as RawGuidPlatformBuffer;
         break;
@@ -1045,7 +1097,7 @@ export class Guid implements IGuid {
     }
     if (
       rawGuidBufferResult.length !==
-      Guid.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
+      GuidBuffer.guidBrandToLength(GuidBrandType.RawGuidPlatformBuffer)
     ) {
       throw new GuidError(
         GuidErrorType.InvalidGuidUnknownLength,
@@ -1110,15 +1162,17 @@ export class Guid implements IGuid {
    * @returns True if the GUID is null, undefined, or empty
    */
   public static isNilOrEmpty(guid: IGuid | null | undefined): boolean {
-    return !guid || (guid instanceof Guid && guid.isEmpty());
+    return !guid || (guid instanceof GuidBuffer && guid.isEmpty());
   }
 
   /**
    * Creates a new Guid instance with the same value as this one.
-   * @returns A new Guid instance with identical value
+   * @returns A new Guid instance with identical value and __version attached
    */
-  public clone(): Guid {
-    return new Guid(Buffer.from(this._value) as RawGuidPlatformBuffer);
+  public clone(): VersionedGuidBuffer {
+    return GuidBuffer.withVersion(
+      new GuidBuffer(Buffer.from(this._value) as RawGuidPlatformBuffer),
+    );
   }
 
   /**
@@ -1142,7 +1196,7 @@ export class Guid implements IGuid {
    */
   public getVersion(): number | undefined {
     // Skip boundary values
-    if (Guid.isBoundaryValue(this.asFullHexGuid)) {
+    if (GuidBuffer.isBoundaryValue(this.asFullHexGuid)) {
       return undefined;
     }
 
@@ -1169,7 +1223,7 @@ export class Guid implements IGuid {
    */
   public isValidV4(): boolean {
     // Boundary values are considered valid
-    if (Guid.isBoundaryValue(this.asFullHexGuid)) {
+    if (GuidBuffer.isBoundaryValue(this.asFullHexGuid)) {
       return true;
     }
 
@@ -1241,14 +1295,14 @@ export class Guid implements IGuid {
 
   /**
    * Creates a v1 GUID (time-based).
-   * @returns A new Guid instance containing a v1 GUID
+   * @returns A new Guid instance containing a v1 GUID with __version attached
    */
-  public static v1(): Guid {
+  public static v1(): VersionedGuidBuffer<1> {
     try {
       const v1Guid = uuid.v1();
-      return new Guid(v1Guid as FullHexGuid) as Guid & {
-        readonly __version: 1;
-      };
+      return GuidBuffer.withVersion(
+        new GuidBuffer(v1Guid as FullHexGuid),
+      ) as VersionedGuidBuffer<1>;
     } catch (error) {
       if (error instanceof GuidError) throw error;
       throw new GuidError(GuidErrorType.InvalidGuid);
@@ -1276,22 +1330,23 @@ export class Guid implements IGuid {
 
   /**
    * Creates a GUID from URL-safe base64.
+   * @returns A new Guid instance with __version attached
    */
-  public static fromUrlSafeBase64(urlSafe: string): Guid {
+  public static fromUrlSafeBase64(urlSafe: string): VersionedGuidBuffer {
     const base64 = urlSafe
       .replace(/-/g, '+')
       .replace(/_/g, '/')
       .padEnd(24, '=');
-    return new Guid(base64 as Base64Guid);
+    return GuidBuffer.withVersion(new GuidBuffer(base64 as Base64Guid));
   }
 
   /**
    * Alias for isRawGuidPlatformBuffer for backward compatibility
    */
-  public static isRawGuidBuffer = Guid.isRawGuidPlatformBuffer;
+  public static isRawGuidBuffer = GuidBuffer.isRawGuidPlatformBuffer;
 
   /**
    * Alias for toRawGuidPlatformBuffer for backward compatibility
    */
-  public static toRawGuidBuffer = Guid.toRawGuidPlatformBuffer;
+  public static toRawGuidBuffer = GuidBuffer.toRawGuidPlatformBuffer;
 }

@@ -16,26 +16,29 @@ import {
   ECIESError,
   ECIESErrorTypeEnum,
   EciesVersionEnum,
+  IECIESConfig,
+  IECIESConstants,
   IIdProvider,
 } from '@digitaldefiance/ecies-lib';
 
-import { PlatformID } from '../../interfaces';
+import { getNodeRuntimeConfiguration } from '../../constants';
+import { IConstants, PlatformID } from '../../interfaces';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import type { IMember } from '../../interfaces/member';
 import { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
 import { getEnhancedNodeIdProvider } from '../../typed-configuration';
+import { AESGCMService } from '../aes-gcm';
 
 import { EciesCryptoCore } from './crypto-core';
-import { EciesSingleRecipientCore } from './single-recipient';
 
 /**
  * Multiple recipient encryption/decryption functions for ECIES
  */
 export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
+  protected readonly aesGcmService: AESGCMService;
   protected readonly cryptoCore: EciesCryptoCore;
-  protected readonly singleRecipientCore: EciesSingleRecipientCore;
   protected readonly idProvider: IIdProvider<TID>;
 
   /**
@@ -44,11 +47,13 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
    * @param idProvider ID provider for recipient IDs. Defaults to enhanced typed provider.
    */
   constructor(
-    cryptoCore: EciesCryptoCore,
+    constants: IConstants = getNodeRuntimeConfiguration(),
+    config: IECIESConfig = constants.ECIES_CONFIG,
+    eciesParams: IECIESConstants = constants.ECIES,
     idProvider: IIdProvider<TID> = getEnhancedNodeIdProvider<TID>(),
   ) {
-    this.cryptoCore = cryptoCore;
-    this.singleRecipientCore = new EciesSingleRecipientCore(cryptoCore.config);
+    this.aesGcmService = new AESGCMService(constants);
+    this.cryptoCore = new EciesCryptoCore(config, eciesParams);
     this.idProvider = idProvider;
   }
 
@@ -733,7 +738,7 @@ export class EciesMultiRecipient<TID extends PlatformID = Buffer> {
         0,
       );
     } else {
-      // Default assumption: all keys use Simple encryption type (more efficient)
+      // Default assumption: all keys use basic encryption type (more efficient)
       encryptedKeysSize =
         recipientCount * this.cryptoCore.consts.MULTIPLE.ENCRYPTED_KEY_SIZE;
     }

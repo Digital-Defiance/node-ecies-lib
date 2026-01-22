@@ -23,7 +23,7 @@ import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { getNodeRuntimeConfiguration } from './constants';
 import {
-  getNodeEciesTranslation,
+  getLazyNodeEciesTranslation,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
 import { PlatformID } from './interfaces';
@@ -127,7 +127,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     this._name = name;
     if (!this._name || this._name.length == 0) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
         MemberErrorType.MissingMemberName,
@@ -135,7 +135,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
     if (this._name.trim() != this._name) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace,
         ),
         MemberErrorType.InvalidMemberNameWhitespace,
@@ -229,7 +229,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public get wallet(): Wallet {
     if (!this._wallet) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Member_NoWallet),
+        getLazyNodeEciesTranslation(NodeEciesStringKey.Error_Member_NoWallet),
         MemberErrorType.NoWallet,
       );
     }
@@ -284,7 +284,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   ): Promise<void> {
     if (!this._privateKey) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
         ),
         MemberErrorType.MissingPrivateKey,
@@ -332,7 +332,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public loadWallet(mnemonic: SecureString): void {
     if (this._wallet) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_WalletAlreadyLoaded,
         ),
         MemberErrorType.WalletAlreadyLoaded,
@@ -348,7 +348,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
     ) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_InvalidMnemonic,
         ),
         MemberErrorType.InvalidMnemonic,
@@ -371,7 +371,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public sign(data: Buffer): SignatureBuffer {
     if (!this._privateKey) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
         ),
         MemberErrorType.MissingPrivateKey,
@@ -386,7 +386,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   public signData(data: Buffer): SignatureBuffer {
     if (!this._privateKey) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
         ),
         MemberErrorType.MissingPrivateKey,
@@ -424,7 +424,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     // Validate input
     if (!data) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingEncryptionData,
         ),
         MemberErrorType.MissingEncryptionData,
@@ -437,7 +437,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       : Buffer.byteLength(data);
     if (dataSize > Member.MAX_ENCRYPTION_SIZE) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_EncryptionDataTooLarge,
         ),
         MemberErrorType.EncryptionDataTooLarge,
@@ -450,25 +450,20 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     // Use recipient public key or self public key
     const targetPublicKey = recipientPublicKey || this._publicKey;
 
-    return this._eciesService.encryptSimpleOrSingle(
-      false,
-      targetPublicKey,
-      bufferData,
-    );
+    return this._eciesService.encryptWithLength(targetPublicKey, bufferData);
   }
 
   public decryptData(encryptedData: Buffer): Buffer {
     if (!this._privateKey) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
         ),
         MemberErrorType.MissingPrivateKey,
       );
     }
     // decryptSingleWithHeader now returns the Buffer directly
-    return this._eciesService.decryptSimpleOrSingleWithHeader(
-      false,
+    return this._eciesService.decryptWithLengthAndHeader(
       Buffer.from(this._privateKey.value),
       encryptedData,
     );
@@ -510,7 +505,11 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     },
   ): AsyncGenerator<IEncryptedChunk, void, unknown> {
     const targetPublicKey = options?.recipientPublicKey || this._publicKey;
-    const stream = new EncryptionStream<TID>(this._eciesService);
+    const stream = new EncryptionStream<TID>(
+      Constants,
+      Constants.ECIES_CONFIG,
+      this._eciesService,
+    );
 
     for await (const chunk of stream.encryptStream(source, targetPublicKey, {
       onProgress: options?.onProgress,
@@ -529,14 +528,18 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
   ): AsyncGenerator<Buffer, void, unknown> {
     if (!this._privateKey) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
         ),
         MemberErrorType.MissingPrivateKey,
       );
     }
 
-    const stream = new EncryptionStream<TID>(this._eciesService);
+    const stream = new EncryptionStream<TID>(
+      Constants,
+      Constants.ECIES_CONFIG,
+      this._eciesService,
+    );
 
     for await (const chunk of stream.decryptStream(
       source,
@@ -637,7 +640,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingMemberName,
         ),
         MemberErrorType.MissingMemberName,
@@ -645,7 +648,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
     if (name.trim() != name) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace,
         ),
         MemberErrorType.InvalidMemberNameWhitespace,
@@ -653,13 +656,15 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
     if (!email || email.toString().length == 0) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(NodeEciesStringKey.Error_Member_MissingEmail),
+        getLazyNodeEciesTranslation(
+          NodeEciesStringKey.Error_Member_MissingEmail,
+        ),
         MemberErrorType.MissingEmail,
       );
     }
     if (email.toString().trim() != email.toString()) {
       throw new NodeMemberError(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_InvalidEmailWhitespace,
         ),
         MemberErrorType.InvalidEmailWhitespace,

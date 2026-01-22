@@ -3,6 +3,7 @@ import {
   ObjectIdProvider,
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
+import { Constants } from '@digitaldefiance/node-ecies-lib';
 
 import { registerNodeRuntimeConfiguration } from '../src/constants';
 import { IMember } from '../src/interfaces/member';
@@ -10,20 +11,21 @@ import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService } from '../src/services/ecies/service';
 import { EncryptionStream } from '../src/services/encryption-stream';
 import { MultiRecipientProcessor } from '../src/services/multi-recipient-processor';
+import { GuidV4Buffer } from '../src/types';
 
 describe('Cross-Platform ID Size Compatibility', () => {
   let originalConfig: ReturnType<typeof registerNodeRuntimeConfiguration>;
 
   beforeEach(() => {
     // Save original config to restore later
-    originalConfig = registerNodeRuntimeConfiguration({
+    originalConfig = registerNodeRuntimeConfiguration('object-id-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
 
   afterEach(() => {
     // Restore default ObjectIdProvider (12 bytes) to prevent test interference
-    registerNodeRuntimeConfiguration({
+    registerNodeRuntimeConfiguration('object-id-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
@@ -31,7 +33,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
   it('should support 16-byte GUIDs for multi-recipient encryption', async () => {
     // 1. Configure to use GUIDs
     const guidProvider = new GuidV4Provider();
-    const config = registerNodeRuntimeConfiguration({
+    const config = registerNodeRuntimeConfiguration('guid-config', {
       idProvider: guidProvider,
     });
 
@@ -39,7 +41,11 @@ describe('Cross-Platform ID Size Compatibility', () => {
 
     // Pass the full configuration to the service
     const nodeEcies = new ECIESService(config);
-    const nodeStream = new EncryptionStream(nodeEcies);
+    const nodeStream = new EncryptionStream(
+      Constants,
+      Constants.ECIES_CONFIG,
+      nodeEcies,
+    );
 
     // 2. Generate keys and recipients
     const mnemonic1 = nodeEcies.generateNewMnemonic();
@@ -91,7 +97,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
   it('should support 16-byte GUIDs for non-streaming Multiple mode', async () => {
     // 1. Configure to use GUIDs
     const guidProvider = new GuidV4Provider();
-    const config = registerNodeRuntimeConfiguration({
+    const config = registerNodeRuntimeConfiguration('guid-config', {
       idProvider: guidProvider,
     });
 
@@ -106,7 +112,9 @@ describe('Cross-Platform ID Size Compatibility', () => {
 
     const cryptoCore = new EciesCryptoCore(fullConfig, config.ECIES);
     // Pass guidProvider to processor
-    const processor = new MultiRecipientProcessor(
+    const processor = new MultiRecipientProcessor<GuidV4Buffer>(
+      Constants,
+      Constants.ECIES_CONFIG,
       cryptoCore,
       guidProvider,
       config.ECIES,

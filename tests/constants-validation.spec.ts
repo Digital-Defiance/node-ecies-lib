@@ -59,8 +59,8 @@ describe('Constants Validation', () => {
 
       expect(ECIES.PUBLIC_KEY_LENGTH).toBe(33);
       expect(ECIES.IV_SIZE).toBe(12);
-      expect(ECIES.SINGLE).toBeDefined();
-      expect(ECIES.SIMPLE).toBeDefined();
+      expect(ECIES.WITH_LENGTH).toBeDefined();
+      expect(ECIES.BASIC).toBeDefined();
       expect(ECIES.MULTIPLE).toBeDefined();
     });
 

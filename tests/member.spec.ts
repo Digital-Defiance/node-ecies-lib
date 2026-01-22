@@ -317,16 +317,14 @@ describe('DigitalDefiance ECIES Member', () => {
       const memberJson = alice.member.toJson();
       const reloadedMember = Member.fromJson(memberJson, eciesService);
       reloadedMember.loadWallet(alice.mnemonic);
-      const encrypted = eciesService.encryptSimpleOrSingle(
-        false,
+      const encrypted = eciesService.encryptWithLength(
         alice.member.publicKey,
         Buffer.from('hello world'),
       );
       if (!reloadedMember.privateKey) {
         throw new Error('Private key not loaded');
       }
-      const decrypted = eciesService.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = eciesService.decryptWithLengthAndHeader(
         Buffer.from(reloadedMember.privateKey.value),
         encrypted,
       );

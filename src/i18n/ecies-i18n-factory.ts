@@ -106,7 +106,7 @@ export function resetEciesPluginI18nEngine(): void {
 /**
  * Get a translation from the Node ECIES component
  */
-export function getNodeEciesTranslation(
+export function getLazyNodeEciesTranslation(
   key: NodeEciesStringKey,
   variables?: Record<string, string | number>,
   language?: CoreLanguageCode,

@@ -31,8 +31,8 @@ describe('Constants Validation Integration Tests', () => {
     });
 
     it('should have ECIES constants properly structured', () => {
-      expect(Constants.ECIES.SIMPLE).toBeDefined();
-      expect(Constants.ECIES.SINGLE).toBeDefined();
+      expect(Constants.ECIES.BASIC).toBeDefined();
+      expect(Constants.ECIES.WITH_LENGTH).toBeDefined();
       expect(Constants.ECIES.MULTIPLE).toBeDefined();
     });
 
@@ -239,8 +239,8 @@ describe('Constants Validation Integration Tests', () => {
 
     it('should have valid encryption constants', () => {
       // Verify ECIES constants exist
-      expect(Constants.ECIES.SIMPLE).toBeDefined();
-      expect(Constants.ECIES.SINGLE).toBeDefined();
+      expect(Constants.ECIES.BASIC).toBeDefined();
+      expect(Constants.ECIES.WITH_LENGTH).toBeDefined();
       expect(Constants.ECIES.MULTIPLE).toBeDefined();
     });
 

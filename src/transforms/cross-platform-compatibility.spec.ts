@@ -181,16 +181,11 @@ describe('Cross-Platform Transform Binary Compatibility', () => {
         nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
 
       const plaintext = Buffer.from('Secret message from Node');
-      const encrypted = await nodeEcies.encryptSimpleOrSingle(
-        false,
-        publicKey,
-        plaintext,
-      );
+      const encrypted = await nodeEcies.encryptWithLength(publicKey, plaintext);
 
       // Decrypt with Browser
       const browserEcies = new BrowserECIES();
-      const decrypted = await browserEcies.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await browserEcies.decryptWithLengthAndHeader(
         new Uint8Array(privateKey),
         new Uint8Array(encrypted),
       );
@@ -207,16 +202,14 @@ describe('Cross-Platform Transform Binary Compatibility', () => {
       const plaintext = new Uint8Array(
         Buffer.from('Secret message from Browser'),
       );
-      const encrypted = await browserEcies.encryptSimpleOrSingle(
-        false,
+      const encrypted = await browserEcies.encryptWithLength(
         publicKey,
         plaintext,
       );
 
       // Decrypt with Node
       const nodeEcies = new NodeECIES();
-      const decrypted = await nodeEcies.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await nodeEcies.decryptWithLengthAndHeader(
         Buffer.from(privateKey),
         Buffer.from(encrypted),
       );
@@ -236,14 +229,9 @@ describe('Cross-Platform Transform Binary Compatibility', () => {
       }
 
       // Node encrypt -> Browser decrypt
-      const encrypted = await nodeEcies.encryptSimpleOrSingle(
-        false,
-        publicKey,
-        plaintext,
-      );
+      const encrypted = await nodeEcies.encryptWithLength(publicKey, plaintext);
       const browserEcies = new BrowserECIES();
-      const decrypted = await browserEcies.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await browserEcies.decryptWithLengthAndHeader(
         new Uint8Array(privateKey),
         new Uint8Array(encrypted),
       );

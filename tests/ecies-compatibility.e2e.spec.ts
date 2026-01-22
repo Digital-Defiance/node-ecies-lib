@@ -15,12 +15,12 @@ import { Wallet } from '@ethereumjs/wallet';
 import { createECDH, randomBytes } from 'crypto';
 
 import { getNodeRuntimeConfiguration } from '../src/constants';
-import { ISimpleKeyPairBuffer } from '../src/interfaces/simple-key-pair-buffer';
 import { Member as BackendMember } from '../src/member';
 import { EciesCryptoCore as BackendEciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
 import { EciesSingleRecipientCore as BackendEciesSingleRecipient } from '../src/services/ecies/single-recipient';
 import { SignatureBuffer } from '../src/types';
+import { ISimpleKeyPairBuffer } from '@digitaldefiance/node-ecies-lib';
 
 describe('ECIES Cross-Platform Compatibility', () => {
   let config: IECIESConfig;
@@ -148,13 +148,13 @@ describe('ECIES Cross-Platform Compatibility', () => {
     it('should encrypt/decrypt simple mode cross-platform', async () => {
       // Backend encrypts, frontend decrypts
       const backendEncrypted = backendSingle.encrypt(
-        true, // simple mode
+        EciesEncryptionTypeEnum.Basic, // simple mode
         receiverKeyPair.publicKey,
         testMessage,
       );
 
       const frontendDecrypted = await frontendSingle.decryptWithHeader(
-        EciesEncryptionTypeEnum.Simple,
+        EciesEncryptionTypeEnum.Basic,
         new Uint8Array(receiverKeyPair.privateKey),
         new Uint8Array(backendEncrypted),
       );
@@ -163,13 +163,13 @@ describe('ECIES Cross-Platform Compatibility', () => {
 
       // Frontend encrypts, backend decrypts
       const frontendEncrypted = await frontendSingle.encrypt(
-        true, // simple mode
+        EciesEncryptionTypeEnum.Basic, // simple mode
         new Uint8Array(receiverKeyPair.publicKey),
         new Uint8Array(testMessage),
       );
 
       const backendDecrypted = backendSingle.decryptWithHeader(
-        EciesEncryptionTypeEnum.Simple,
+        EciesEncryptionTypeEnum.Basic,
         receiverKeyPair.privateKey,
         Buffer.from(frontendEncrypted),
       );
@@ -180,13 +180,13 @@ describe('ECIES Cross-Platform Compatibility', () => {
     it('should encrypt/decrypt single mode cross-platform', async () => {
       // Backend encrypts, frontend decrypts
       const backendEncrypted = backendSingle.encrypt(
-        false, // single mode
+        EciesEncryptionTypeEnum.WithLength, // single mode
         receiverKeyPair.publicKey,
         testMessage,
       );
 
       const frontendDecrypted = await frontendSingle.decryptWithHeader(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         new Uint8Array(receiverKeyPair.privateKey),
         new Uint8Array(backendEncrypted),
       );
@@ -195,13 +195,13 @@ describe('ECIES Cross-Platform Compatibility', () => {
 
       // Frontend encrypts, backend decrypts
       const frontendEncrypted = await frontendSingle.encrypt(
-        false, // single mode
+        EciesEncryptionTypeEnum.WithLength, // single mode
         new Uint8Array(receiverKeyPair.publicKey),
         new Uint8Array(testMessage),
       );
 
       const backendDecrypted = backendSingle.decryptWithHeader(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         receiverKeyPair.privateKey,
         Buffer.from(frontendEncrypted),
       );
@@ -211,18 +211,18 @@ describe('ECIES Cross-Platform Compatibility', () => {
 
     it('should parse headers identically', async () => {
       const encrypted = backendSingle.encrypt(
-        false, // single mode
+        EciesEncryptionTypeEnum.WithLength, // single mode
         receiverKeyPair.publicKey,
         testMessage,
       );
 
       const frontendParsed = frontendSingle.parseEncryptedMessage(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         new Uint8Array(encrypted),
       );
 
       const backendParsed = backendSingle.parseEncryptedMessage(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         encrypted,
       );
 
@@ -244,15 +244,13 @@ describe('ECIES Cross-Platform Compatibility', () => {
   describe('Service Level Compatibility', () => {
     it('should encrypt/decrypt using services cross-platform', async () => {
       // Backend service encrypts, frontend service decrypts
-      const backendEncrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
+      const backendEncrypted = backendService.encryptWithLength(
         Buffer.from(receiverKeyPair.publicKey),
         testMessage,
       );
 
       const frontendDecrypted =
-        await frontendService.decryptSimpleOrSingleWithHeader(
-          false, // single mode
+        await frontendService.decryptWithLengthAndHeader(
           new Uint8Array(receiverKeyPair.privateKey),
           new Uint8Array(backendEncrypted),
         );
@@ -260,14 +258,12 @@ describe('ECIES Cross-Platform Compatibility', () => {
       expect(Buffer.from(frontendDecrypted)).toEqual(testMessage);
 
       // Frontend service encrypts, backend service decrypts
-      const frontendEncrypted = await frontendService.encryptSimpleOrSingle(
-        false, // single mode
+      const frontendEncrypted = await frontendService.encryptWithLength(
         new Uint8Array(receiverKeyPair.publicKey),
         new Uint8Array(testMessage),
       );
 
-      const backendDecrypted = backendService.decryptSimpleOrSingleWithHeader(
-        false, // single mode
+      const backendDecrypted = backendService.decryptWithLengthAndHeader(
         receiverKeyPair.privateKey,
         Buffer.from(frontendEncrypted),
       );
@@ -358,8 +354,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
       const emptyMessage = Buffer.alloc(0);
 
       expect(() => {
-        backendService.encryptSimpleOrSingle(
-          false,
+        backendService.encryptWithLength(
           receiverKeyPair.publicKey,
           emptyMessage,
         );
@@ -369,14 +364,12 @@ describe('ECIES Cross-Platform Compatibility', () => {
     it('should handle large messages', async () => {
       const largeMessage = randomBytes(1024 * 100); // 100KB
 
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
+      const encrypted = backendService.encryptWithLength(
         receiverKeyPair.publicKey,
         largeMessage,
       );
 
-      const decrypted = await frontendService.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await frontendService.decryptWithLengthAndHeader(
         new Uint8Array(receiverKeyPair.privateKey),
         new Uint8Array(encrypted),
       );
@@ -385,8 +378,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
     });
 
     it('should reject corrupted data', async () => {
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
+      const encrypted = backendService.encryptWithLength(
         receiverKeyPair.publicKey,
         testMessage,
       );
@@ -396,8 +388,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
       corrupted[corrupted.length - 1] ^= 0xff;
 
       await expect(
-        frontendService.decryptSimpleOrSingleWithHeader(
-          false,
+        frontendService.decryptWithLengthAndHeader(
           new Uint8Array(receiverKeyPair.privateKey),
           new Uint8Array(corrupted),
         ),
@@ -405,8 +396,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
     });
 
     it('should reject wrong private key', async () => {
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
+      const encrypted = backendService.encryptWithLength(
         receiverKeyPair.publicKey,
         testMessage,
       );
@@ -417,8 +407,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
       const wrongPrivateKey = wrongWallet.getPrivateKey();
 
       await expect(
-        frontendService.decryptSimpleOrSingleWithHeader(
-          false,
+        frontendService.decryptWithLengthAndHeader(
           new Uint8Array(wrongPrivateKey),
           new Uint8Array(encrypted),
         ),
@@ -436,19 +425,14 @@ describe('ECIES Cross-Platform Compatibility', () => {
       // Backend performance
       const backendStart = Date.now();
       for (let i = 0; i < iterations; i++) {
-        backendService.encryptSimpleOrSingle(
-          false,
-          receiverKeyPair.publicKey,
-          message,
-        );
+        backendService.encryptWithLength(receiverKeyPair.publicKey, message);
       }
       const backendTime = Date.now() - backendStart;
 
       // Frontend performance
       const frontendStart = Date.now();
       for (let i = 0; i < iterations; i++) {
-        await frontendService.encryptSimpleOrSingle(
-          false,
+        await frontendService.encryptWithLength(
           new Uint8Array(receiverKeyPair.publicKey),
           new Uint8Array(message),
         );
@@ -462,8 +446,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
     it('should have comparable decryption performance', async () => {
       await withConsoleMocks({ mute: true }, async () => {
         const message = randomBytes(messageSize);
-        const encrypted = backendService.encryptSimpleOrSingle(
-          false,
+        const encrypted = backendService.encryptWithLength(
           receiverKeyPair.publicKey,
           message,
         );
@@ -471,8 +454,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
         // Backend performance
         const backendStart = Date.now();
         for (let i = 0; i < iterations; i++) {
-          backendService.decryptSimpleOrSingleWithHeader(
-            false,
+          backendService.decryptWithLengthAndHeader(
             receiverKeyPair.privateKey,
             encrypted,
           );
@@ -482,8 +464,7 @@ describe('ECIES Cross-Platform Compatibility', () => {
         // Frontend performance
         const frontendStart = Date.now();
         for (let i = 0; i < iterations; i++) {
-          await frontendService.decryptSimpleOrSingleWithHeader(
-            false,
+          await frontendService.decryptWithLengthAndHeader(
             new Uint8Array(receiverKeyPair.privateKey),
             new Uint8Array(encrypted),
           );
@@ -508,14 +489,12 @@ describe('ECIES Cross-Platform Compatibility', () => {
     it('should produce identical header structures', async () => {
       const message = Buffer.from('Header structure test');
 
-      const backendEncrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
+      const backendEncrypted = backendService.encryptWithLength(
         receiverKeyPair.publicKey,
         message,
       );
 
-      const frontendEncrypted = await frontendService.encryptSimpleOrSingle(
-        false, // single mode
+      const frontendEncrypted = await frontendService.encryptWithLength(
         new Uint8Array(receiverKeyPair.publicKey),
         new Uint8Array(message),
       );
@@ -535,14 +514,12 @@ describe('ECIES Cross-Platform Compatibility', () => {
       ];
 
       for (const testCase of testCases) {
-        const encrypted = backendService.encryptSimpleOrSingle(
-          false,
+        const encrypted = backendService.encryptWithLength(
           receiverKeyPair.publicKey,
           testCase,
         );
 
-        const decrypted = await frontendService.decryptSimpleOrSingleWithHeader(
-          false,
+        const decrypted = await frontendService.decryptWithLengthAndHeader(
           new Uint8Array(receiverKeyPair.privateKey),
           new Uint8Array(encrypted),
         );

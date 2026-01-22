@@ -7,7 +7,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
-  getNodeEciesTranslation,
+  getLazyNodeEciesTranslation,
   NodeEciesStringKey,
 } from '../../i18n/ecies-i18n-factory';
 import { IConstants } from '../../interfaces/constants';
@@ -78,7 +78,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
 
     if (config.MEMBER_ID_LENGTH !== config.idProvider.byteLength) {
       issues.push(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Invariant_MemberIdLengthMismatchTemplate,
           {
             actual: config.MEMBER_ID_LENGTH,
@@ -92,7 +92,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
       config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE !== config.idProvider.byteLength
     ) {
       issues.push(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Invariant_EciesMultipleRecipientIdSizeMismatchTemplate,
           {
             actual: config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
@@ -107,7 +107,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
         config.ENCRYPTION.RECIPIENT_ID_SIZE !== config.idProvider.byteLength
       ) {
         issues.push(
-          getNodeEciesTranslation(
+          getLazyNodeEciesTranslation(
             NodeEciesStringKey.Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate,
             {
               actual: config.ENCRYPTION.RECIPIENT_ID_SIZE,
@@ -118,7 +118,7 @@ export class RecipientIdConsistencyInvariant extends BaseInvariant {
       }
     }
 
-    return getNodeEciesTranslation(
+    return getLazyNodeEciesTranslation(
       NodeEciesStringKey.Error_Invariant_NodeRecipientIdConsistency_FailedTemplate,
       {
         issues: issues.join('\n  '),

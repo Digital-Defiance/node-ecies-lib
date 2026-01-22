@@ -14,6 +14,7 @@ import { ECIESService } from '../../src/services/ecies/service';
 import { EncryptionStream } from '../../src/services/encryption-stream';
 import { MultiRecipientProcessor } from '../../src/services/multi-recipient-processor';
 import { ProgressTracker } from '../../src/services/progress-tracker';
+import { Constants } from '@digitaldefiance/node-ecies-lib';
 
 describe('Dependency Injection Integration', () => {
   describe('12.2 Dependency injection integration test', () => {
@@ -91,7 +92,11 @@ describe('Dependency Injection Integration', () => {
 
     it('should create EncryptionStream with injected ECIESService', () => {
       // Create encryption stream with injected service
-      const stream = new EncryptionStream(eciesService);
+      const stream = new EncryptionStream(
+        Constants,
+        Constants.ECIES_CONFIG,
+        eciesService,
+      );
 
       // Verify stream was created
       expect(stream).toBeDefined();
@@ -100,7 +105,10 @@ describe('Dependency Injection Integration', () => {
     it('should create MultiRecipientProcessor with injected ECIESService', () => {
       // Create processor with injected service
       const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
         eciesService.core,
+        undefined,
         eciesService.core.consts,
       );
 
@@ -266,7 +274,11 @@ describe('Dependency Injection Integration', () => {
     it('should support full encryption workflow with all injected dependencies', async () => {
       // Create all services
       const ecies = new ECIESService();
-      const stream = new EncryptionStream(ecies);
+      const stream = new EncryptionStream(
+        Constants,
+        Constants.ECIES_CONFIG,
+        ecies,
+      );
       const tracker = new ProgressTracker();
 
       // Create sender and recipient

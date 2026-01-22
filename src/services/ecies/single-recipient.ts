@@ -10,10 +10,12 @@ import {
   EciesEncryptionTypeMap,
   ECIESError,
   ECIESErrorTypeEnum,
+  EciesStringKey,
   EciesVersionEnum,
   encryptionTypeToString,
   ensureEciesEncryptionTypeEnum,
   IECIESConfig,
+  TranslatableEciesError,
   UINT32_MAX,
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
@@ -40,15 +42,15 @@ export class EciesSingleRecipientCore {
 
   /**
    * Get the size of the header for a given encryption type
-   * @param encryptionType The encryption type (single, simple, etc.)
+   * @param encryptionType The encryption type (basic, withLength, etc.)
    * @returns
    */
   public getHeaderSize(encryptionType: EciesEncryptionType): number {
     switch (encryptionType) {
-      case 'simple':
-        return this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE;
-      case 'single':
-        return this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE;
+      case 'basic':
+        return this.cryptoCore.consts.BASIC.FIXED_OVERHEAD_SIZE;
+      case 'withLength':
+        return this.cryptoCore.consts.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       default:
         throw new ECIESError(ECIESErrorTypeEnum.InvalidEncryptionType);
     }
@@ -56,7 +58,7 @@ export class EciesSingleRecipientCore {
 
   /**
    * Encrypt a message with a public key
-   * @param encryptSimple Whether to simple encrypt (without crc, length)
+   * @param encryptionMode Encryption mode (without crc, length)
    * @param receiverPublicKey The public key of the receiver
    * @param message The message to encrypt
    * @param preamble Optional preamble to prepend to the encrypted message
@@ -65,11 +67,16 @@ export class EciesSingleRecipientCore {
    * @returns The encrypted message
    */
   public encrypt(
-    encryptSimple: boolean,
+    encryptionMode: EciesEncryptionTypeEnum,
     receiverPublicKey: Buffer,
     message: Buffer,
     preamble: Buffer = Buffer.alloc(0),
   ): Buffer {
+    if (encryptionMode === EciesEncryptionTypeEnum.Multiple) {
+      throw new TranslatableEciesError(
+        EciesStringKey.Error_ECIESError_InvalidEncryptionType,
+      );
+    }
     // Security fix 4: Message size validation
     if (message.length === 0) {
       throw new ECIESError(ECIESErrorTypeEnum.CannotEncryptEmptyData);
@@ -78,9 +85,8 @@ export class EciesSingleRecipientCore {
       throw new ECIESError(ECIESErrorTypeEnum.MessageTooLarge);
     }
 
-    const encryptionType: EciesEncryptionType = encryptSimple
-      ? 'simple'
-      : 'single';
+    const encryptionType: EciesEncryptionType =
+      encryptionMode === EciesEncryptionTypeEnum.Basic ? 'basic' : 'withLength';
     const encryptionTypeBuffer = Buffer.alloc(1);
     encryptionTypeBuffer.writeUint8(
       EciesEncryptionTypeMap[
@@ -217,8 +223,8 @@ export class EciesSingleRecipientCore {
 
     // Add a length prefix to the encrypted data to ensure we can extract the exact number of bytes during decryption
     const lengthBuffer =
-      encryptionType === 'simple' ? Buffer.alloc(0) : Buffer.alloc(UINT64_SIZE);
-    if (encryptionType === 'single') {
+      encryptionType === 'basic' ? Buffer.alloc(0) : Buffer.alloc(UINT64_SIZE);
+    if (encryptionType === 'withLength') {
       lengthBuffer.writeBigUInt64BE(BigInt((encrypted as Buffer).length));
     }
 
@@ -244,7 +250,7 @@ export class EciesSingleRecipientCore {
 
   /**
    * Parse the header from encrypted data
-   * @param encryptionType The type of encryption (single, simple, etc.) or undefined if not known
+   * @param encryptionType The type of encryption (basic, withLength, etc.) or undefined if not known
    * @param data The encrypted data
    * @param preambleSize The size of the preamble, if any
    * @param options Optional parsing options
@@ -313,18 +319,18 @@ export class EciesSingleRecipientCore {
         undefined,
         undefined,
         {
-          expected: 'single or simple',
+          expected: 'basic or withLength',
           actual: encryptionTypeToString(actualEncryptionTypeEnum),
         },
       );
     }
     const includeLengthAndCrc =
-      actualEncryptionTypeEnum === EciesEncryptionTypeEnum.Single;
+      actualEncryptionTypeEnum === EciesEncryptionTypeEnum.WithLength;
 
     // Security fix 6: Minimum encrypted data size
     const minSize = includeLengthAndCrc
-      ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
-      : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE;
+      ? this.cryptoCore.consts.WITH_LENGTH.FIXED_OVERHEAD_SIZE
+      : this.cryptoCore.consts.BASIC.FIXED_OVERHEAD_SIZE;
     if (data.length < minSize) {
       throw new ECIESError(ECIESErrorTypeEnum.InvalidEncryptedDataLength);
     }
@@ -356,11 +362,11 @@ export class EciesSingleRecipientCore {
     const dataLengthBuffer = includeLengthAndCrc
       ? data.subarray(
           offset,
-          offset + this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE,
+          offset + this.cryptoCore.consts.WITH_LENGTH.DATA_LENGTH_SIZE,
         )
       : Buffer.alloc(0);
     if (includeLengthAndCrc) {
-      offset += this.cryptoCore.consts.SINGLE.DATA_LENGTH_SIZE;
+      offset += this.cryptoCore.consts.WITH_LENGTH.DATA_LENGTH_SIZE;
     }
 
     const dataLength = includeLengthAndCrc
@@ -467,8 +473,8 @@ export class EciesSingleRecipientCore {
         authTag,
         dataLength,
         headerSize: includeLengthAndCrc
-          ? this.cryptoCore.consts.SINGLE.FIXED_OVERHEAD_SIZE
-          : this.cryptoCore.consts.SIMPLE.FIXED_OVERHEAD_SIZE,
+          ? this.cryptoCore.consts.WITH_LENGTH.FIXED_OVERHEAD_SIZE
+          : this.cryptoCore.consts.BASIC.FIXED_OVERHEAD_SIZE,
       },
       data: encryptedData,
       remainder,
@@ -479,7 +485,7 @@ export class EciesSingleRecipientCore {
    * Decrypts data encrypted with ECIES using a header
    * This method maintains backward compatibility with the original implementation
    * by returning just the Buffer. For detailed information, use decryptSingleWithHeaderEx
-   * @param encryptionType The type of encryption (single, simple, etc.)
+   * @param encryptionType The type of encryption (basic, withLength, etc.)
    * @param privateKey The private key to decrypt the data
    * @param encryptedData The data to decrypt
    * @param preambleSize The size of the preamble, if any
@@ -523,7 +529,7 @@ export class EciesSingleRecipientCore {
 
   /**
    * Extended version of decryptSingleWithHeader that provides more detailed information
-   * @param encryptionType The type of encryption (single, simple, etc.)
+   * @param encryptionType The type of encryption (basic, withLength, etc.)
    * @param privateKey The private key to decrypt the data
    * @param encryptedData The data to decrypt
    * @param preambleSize The size of the preamble, if any

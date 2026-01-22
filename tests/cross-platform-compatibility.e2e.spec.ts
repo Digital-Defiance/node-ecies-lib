@@ -1,4 +1,4 @@
-import { Constants } from '@digitaldefiance/ecies-lib';
+import { Constants } from '@digitaldefiance/node-ecies-lib';
 
 import { BufferIdProvider } from '../src/lib/id-providers/buffer-provider';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
@@ -12,7 +12,11 @@ describe('Cross-Platform Compatibility', () => {
 
   beforeEach(() => {
     nodeEcies = new ECIESService();
-    nodeStream = new EncryptionStream(nodeEcies);
+    nodeStream = new EncryptionStream(
+      Constants,
+      Constants.ECIES_CONFIG,
+      nodeEcies,
+    );
   });
 
   describe('basic encryption compatibility', () => {
@@ -21,13 +25,8 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
 
       const message = Buffer.from('Cross-platform test message');
-      const encrypted = nodeEcies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
-      const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
-        false,
+      const encrypted = nodeEcies.encryptWithLength(keyPair.publicKey, message);
+      const decrypted = nodeEcies.decryptWithLengthAndHeader(
         keyPair.privateKey,
         encrypted,
       );
@@ -40,11 +39,7 @@ describe('Cross-Platform Compatibility', () => {
       const keyPair = nodeEcies.mnemonicToSimpleKeyPair(mnemonic);
 
       const message = Buffer.from('Test');
-      const encrypted = nodeEcies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
+      const encrypted = nodeEcies.encryptWithLength(keyPair.publicKey, message);
 
       // Verify structure: version(1) + suite(1) + type(1) + pubkey(33) + iv(12) + tag(16) + length(8) + data
       expect(encrypted.length).toBeGreaterThan(1 + 1 + 1 + 33 + 12 + 16 + 8);
@@ -257,11 +252,19 @@ describe('Cross-Platform Compatibility', () => {
     });
 
     it('should use correct byte order for multi-recipient header', async () => {
-      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
+      const cryptoCore = new EciesCryptoCore({
+        ...Constants.ECIES_CONFIG,
+        curveName: 'secp256k1',
+      });
       const idProvider = new BufferIdProvider(
         Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
       );
-      const processor = new MultiRecipientProcessor(cryptoCore, idProvider);
+      const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
+        cryptoCore,
+        idProvider,
+      );
 
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
       const recipients = [
@@ -293,7 +296,8 @@ describe('Cross-Platform Compatibility', () => {
       const mnemonic = nodeEcies.generateNewMnemonic();
 
       expect(mnemonic.value).toBeDefined();
-      expect(mnemonic.value.split(' ').length).toBe(24); // Default 24 words
+      expect(mnemonic.value).not.toBeNull();
+      expect(mnemonic.value!.split(' ').length).toBe(24); // Default 24 words
     });
 
     it('should derive same keys from same mnemonic', () => {

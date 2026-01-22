@@ -55,8 +55,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
         const encrypted = Buffer.from(vector.encrypted, 'base64');
         const expectedInput = Buffer.from(vector.input, 'base64');
 
-        const decrypted = service.decryptSimpleOrSingleWithHeader(
-          false,
+        const decrypted = service.decryptWithLengthAndHeader(
           privateKey,
           encrypted,
         );
@@ -78,7 +77,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
           const garbage = randomBytes(garbageLength);
 
           expect(() => {
-            service.decryptSimpleOrSingleWithHeader(false, privateKey, garbage);
+            service.decryptWithLengthAndHeader(privateKey, garbage);
           }).toThrow();
         }
       });
@@ -99,7 +98,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
           mutated[pos] ^= 0xff; // Flip bits
 
           expect(() => {
-            service.decryptSimpleOrSingleWithHeader(false, privateKey, mutated);
+            service.decryptWithLengthAndHeader(privateKey, mutated);
           }).toThrow();
         }
       });
@@ -118,11 +117,7 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
           const truncated = validEncrypted.subarray(0, len);
 
           expect(() => {
-            service.decryptSimpleOrSingleWithHeader(
-              false,
-              privateKey,
-              truncated,
-            );
+            service.decryptWithLengthAndHeader(privateKey, truncated);
           }).toThrow();
         }
       });
@@ -145,13 +140,8 @@ describe('Enterprise Grade Compatibility & Robustness', () => {
       for (let i = 0; i < count; i++) {
         promises.push(
           (async () => {
-            const encrypted = service.encryptSimpleOrSingle(
-              false,
-              publicKey,
-              message,
-            );
-            const decrypted = service.decryptSimpleOrSingleWithHeader(
-              false,
+            const encrypted = service.encryptWithLength(publicKey, message);
+            const decrypted = service.decryptWithLengthAndHeader(
               privateKey,
               encrypted,
             );

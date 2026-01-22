@@ -108,12 +108,12 @@ function customProviderExample() {
   console.log('=== Custom Provider Example ===');
 
   // GUID configuration
-  const guidConfig = createNodeTypedConfiguration<string>({
+  const guidConfig = createNodeTypedConfiguration<string>('guid-config', {
     idProvider: new GuidV4Provider(),
   });
 
   // UUID configuration
-  const uuidConfig = createNodeTypedConfiguration<string>({
+  const uuidConfig = createNodeTypedConfiguration<string>('uuid-config', {
     idProvider: new UuidProvider(),
   });
 
@@ -136,7 +136,7 @@ function typeSafetyExample() {
   console.log('=== Type Safety Example ===');
 
   const objectIdConfig = createNodeObjectIdConfiguration();
-  const guidConfig = createNodeTypedConfiguration<string>({
+  const guidConfig = createNodeTypedConfiguration<string>('guid-config', {
     idProvider: new GuidV4Provider(),
   });
 

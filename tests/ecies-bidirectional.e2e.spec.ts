@@ -152,15 +152,13 @@ describe('ECIES Bidirectional Compatibility', () => {
       ]);
 
       // Backend service encrypts, frontend service decrypts
-      const backendEncrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
+      const backendEncrypted = backendService.encryptWithLength(
         publicKey,
         testMessage,
       );
 
       const frontendDecrypted =
-        await frontendService.decryptSimpleOrSingleWithHeader(
-          false, // single mode
+        await frontendService.decryptWithLengthAndHeader(
           new Uint8Array(privateKey),
           new Uint8Array(backendEncrypted),
         );
@@ -168,14 +166,12 @@ describe('ECIES Bidirectional Compatibility', () => {
       expect(Buffer.from(frontendDecrypted)).toEqual(testMessage);
 
       // Frontend service encrypts, backend service decrypts
-      const frontendEncrypted = await frontendService.encryptSimpleOrSingle(
-        false, // single mode
+      const frontendEncrypted = await frontendService.encryptWithLength(
         new Uint8Array(publicKey),
         new Uint8Array(testMessage),
       );
 
-      const backendDecrypted = backendService.decryptSimpleOrSingleWithHeader(
-        false, // single mode
+      const backendDecrypted = backendService.decryptWithLengthAndHeader(
         privateKey,
         Buffer.from(frontendEncrypted),
       );
@@ -193,28 +189,21 @@ describe('ECIES Bidirectional Compatibility', () => {
       ]);
 
       // Test simple mode
-      const backendSimple = backendService.encryptSimpleOrSingle(
-        true,
-        publicKey,
-        testMessage,
-      );
+      const backendSimple = backendService.encryptBasic(publicKey, testMessage);
       const frontendSimpleDecrypted =
-        await frontendService.decryptSimpleOrSingleWithHeader(
-          true,
+        await frontendService.decryptBasicWithHeader(
           new Uint8Array(privateKey),
           new Uint8Array(backendSimple),
         );
       expect(Buffer.from(frontendSimpleDecrypted)).toEqual(testMessage);
 
       // Test single mode
-      const backendSingle = backendService.encryptSimpleOrSingle(
-        false,
+      const backendSingle = backendService.encryptWithLength(
         publicKey,
         testMessage,
       );
       const frontendSingleDecrypted =
-        await frontendService.decryptSimpleOrSingleWithHeader(
-          false,
+        await frontendService.decryptWithLengthAndHeader(
           new Uint8Array(privateKey),
           new Uint8Array(backendSingle),
         );

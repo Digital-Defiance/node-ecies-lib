@@ -6,14 +6,11 @@
  */
 import { CipherGCMTypes } from 'crypto';
 
-import type {
-  IConstants as IBaseConstants,
-  IPBkdf2Consts,
-} from '@digitaldefiance/ecies-lib';
+import type { IPBkdf2Consts } from '@digitaldefiance/ecies-lib';
 import {
-  OBJECT_ID_LENGTH,
   ObjectIdProvider,
   registerRuntimeConfiguration,
+  Constants as BaseConstants,
 } from '@digitaldefiance/ecies-lib';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
@@ -70,7 +67,7 @@ export const NODE_RUNTIME_CONFIGURATION_KEY = Symbol.for(
 /**
  * Node runtime configuration type (extends base IConstants)
  */
-export type NodeRuntimeConfiguration = IBaseConstants;
+export type NodeRuntimeConfiguration = IConstants;
 
 /**
  * Overrides for node runtime configuration
@@ -85,64 +82,10 @@ export type NodeRuntimeOverrides = Parameters<
  */
 const DEFAULT_ID_PROVIDER = new ObjectIdProvider();
 
-export const NODE_DEFAULTS_OVERRIDES: NodeRuntimeOverrides = Object.freeze({
-  PBKDF2: {
-    ALGORITHM: 'sha256',
-  },
-  // Register the ID provider to ensure MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE are synced
-  idProvider: DEFAULT_ID_PROVIDER,
-});
+// Import base constants from ecies-lib
 
-let runtimeDefaults: NodeRuntimeConfiguration = registerRuntimeConfiguration(
-  NODE_RUNTIME_CONFIGURATION_KEY,
-  NODE_DEFAULTS_OVERRIDES,
-);
-
-/**
- * Ensure the runtime configuration is initialized.
- * This is called automatically at module load, but can be called explicitly if needed.
- */
-export function ensureNodeRuntimeConfiguration(): void {
-  if (!runtimeDefaults || !runtimeDefaults.idProvider) {
-    runtimeDefaults = registerRuntimeConfiguration(
-      NODE_RUNTIME_CONFIGURATION_KEY,
-      NODE_DEFAULTS_OVERRIDES,
-    );
-  }
-}
-
-export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
-  ensureNodeRuntimeConfiguration();
-  return runtimeDefaults;
-}
-
-export function registerNodeRuntimeConfiguration(
-  configOrOverrides?: NodeRuntimeOverrides | NodeRuntimeConfiguration,
-  options?: Parameters<typeof registerRuntimeConfiguration>[2],
-): NodeRuntimeConfiguration {
-  // Register configuration through ecies-lib's system
-  // This handles auto-sync of idProvider -> MEMBER_ID_LENGTH and ECIES.MULTIPLE.RECIPIENT_ID_SIZE
-  runtimeDefaults = registerRuntimeConfiguration(
-    NODE_RUNTIME_CONFIGURATION_KEY,
-    configOrOverrides,
-    options,
-  );
-
-  // Note: ENCRYPTION.RECIPIENT_ID_SIZE is set at module initialization
-  // and uses DEFAULT_ID_PROVIDER.byteLength. For runtime configurations with
-  // different providers, code should reference config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE
-  // which is auto-synced by ecies-lib's createRuntimeConfiguration.
-
-  // Validate Node-specific invariants (base ecies-lib invariants already validated)
-  // Note: Validation temporarily disabled for configs without ENCRYPTION property
-  // as runtimeDefaults doesn't include node-specific constants
-  // InvariantValidator.validateAll(runtimeDefaults as IConstants);
-
-  return runtimeDefaults;
-}
-
-// Use runtime defaults for base constants
-export const CHECKSUM: IChecksumConsts = runtimeDefaults.CHECKSUM;
+// Use base constants directly
+export const CHECKSUM: IChecksumConsts = BaseConstants.CHECKSUM;
 
 export const KEYRING: IKeyringConsts = Object.freeze({
   ALGORITHM: 'aes' as const,
@@ -150,7 +93,10 @@ export const KEYRING: IKeyringConsts = Object.freeze({
   MODE: 'gcm' as const,
 } as const);
 
-export const PBKDF2: IPBkdf2Consts = runtimeDefaults.PBKDF2;
+export const PBKDF2: IPBkdf2Consts = {
+  ...BaseConstants.PBKDF2,
+  ALGORITHM: 'sha256' as const,
+};
 
 export const PBKDF2_PROFILES: PbkdfProfiles = Object.freeze({
   // Align browser password profile with high security expectations (sha512, 64-byte salt/hash, 2M iterations)
@@ -213,68 +159,34 @@ export const ENCRYPTION: IEncryptionConsts = Object.freeze({
 } as const);
 
 export const Constants: IConstants = Object.freeze({
-  ...runtimeDefaults,
+  ...BaseConstants,
   // Node-specific overrides and additions
-  /**
-   * PBKDF2 constants (Node.js crypto implementation)
-   */
   PBKDF2: PBKDF2,
-  /**
-   * PBKDF2 configuration profiles
-   */
   PBKDF2_PROFILES: PBKDF2_PROFILES,
-  /**
-   * Key Wrapping Service constants
-   */
   WRAPPED_KEY: WRAPPED_KEY,
-  /**
-   * Checksum constants used for data integrity
-   */
   CHECKSUM: CHECKSUM,
-  /**
-   * Keyring constants used for key management
-   */
   KEYRING: KEYRING,
-  /**
-   * Encryption constants used for encrypted data
-   */
   ENCRYPTION: ENCRYPTION,
-  /**
-   * Voting constants used for homomorphic encryption voting
-   */
   VOTING: VOTING,
-  /**
-   * Algorithm configuration string for keyring operations
-   */
   KEYRING_ALGORITHM_CONFIGURATION: KEYRING_ALGORITHM_CONFIGURATION,
-  /**
-   * Size of ECIES version field in bytes
-   */
   ECIES_VERSION_SIZE: 1,
-  /**
-   * Size of ECIES cipher suite field in bytes
-   */
   ECIES_CIPHER_SUITE_SIZE: 1,
-  // Override specific ECIES constants for Node.js
   ECIES: {
-    ...runtimeDefaults.ECIES,
-    // Override public key length for compressed keys
+    ...BaseConstants.ECIES,
     PUBLIC_KEY_LENGTH: 33,
-    // Override IV size for AES-GCM (standard is 12 bytes)
     IV_SIZE: 12,
-    SINGLE: {
-      ...runtimeDefaults.ECIES.SINGLE,
+    WITH_LENGTH: {
+      ...BaseConstants.ECIES.WITH_LENGTH,
       FIXED_OVERHEAD_SIZE: 72,
     },
-    SIMPLE: {
-      ...runtimeDefaults.ECIES.SIMPLE,
+    BASIC: {
+      ...BaseConstants.ECIES.BASIC,
       FIXED_OVERHEAD_SIZE: 64,
     },
     MULTIPLE: {
-      ...runtimeDefaults.ECIES.MULTIPLE,
+      ...BaseConstants.ECIES.MULTIPLE,
       ENCRYPTED_KEY_SIZE: 60,
-      // Keep MAX_DATA_SIZE aligned with base config (1MB guardrail)
-      MAX_DATA_SIZE: runtimeDefaults.ECIES.MULTIPLE.MAX_DATA_SIZE,
+      MAX_DATA_SIZE: BaseConstants.ECIES.MULTIPLE.MAX_DATA_SIZE,
     },
   },
 } as const);
@@ -311,11 +223,89 @@ if (
   );
 }
 
-if (OBJECT_ID_LENGTH !== 12) {
-  console.warn(
-    'ObjectID length may have changed, breaking encryption',
-    OBJECT_ID_LENGTH,
+/**
+ * Creates a node-specific runtime configuration with overrides.
+ * Uses Constants as the base and applies node-specific defaults.
+ */
+export function createNodeRuntimeConfiguration(
+  overrides?: NodeRuntimeOverrides,
+): NodeRuntimeConfiguration {
+  return registerRuntimeConfiguration<NodeRuntimeConfiguration>(
+    Symbol('node-runtime-config'),
+    { ...overrides },
+    { baseKey: NODE_RUNTIME_CONFIGURATION_KEY },
   );
+}
+
+/**
+ * Registers a node-specific runtime configuration.
+ *
+ * @overload When called with just overrides, generates a unique symbol key automatically.
+ * @overload When called with a key and overrides, uses the provided key.
+ */
+export function registerNodeRuntimeConfiguration(
+  overrides: NodeRuntimeOverrides,
+): NodeRuntimeConfiguration;
+export function registerNodeRuntimeConfiguration(
+  key: symbol | string,
+  overrides?: NodeRuntimeOverrides,
+): NodeRuntimeConfiguration;
+export function registerNodeRuntimeConfiguration(
+  keyOrOverrides: symbol | string | NodeRuntimeOverrides,
+  overrides?: NodeRuntimeOverrides,
+): NodeRuntimeConfiguration {
+  let result: NodeRuntimeConfiguration;
+
+  // Check if first argument is overrides (an object that's not a symbol or string)
+  if (
+    typeof keyOrOverrides === 'object' &&
+    keyOrOverrides !== null &&
+    !(typeof keyOrOverrides === 'symbol')
+  ) {
+    // Called with just overrides - generate a unique key
+    result = registerRuntimeConfiguration<NodeRuntimeConfiguration>(
+      Symbol('node-runtime-config'),
+      keyOrOverrides as NodeRuntimeOverrides,
+      {
+        baseKey: NODE_RUNTIME_CONFIGURATION_KEY,
+      },
+    );
+  } else {
+    // Called with key and optional overrides
+    result = registerRuntimeConfiguration<NodeRuntimeConfiguration>(
+      keyOrOverrides as symbol | string,
+      overrides,
+      {
+        baseKey: NODE_RUNTIME_CONFIGURATION_KEY,
+      },
+    );
+  }
+
+  // Update the runtimeDefaults so that getNodeRuntimeConfiguration() returns
+  // the most recently registered configuration
+  runtimeDefaults = result;
+
+  return result;
+}
+
+// Register the default node configuration in the registry
+let runtimeDefaults = registerRuntimeConfiguration(
+  NODE_RUNTIME_CONFIGURATION_KEY,
+  Constants as IConstants,
+);
+
+export function ensureNodeRuntimeConfiguration(): void {
+  if (!runtimeDefaults || !runtimeDefaults.idProvider) {
+    runtimeDefaults = registerRuntimeConfiguration(
+      NODE_RUNTIME_CONFIGURATION_KEY,
+      Constants,
+    );
+  }
+}
+
+export function getNodeRuntimeConfiguration(): NodeRuntimeConfiguration {
+  ensureNodeRuntimeConfiguration();
+  return runtimeDefaults;
 }
 
 // Export utility functions

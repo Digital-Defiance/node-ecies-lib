@@ -438,10 +438,11 @@ export function getTypedNodeIdProvider<TID>(): ITypedNodeIdProvider<TID> {
  * ```
  */
 export function createNodeTypedConfiguration<TID>(
+  key: string,
   overrides?: NodeRuntimeOverrides,
 ): INodeTypedConfiguration<TID> {
   const constants = overrides
-    ? registerNodeRuntimeConfiguration(overrides)
+    ? registerNodeRuntimeConfiguration(Symbol(key), overrides)
     : getNodeRuntimeConfiguration();
   return new NodeTypedConfiguration<TID>(constants);
 }

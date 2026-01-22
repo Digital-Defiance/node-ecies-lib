@@ -54,12 +54,10 @@ export class EciesDecryptionTransform<
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock =
-            this.eciesService.decryptSimpleOrSingleWithHeader(
-              true, // decryptSimple = true
-              this.privateKey,
-              encryptedBlock,
-            );
+          const decryptedBlock = this.eciesService.decryptBasicWithHeader(
+            this.privateKey,
+            encryptedBlock,
+          );
           this.push(decryptedBlock);
         } catch (decryptError) {
           console.error('Block decryption error:', {
@@ -92,12 +90,10 @@ export class EciesDecryptionTransform<
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        const decryptedBlock =
-          this.eciesService.decryptSimpleOrSingleWithHeader(
-            true, // decryptSimple = true
-            this.privateKey,
-            this.buffer,
-          );
+        const decryptedBlock = this.eciesService.decryptBasicWithHeader(
+          this.privateKey,
+          this.buffer,
+        );
         this.push(decryptedBlock);
       }
       callback();

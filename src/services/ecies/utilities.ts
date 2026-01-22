@@ -35,12 +35,12 @@ export class EciesUtilities {
     const eciesDefaults: IECIESConstants = constants.ECIES;
 
     switch (encryptionMode) {
-      case 'simple':
+      case 'basic':
         // type (1) + public key (65) + IV (16) + auth tag (16) = 98
-        return dataLength + eciesDefaults.SIMPLE.FIXED_OVERHEAD_SIZE;
-      case 'single':
+        return dataLength + eciesDefaults.BASIC.FIXED_OVERHEAD_SIZE;
+      case 'withLength':
         // type (1) + public key (65) + IV (16) + auth tag (16) + data length (4) + crc16 (2) = 104
-        return dataLength + eciesDefaults.SINGLE.FIXED_OVERHEAD_SIZE;
+        return dataLength + eciesDefaults.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       case 'multiple':
         // Calculate multiple recipient overhead without instantiating service
         return (
@@ -109,7 +109,7 @@ export class EciesUtilities {
     }
 
     const { ECIES: eciesDefaults } = constants;
-    const overhead = eciesDefaults.SINGLE.FIXED_OVERHEAD_SIZE;
+    const overhead = eciesDefaults.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
     const actualPadding = padding !== undefined ? padding : 0;
 
     const decryptedLength = encryptedDataLength - overhead - actualPadding;

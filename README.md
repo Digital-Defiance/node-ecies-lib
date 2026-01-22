@@ -8,7 +8,7 @@ A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve 
 
 Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
 
-> Current Version: v4.10.6
+> Current Version: v4.13.0
 
 This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuring HKDF key derivation, AAD binding, and optimized multi-recipient encryption. It includes a pluggable ID provider system, memory-efficient streaming encryption, and comprehensive internationalization.
 
@@ -26,8 +26,8 @@ This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuri
   - **Symmetric**: `AES-256-GCM` for authenticated symmetric encryption.
   - **Hashing**: `SHA-256` and `SHA-512`.
 - **Modes**:
-  - **Simple**: Minimal overhead (no length prefix).
-  - **Single**: Includes data length prefix.
+  - **Basic**: Minimal overhead (no length prefix).
+  - **WithLength**: Includes data length prefix.
   - **Multiple**: Efficient encryption for up to 65,535 recipients.
 
 ### 🆔 Identity & Management
@@ -145,7 +145,7 @@ import {
 import { ObjectIdProvider } from '@digitaldefiance/ecies-lib';
 
 // 1. Configure (Optional - defaults to ObjectIdProvider)
-registerNodeRuntimeConfiguration({
+registerNodeRuntimeConfiguration('my-app-config', {
   idProvider: new ObjectIdProvider()
 });
 
@@ -158,8 +158,8 @@ const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(mnemonic);
 
 // 4. Encrypt & Decrypt
 const message = Buffer.from('Hello, Secure World!');
-const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, message);
-const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+const encrypted = ecies.encryptWithLength(publicKey, message);
+const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
 
 console.log(decrypted.toString()); // "Hello, Secure World!"
 ```
@@ -274,7 +274,7 @@ import {
 import { GuidV4Provider } from '@digitaldefiance/ecies-lib';
 
 // Configure to use 16-byte GUIDs
-const config = registerNodeRuntimeConfiguration({
+const config = registerNodeRuntimeConfiguration('guid-config', {
   idProvider: new GuidV4Provider()
 });
 
@@ -286,7 +286,7 @@ const id = config.idProvider.generate(); // Returns 16-byte Uint8Array
 
 ```typescript
 // Option 1: Pass IConstants directly (recommended)
-const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const config = registerNodeRuntimeConfiguration('my-config', { idProvider: new GuidV4Provider() });
 const ecies1 = new ECIESService(config);
 
 // Option 2: Pass partial ECIES config (legacy)
@@ -536,7 +536,7 @@ describe('Node ECIES Encryption', () => {
   let ecies: ECIESService;
 
   beforeEach(() => {
-    registerNodeRuntimeConfiguration({
+    registerNodeRuntimeConfiguration('test-config', {
       idProvider: new ObjectIdProvider()
     });
     ecies = new ECIESService();
@@ -547,8 +547,8 @@ describe('Node ECIES Encryption', () => {
     const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(mnemonic);
     
     const message = Buffer.from('Secret Message');
-    const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, message);
-    const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+    const encrypted = ecies.encryptWithLength(publicKey, message);
+    const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
     
     expect(decrypted.toString()).toBe('Secret Message');
   });
@@ -595,11 +595,10 @@ describe('Binary Compatibility', () => {
     
     // Encrypt in browser
     const message = new TextEncoder().encode('Cross-platform message');
-    const encrypted = await browserEcies.encryptSimpleOrSingle(false, publicKey, message);
+    const encrypted = await browserEcies.encryptWithLength(publicKey, message);
     
     // Decrypt in Node.js
-    const decrypted = nodeEcies.decryptSimpleOrSingleWithHeader(
-      false,
+    const decrypted = nodeEcies.decryptWithLengthAndHeader(
       Buffer.from(privateKey),
       Buffer.from(encrypted)
     );
@@ -625,8 +624,8 @@ describe('Cryptographic Properties', () => {
         fc.uint8Array({ minLength: 1, maxLength: 1000 }),
         (data) => {
           const message = Buffer.from(data);
-          const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, message);
-          const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+          const encrypted = ecies.encryptWithLength(publicKey, message);
+          const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
           
           expect(decrypted.equals(message)).toBe(true);
         }
@@ -671,6 +670,56 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.13.0 - API Naming Improvements & Configuration Enhancements
+
+**Breaking Changes:**
+
+- **Encryption Mode Renaming**: 
+  - `SIMPLE` → `BASIC` (constant)
+  - `SINGLE` → `WITH_LENGTH` (constant)
+  - `encryptSimpleOrSingle(isSimple, ...)` → `encryptBasic(...)` / `encryptWithLength(...)`
+  - `decryptSimpleOrSingleWithHeader(isSimple, ...)` → `decryptBasicWithHeader(...)` / `decryptWithLengthAndHeader(...)`
+  
+- **registerNodeRuntimeConfiguration Signature Change**:
+  - Now requires a key parameter: `registerNodeRuntimeConfiguration(key, overrides)`
+  - Supports both `symbol` and `string` keys
+  - Overloaded to support `registerNodeRuntimeConfiguration(overrides)` which auto-generates a symbol key
+  
+- **Removed Constants**:
+  - `OBJECT_ID_LENGTH` removed - use `idProvider.byteLength` instead
+  
+- **GuidBuffer Class Renamed**:
+  - `Guid` → `GuidBuffer` (Node.js Buffer-based implementation)
+  - Added `VersionedGuidBuffer<V>` type for compile-time version tracking
+
+**New Features:**
+
+- **ECIES_CONFIG**: New configuration interface and constant inherited from ecies-lib
+  
+- **TranslatableNodeEciesError**: New error class with automatic i18n translation
+  ```typescript
+  throw new TranslatableNodeEciesError('INVALID_KEY', { keyLength: 32 });
+  ```
+  
+- **getNodeEciesTranslation()**: New helper function for translating node-ecies strings
+
+- **Enhanced Type System for GUIDs**:
+  - `VersionedGuidBuffer<4>` for v4 UUIDs with compile-time version info
+  - `__version` property attached to parsed/generated GUIDs
+
+**Migration Guide:**
+```typescript
+// BEFORE (v4.12.x)
+registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, data);
+const decrypted = ecies.decryptSimpleOrSingleWithHeader(false, privateKey, encrypted);
+
+// AFTER (v4.13.0+)
+registerNodeRuntimeConfiguration('my-app-config', { idProvider: new GuidV4Provider() });
+const encrypted = ecies.encryptWithLength(publicKey, data);
+const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
+```
 
 ### v4.12.0 - AESGCMService Refactoring & JSON Encryption
 
@@ -843,7 +892,7 @@ This release fixes a critical bug where `Member.newMember()` ignored the configu
 
 **Before (Broken):**
 ```typescript
-const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const config = registerNodeRuntimeConfiguration('guid-config', { idProvider: new GuidV4Provider() });
 const service = new ECIESService(config);
 const { member } = Member.newMember(service, MemberType.User, 'Alice', email);
 console.log(member.id.length); // 12 (wrong - used default ObjectIdProvider)
@@ -851,7 +900,7 @@ console.log(member.id.length); // 12 (wrong - used default ObjectIdProvider)
 
 **After (Fixed):**
 ```typescript
-const config = registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
+const config = registerNodeRuntimeConfiguration('guid-config', { idProvider: new GuidV4Provider() });
 const service = new ECIESService(config);
 const { member } = Member.newMember(service, MemberType.User, 'Alice', email);
 console.log(member.id.length); // 16 (correct - uses configured GuidV4Provider)

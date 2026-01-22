@@ -34,7 +34,12 @@ describe('Node ECIES Multi-Recipient - Branch Coverage', () => {
     idProvider = new BufferIdProvider(
       Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
     );
-    multiRecipient = new EciesMultiRecipient(cryptoCore, idProvider);
+    multiRecipient = new EciesMultiRecipient(
+      Constants,
+      Constants.ECIES_CONFIG,
+      cryptoCore.consts,
+      idProvider,
+    );
 
     const kp1 = await cryptoCore.generateEphemeralKeyPair();
     const kp2 = await cryptoCore.generateEphemeralKeyPair();

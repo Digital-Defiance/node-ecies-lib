@@ -35,8 +35,7 @@ export class EciesFileService {
     const decryptedChunks: Buffer[] = [];
 
     for (const chunk of chunks) {
-      const decrypted = this.eciesService.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = this.eciesService.decryptWithLengthAndHeader(
         this.userPrivateKey,
         chunk,
       );
@@ -64,8 +63,7 @@ export class EciesFileService {
     };
 
     const headerBytes = this.serializeHeader(header);
-    const encryptedHeader = this.eciesService.encryptSimpleOrSingle(
-      false,
+    const encryptedHeader = this.eciesService.encryptWithLength(
       recipientPublicKey,
       headerBytes,
     );
@@ -80,8 +78,7 @@ export class EciesFileService {
         const chunkData = Buffer.alloc(chunkSize);
         fs.readSync(fd, chunkData, 0, chunkSize, offset);
 
-        const encryptedChunk = this.eciesService.encryptSimpleOrSingle(
-          false,
+        const encryptedChunk = this.eciesService.encryptWithLength(
           recipientPublicKey,
           chunkData,
         );
@@ -101,8 +98,7 @@ export class EciesFileService {
 
     try {
       for (const chunk of chunks) {
-        const decrypted = this.eciesService.decryptSimpleOrSingleWithHeader(
-          false,
+        const decrypted = this.eciesService.decryptWithLengthAndHeader(
           this.userPrivateKey,
           chunk,
         );
@@ -142,16 +138,14 @@ export class EciesFileService {
   } {
     const headerLength = this.eciesService.computeEncryptedLengthFromDataLength(
       this.config.headerSize,
-      'single',
+      'withLength',
     );
 
     const encryptedHeader = encryptedData.subarray(0, headerLength);
-    const decryptedHeaderBytes =
-      this.eciesService.decryptSimpleOrSingleWithHeader(
-        false,
-        this.userPrivateKey,
-        encryptedHeader,
-      );
+    const decryptedHeaderBytes = this.eciesService.decryptWithLengthAndHeader(
+      this.userPrivateKey,
+      encryptedHeader,
+    );
 
     const header = this.deserializeHeader(decryptedHeaderBytes);
     const chunks: Buffer[] = [];
@@ -163,7 +157,7 @@ export class EciesFileService {
           i === header.totalChunks - 1
             ? header.originalSize % header.chunkSize || header.chunkSize
             : header.chunkSize,
-          'single',
+          'withLength',
         );
 
       chunks.push(encryptedData.subarray(offset, offset + chunkLength));

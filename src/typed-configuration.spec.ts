@@ -8,7 +8,7 @@ import {
   GuidV4Provider,
   UuidProvider,
   CustomIdProvider,
-  GuidV4,
+  GuidV4Uint8Array,
 } from '@digitaldefiance/ecies-lib';
 import {
   getEnhancedNodeIdProvider,
@@ -27,7 +27,7 @@ describe('Node.js Typed Configuration System', () => {
   describe('getEnhancedNodeIdProvider', () => {
     it('should provide both original and typed methods for ObjectId', () => {
       // Configure with ObjectIdProvider
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('objectid-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -57,7 +57,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should work with GuidV4Provider', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -77,7 +77,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should work with UuidProvider', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('uuid-config', {
         idProvider: new UuidProvider(),
       });
 
@@ -97,7 +97,7 @@ describe('Node.js Typed Configuration System', () => {
 
   describe('getTypedNodeIdProvider', () => {
     it('should provide only typed methods', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('objectid-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -121,7 +121,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should handle round-trip operations', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -142,7 +142,7 @@ describe('Node.js Typed Configuration System', () => {
 
   describe('createNodeTypedConfiguration', () => {
     it('should create complete typed configuration', () => {
-      const config = createNodeTypedConfiguration<ObjectId>();
+      const config = createNodeTypedConfiguration<ObjectId>('objectid-config');
 
       expect(config.constants).toBeDefined();
       expect(config.enhancedIdProvider).toBeDefined();
@@ -160,7 +160,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should accept custom overrides', () => {
-      const config = createNodeTypedConfiguration<string>({
+      const config = createNodeTypedConfiguration<string>('uuid-config', {
         idProvider: new UuidProvider(),
       });
 
@@ -175,7 +175,7 @@ describe('Node.js Typed Configuration System', () => {
   describe('createNodeObjectIdConfiguration', () => {
     it('should create ObjectId-specific configuration', () => {
       // Reset to ObjectId configuration first
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('objectid-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -199,7 +199,7 @@ describe('Node.js Typed Configuration System', () => {
     it('should maintain type safety across operations', () => {
       // This test verifies compile-time type safety
       const objectIdConfig = createNodeObjectIdConfiguration();
-      const guidConfig = createNodeTypedConfiguration<string>({
+      const guidConfig = createNodeTypedConfiguration<string>('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -225,13 +225,13 @@ describe('Node.js Typed Configuration System', () => {
     it('should use the current runtime configuration', () => {
       // Set up a specific configuration
       const customProvider = new CustomIdProvider(20, 'Custom20Byte');
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('custom-config', {
         idProvider: customProvider,
       });
 
       const enhancedProvider = getEnhancedNodeIdProvider<Uint8Array>();
       const typedProvider = getTypedNodeIdProvider<Uint8Array>();
-      const config = createNodeTypedConfiguration<Uint8Array>();
+      const config = createNodeTypedConfiguration<Uint8Array>('custom-config');
 
       // All should use the same configured provider
       expect(enhancedProvider.byteLength).toBe(20);
@@ -245,7 +245,7 @@ describe('Node.js Typed Configuration System', () => {
 
     it('should reflect configuration changes', () => {
       // Start with ObjectId
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('objectid-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -253,11 +253,11 @@ describe('Node.js Typed Configuration System', () => {
       expect(provider.byteLength).toBe(12);
 
       // Switch to GUID
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
-      const guidProvider = getEnhancedNodeIdProvider<GuidV4>();
+      const guidProvider = getEnhancedNodeIdProvider<GuidV4Uint8Array>();
       expect(guidProvider.byteLength).toBe(16);
     });
   });
@@ -285,7 +285,7 @@ describe('Node.js Typed Configuration System', () => {
 
   describe('ensureEnhancedIdProvider', () => {
     it('should return provider when name matches', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('objectid-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -302,7 +302,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should throw error when name does not match', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -313,11 +313,11 @@ describe('Node.js Typed Configuration System', () => {
 
     it('should work with custom configuration keys', () => {
       const testKey = 'test-guid-config';
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration(testKey, {
         idProvider: new GuidV4Provider(),
       });
 
-      const provider = ensureEnhancedNodeIdProvider<GuidV4>('GUIDv4');
+      const provider = ensureEnhancedNodeIdProvider<GuidV4Uint8Array>('GUIDv4');
       expect(provider.name).toBe('GUIDv4');
 
       const id = provider.generateTyped();
@@ -326,7 +326,7 @@ describe('Node.js Typed Configuration System', () => {
 
     it('should throw error for mismatched name with custom key', () => {
       const testKey = 'test-uuid-config';
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration(testKey, {
         idProvider: new UuidProvider(),
       });
 
@@ -339,7 +339,9 @@ describe('Node.js Typed Configuration System', () => {
   describe('Enhanced Providers - All Types', () => {
     it('should work with ObjectIdProvider', () => {
       const key = 'test-objectid';
-      registerNodeRuntimeConfiguration({ idProvider: new ObjectIdProvider() });
+      registerNodeRuntimeConfiguration(key, {
+        idProvider: new ObjectIdProvider(),
+      });
       const provider = getEnhancedNodeIdProvider<ObjectId>();
 
       const id = provider.generateTyped();
@@ -354,8 +356,10 @@ describe('Node.js Typed Configuration System', () => {
 
     it('should work with GuidV4Provider', () => {
       const key = 'test-guidv4';
-      registerNodeRuntimeConfiguration({ idProvider: new GuidV4Provider() });
-      const provider = getEnhancedNodeIdProvider<GuidV4>();
+      registerNodeRuntimeConfiguration(key, {
+        idProvider: new GuidV4Provider(),
+      });
+      const provider = getEnhancedNodeIdProvider<GuidV4Uint8Array>();
 
       const id = provider.generateTyped();
       expect(typeof id.asFullHexGuid).toBe('string');
@@ -367,7 +371,7 @@ describe('Node.js Typed Configuration System', () => {
 
     it('should work with UuidProvider', () => {
       const key = 'test-uuid';
-      registerNodeRuntimeConfiguration({ idProvider: new UuidProvider() });
+      registerNodeRuntimeConfiguration(key, { idProvider: new UuidProvider() });
       const provider = getEnhancedNodeIdProvider<string>();
 
       const id = provider.generateTyped();
@@ -381,7 +385,7 @@ describe('Node.js Typed Configuration System', () => {
     });
 
     it('should work with BufferProvider', () => {
-      registerNodeRuntimeConfiguration({
+      registerNodeRuntimeConfiguration('buffer-config', {
         idProvider: new BufferIdProvider(16),
       });
       const provider = getEnhancedNodeIdProvider<Uint8Array>();

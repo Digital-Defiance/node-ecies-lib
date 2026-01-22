@@ -20,7 +20,7 @@ import {
   createRuntimeConfiguration,
   GuidV4Provider,
   ObjectIdProvider,
-  Guid,
+  GuidUint8Array,
   EmailString,
   MemberType,
   ECIESService as BrowserECIESService,
@@ -35,14 +35,14 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
 
   beforeEach(() => {
     // Save original configuration
-    originalConfig = registerNodeRuntimeConfiguration({
+    originalConfig = registerNodeRuntimeConfiguration('object-id-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
 
   afterEach(() => {
     // Restore default ObjectIdProvider to prevent test interference
-    registerNodeRuntimeConfiguration({
+    registerNodeRuntimeConfiguration('object-id-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
@@ -54,7 +54,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
           idProvider: new GuidV4Provider(),
         });
 
-        const nodeConfig = registerNodeRuntimeConfiguration({
+        const nodeConfig = registerNodeRuntimeConfiguration('guid-v4-config', {
           idProvider: new GuidV4Provider(),
         });
 
@@ -158,7 +158,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       const browserConfig = createRuntimeConfiguration({
         idProvider: new ObjectIdProvider(),
       });
-      const nodeConfig = registerNodeRuntimeConfiguration({
+      const nodeConfig = registerNodeRuntimeConfiguration('object-id-config', {
         idProvider: new ObjectIdProvider(),
       });
 
@@ -205,7 +205,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
 
       // Verify UUID compatibility
       expect(() => {
-        const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+        const guid = GuidUint8Array.fromPlatformBuffer(result.member.idBytes);
         expect(guid).toBeDefined();
         expect(guid.asFullHexGuid).toMatch(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -228,7 +228,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
 
       // Verify UUID compatibility
       expect(() => {
-        const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+        const guid = GuidUint8Array.fromPlatformBuffer(result.member.idBytes);
         expect(guid).toBeDefined();
         expect(guid.asFullHexGuid).toMatch(
           /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -259,8 +259,12 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       );
 
       // Both should convert to valid UUIDs
-      const browserGuid = Guid.fromPlatformBuffer(browserResult.member.idBytes);
-      const nodeGuid = Guid.fromPlatformBuffer(nodeResult.member.idBytes);
+      const browserGuid = GuidUint8Array.fromPlatformBuffer(
+        browserResult.member.idBytes,
+      );
+      const nodeGuid = GuidUint8Array.fromPlatformBuffer(
+        nodeResult.member.idBytes,
+      );
 
       // Verify both match UUID v4 format
       const uuidV4Pattern =
@@ -394,7 +398,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       expect(nodeBufferNormalized.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = Guid.fromPlatformBuffer(nodeIdBuffer);
+      const guid = GuidUint8Array.fromPlatformBuffer(nodeIdBuffer);
       expect(guid).toBeDefined();
     });
 
@@ -434,7 +438,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       expect(browserBufferNormalized.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = Guid.fromPlatformBuffer(browserIdBuffer);
+      const guid = GuidUint8Array.fromPlatformBuffer(browserIdBuffer);
       expect(guid).toBeDefined();
     });
 
@@ -542,7 +546,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
       expect(finalId.length).toBe(16);
 
       // Verify UUID compatibility maintained
-      const guid = Guid.fromPlatformBuffer(finalId);
+      const guid = GuidUint8Array.fromPlatformBuffer(finalId);
       expect(guid).toBeDefined();
     });
   });
@@ -566,7 +570,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
               browser: createRuntimeConfiguration({
                 idProvider: new GuidV4Provider(),
               }),
-              node: registerNodeRuntimeConfiguration({
+              node: registerNodeRuntimeConfiguration('guid-v4-config', {
                 idProvider: new GuidV4Provider(),
               }),
             },
@@ -574,7 +578,7 @@ describe('Integration: Cross-Platform idProvider Consistency', () => {
               browser: createRuntimeConfiguration({
                 idProvider: new ObjectIdProvider(),
               }),
-              node: registerNodeRuntimeConfiguration({
+              node: registerNodeRuntimeConfiguration('object-id-config', {
                 idProvider: new ObjectIdProvider(),
               }),
             },

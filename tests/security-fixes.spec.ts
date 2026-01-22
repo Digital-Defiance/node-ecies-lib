@@ -10,13 +10,15 @@ import { MultiRecipientProcessor } from '../src/services/multi-recipient-process
 
 describe('Security Fixes - Comprehensive', () => {
   let ecies: ECIESService;
+  let aesGcmService: AESGCMService;
   let stream: EncryptionStream;
   let publicKey: Buffer;
   let privateKey: Buffer;
 
   beforeEach(() => {
     ecies = new ECIESService();
-    stream = new EncryptionStream(ecies);
+    aesGcmService = new AESGCMService();
+    stream = new EncryptionStream(Constants, Constants.ECIES_CONFIG, ecies);
     const mnemonic = ecies.generateNewMnemonic();
     const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
     publicKey = keyPair.publicKey;
@@ -29,7 +31,7 @@ describe('Security Fixes - Comprehensive', () => {
       const data = Buffer.from('test');
 
       expect(() => {
-        ecies.aesGcmService.encrypt(data, invalidKey);
+        aesGcmService.encrypt(data, invalidKey);
       }).toThrow();
     });
 
@@ -37,7 +39,7 @@ describe('Security Fixes - Comprehensive', () => {
       const key = Buffer.alloc(32);
 
       expect(() => {
-        ecies.aesGcmService.encrypt(null as any, key);
+        aesGcmService.encrypt(null as any, key);
       }).toThrow();
     });
 
@@ -45,7 +47,7 @@ describe('Security Fixes - Comprehensive', () => {
       const key = Buffer.alloc(32);
 
       expect(() => {
-        ecies.aesGcmService.encrypt(undefined as any, key);
+        aesGcmService.encrypt(undefined as any, key);
       }).toThrow();
     });
 
@@ -54,7 +56,7 @@ describe('Security Fixes - Comprehensive', () => {
       const largeData = Buffer.alloc(0x7fffffff + 1);
 
       expect(() => {
-        ecies.aesGcmService.encrypt(largeData, key);
+        aesGcmService.encrypt(largeData, key);
       }).toThrow();
     });
 
@@ -64,7 +66,7 @@ describe('Security Fixes - Comprehensive', () => {
       const data = Buffer.from('test');
 
       expect(() => {
-        ecies.aesGcmService.decrypt(invalidIv, data, key);
+        aesGcmService.decrypt(invalidIv, data, key);
       }).toThrow();
     });
   });
@@ -77,7 +79,7 @@ describe('Security Fixes - Comprehensive', () => {
         const data = Buffer.from('test');
 
         expect(() => {
-          ecies.encryptSimpleOrSingle(false, zeroKey, data);
+          ecies.encryptWithLength(zeroKey, data);
         }).toThrow(ECIESError);
       });
     });
@@ -86,10 +88,10 @@ describe('Security Fixes - Comprehensive', () => {
       withConsoleMocks({ mute: true }, () => {
         const zeroKey = Buffer.alloc(32);
         const data = Buffer.from('test');
-        const encrypted = ecies.encryptSimpleOrSingle(false, publicKey, data);
+        const encrypted = ecies.encryptWithLength(publicKey, data);
 
         expect(() => {
-          ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted);
+          ecies.decryptWithLengthAndHeader(zeroKey, encrypted);
         }).toThrow(ECIESError);
       });
     });
@@ -98,7 +100,7 @@ describe('Security Fixes - Comprehensive', () => {
       const emptyData = Buffer.alloc(0);
 
       expect(() => {
-        ecies.encryptSimpleOrSingle(false, publicKey, emptyData);
+        ecies.encryptWithLength(publicKey, emptyData);
       }).toThrow(ECIESError);
     });
 
@@ -106,7 +108,7 @@ describe('Security Fixes - Comprehensive', () => {
       const largeData = Buffer.alloc(0x7fffffff + 1);
 
       expect(() => {
-        ecies.encryptSimpleOrSingle(false, publicKey, largeData);
+        ecies.encryptWithLength(publicKey, largeData);
       }).toThrow();
     });
   });
@@ -259,9 +261,7 @@ describe('Security Fixes - Comprehensive', () => {
         const message = Buffer.from('Test');
         const zeroKey = Buffer.alloc(65);
 
-        expect(() =>
-          ecies.encryptSimpleOrSingle(false, zeroKey, message),
-        ).toThrow();
+        expect(() => ecies.encryptWithLength(zeroKey, message)).toThrow();
       });
     });
 
@@ -270,15 +270,14 @@ describe('Security Fixes - Comprehensive', () => {
         const ecies = new ECIESService();
         const mnemonic = ecies.generateNewMnemonic();
         const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
-        const encrypted = ecies.encryptSimpleOrSingle(
-          false,
+        const encrypted = ecies.encryptWithLength(
           keyPair.publicKey,
           Buffer.from('Test'),
         );
         const zeroKey = Buffer.alloc(32);
 
         expect(() =>
-          ecies.decryptSimpleOrSingleWithHeader(false, zeroKey, encrypted),
+          ecies.decryptWithLengthAndHeader(zeroKey, encrypted),
         ).toThrow();
       });
     });
@@ -318,11 +317,7 @@ describe('Security Fixes - Comprehensive', () => {
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
       const message = Buffer.from('Test');
 
-      const encrypted = ecies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
+      const encrypted = ecies.encryptWithLength(keyPair.publicKey, message);
       expect(encrypted.length).toBeLessThan(message.length + 1024);
     });
 
@@ -332,13 +327,8 @@ describe('Security Fixes - Comprehensive', () => {
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
       const message = Buffer.from('Test');
 
-      const encrypted = ecies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
-      const decrypted = ecies.decryptSimpleOrSingleWithHeader(
-        false,
+      const encrypted = ecies.encryptWithLength(keyPair.publicKey, message);
+      const decrypted = ecies.decryptWithLengthAndHeader(
         keyPair.privateKey,
         encrypted,
       );
@@ -352,25 +342,24 @@ describe('Security Fixes - Comprehensive', () => {
       const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
       const message = Buffer.from('Test');
 
-      const encrypted = ecies.encryptSimpleOrSingle(
-        false,
-        keyPair.publicKey,
-        message,
-      );
+      const encrypted = ecies.encryptWithLength(keyPair.publicKey, message);
 
       // Truncate to invalid size
       const truncated = encrypted.subarray(0, 50);
       expect(() =>
-        ecies.decryptSimpleOrSingleWithHeader(
-          false,
-          keyPair.privateKey,
-          truncated,
-        ),
+        ecies.decryptWithLengthAndHeader(keyPair.privateKey, truncated),
       ).toThrow();
     });
 
     it('should validate shared secret is not all zeros', async () => {
-      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
+      const cryptoCore = new EciesCryptoCore({
+        curveName: 'secp256k1',
+        primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
+        mnemonicStrength: 256,
+        symmetricAlgorithm: 'aes-256-gcm',
+        symmetricKeyBits: 256,
+        symmetricKeyMode: 'gcm',
+      });
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
 
       const sharedSecret = await cryptoCore.computeSharedSecret(
@@ -389,7 +378,7 @@ describe('Security Fixes - Comprehensive', () => {
 
       const tooLarge = Buffer.alloc(0x80000000);
       expect(() =>
-        ecies.encryptSimpleOrSingle(false, keyPair.publicKey, tooLarge),
+        ecies.encryptWithLength(keyPair.publicKey, tooLarge),
       ).toThrow();
     });
 
@@ -400,11 +389,7 @@ describe('Security Fixes - Comprehensive', () => {
 
       const tooSmall = Buffer.alloc(10);
       expect(() =>
-        ecies.decryptSimpleOrSingleWithHeader(
-          false,
-          keyPair.privateKey,
-          tooSmall,
-        ),
+        ecies.decryptWithLengthAndHeader(keyPair.privateKey, tooSmall),
       ).toThrow();
     });
 
@@ -419,8 +404,19 @@ describe('Security Fixes - Comprehensive', () => {
     });
 
     it('should validate recipient count bounds', async () => {
-      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const cryptoCore = new EciesCryptoCore({
+        curveName: 'secp256k1',
+        primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
+        mnemonicStrength: 256,
+        symmetricAlgorithm: 'aes-256-gcm',
+        symmetricKeyBits: 256,
+        symmetricKeyMode: 'gcm',
+      });
+      const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
+        cryptoCore,
+      );
 
       const message = Buffer.from('Test');
       const recipients = [];
@@ -441,8 +437,19 @@ describe('Security Fixes - Comprehensive', () => {
     });
 
     it('should validate chunk index bounds', async () => {
-      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const cryptoCore = new EciesCryptoCore({
+        curveName: 'secp256k1',
+        primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
+        mnemonicStrength: 256,
+        symmetricAlgorithm: 'aes-256-gcm',
+        symmetricKeyBits: 256,
+        symmetricKeyMode: 'gcm',
+      });
+      const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
+        cryptoCore,
+      );
 
       const data = Buffer.from('Test');
       const symmetricKey = Buffer.alloc(32);
@@ -470,8 +477,19 @@ describe('Security Fixes - Comprehensive', () => {
     });
 
     it('should validate encrypted key length', async () => {
-      const cryptoCore = new EciesCryptoCore({ curveName: 'secp256k1' });
-      const processor = new MultiRecipientProcessor(cryptoCore);
+      const cryptoCore = new EciesCryptoCore({
+        curveName: 'secp256k1',
+        primaryKeyDerivationPath: "m/44'/60'/0'/0/0",
+        mnemonicStrength: 256,
+        symmetricAlgorithm: 'aes-256-gcm',
+        symmetricKeyBits: 256,
+        symmetricKeyMode: 'gcm',
+      });
+      const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
+        cryptoCore,
+      );
 
       const keyPair = await cryptoCore.generateEphemeralKeyPair();
       const invalidKey = Buffer.alloc(100);

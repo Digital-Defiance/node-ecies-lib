@@ -19,7 +19,6 @@ import type { IWrappedKeyConsts } from './wrapped-key-consts';
  *
  * Inherited from IBaseConstants:
  * - idProvider: IIdProvider
- * - OBJECT_ID_LENGTH: number
  * - MEMBER_ID_LENGTH: number
  * - PBKDF2: IPBkdf2Consts (overridden with Node crypto implementation)
  * - PBKDF2_PROFILES: Pbkdf2Profiles (overridden with Node profiles)

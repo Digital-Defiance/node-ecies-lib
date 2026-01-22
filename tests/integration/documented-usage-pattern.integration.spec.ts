@@ -60,15 +60,10 @@ describe('Integration: Documented Usage Pattern (Node.js)', () => {
 
       // Encrypt
       const message = Buffer.from('Hello, World!');
-      const encrypted = ecies.encryptSimpleOrSingle(
-        true,
-        keyPair.publicKey,
-        message,
-      );
+      const encrypted = ecies.encryptBasic(keyPair.publicKey, message);
 
       // Decrypt
-      const decrypted = ecies.decryptSimpleOrSingleWithHeader(
-        true,
+      const decrypted = ecies.decryptBasicWithHeader(
         keyPair.privateKey,
         encrypted,
       );
@@ -122,14 +117,9 @@ describe('Integration: Documented Usage Pattern (Node.js)', () => {
       expect(keyPair.publicKey).toBeInstanceOf(Buffer);
 
       const message = Buffer.from('Test message');
-      const encrypted = ecies.encryptSimpleOrSingle(
-        true,
-        keyPair.publicKey,
-        message,
-      );
+      const encrypted = ecies.encryptBasic(keyPair.publicKey, message);
 
-      const decrypted = ecies.decryptSimpleOrSingleWithHeader(
-        true,
+      const decrypted = ecies.decryptBasicWithHeader(
         keyPair.privateKey,
         encrypted,
       );

@@ -44,7 +44,7 @@ export class EciesEncryptTransform extends Transform {
     const encryptedLength =
       this.eciesService.computeEncryptedLengthFromDataLength(
         this.blockSize,
-        'simple',
+        'basic',
       );
     // For Simple encryption, capacity = blockSize - overhead
     this.capacityPerBlock = this.blockSize - (encryptedLength - this.blockSize);
@@ -72,8 +72,7 @@ export class EciesEncryptTransform extends Transform {
         const blockData = this.buffer.subarray(0, this.capacityPerBlock);
         this.buffer = this.buffer.subarray(this.capacityPerBlock);
 
-        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
-          true, // encryptSimple = true
+        const encryptedBlock = this.eciesService.encryptBasic(
           this.receiverPublicKey,
           blockData,
         );
@@ -112,8 +111,7 @@ export class EciesEncryptTransform extends Transform {
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
-          true, // encryptSimple = true
+        const encryptedBlock = this.eciesService.encryptBasic(
           this.receiverPublicKey,
           this.buffer,
         );

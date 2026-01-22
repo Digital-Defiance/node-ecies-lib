@@ -8,13 +8,18 @@ import {
   ObjectIdProvider,
   GuidV4Provider,
   CustomIdProvider,
+  MemberType,
+  EmailString,
 } from '@digitaldefiance/ecies-lib';
+
+import { GuidV4Provider as NodeGuidV4Provider } from '../../../src/lib/id-providers/guidv4-provider';
 
 import {
   getNodeRuntimeConfiguration,
   registerNodeRuntimeConfiguration,
 } from '../../../src/constants';
 import { ECIESService } from '../../../src/services/ecies/service';
+import { Member } from '../../../src/member';
 
 describe('Enhanced ID Provider Validation (Node.js)', () => {
   let originalConfig: ReturnType<typeof getNodeRuntimeConfiguration>;
@@ -64,7 +69,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       const id = idProvider.generate();
       const guidId = idProvider.fromBytes(id);
       // GuidV4Provider returns GuidV4 instances
-      expect(guidId.constructor.name).toBe('Guid');
+      expect(guidId.constructor.name).toBe('GuidUint8Array');
 
       // But we can convert back to bytes
       const backToBytes = idProvider.toBytes(guidId);
@@ -83,6 +88,28 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
 
       expect(service.idProvider.byteLength).toBe(20);
       expect(service.idProvider.name).toBe('Custom20Byte');
+    });
+
+    it('should work with Node GUID provider and Buffer TID', () => {
+      const guidConfig = registerNodeRuntimeConfiguration({
+        idProvider: new NodeGuidV4Provider(),
+      });
+      const service = new ECIESService<Buffer>(guidConfig);
+      const idProvider = service.idProvider;
+
+      expect(idProvider.byteLength).toBe(16);
+
+      const id = idProvider.generate();
+      const guidId = idProvider.fromBytes(id);
+      // NodeGuidV4Provider returns GuidBuffer instances
+      expect(guidId.constructor.name).toBe('GuidBuffer');
+
+      // But we can convert back to bytes
+      const backToBytes = idProvider.toBytes(guidId);
+      expect(
+        Buffer.isBuffer(backToBytes) || backToBytes instanceof Uint8Array,
+      ).toBe(true);
+      expect(backToBytes.length).toBe(16);
     });
   });
 
@@ -128,7 +155,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       };
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: incompleteProvider as any,
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -143,7 +170,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -158,7 +185,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -173,7 +200,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -188,7 +215,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -203,7 +230,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -220,7 +247,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new BadProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -253,7 +280,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       }
 
       expect(() => {
-        registerNodeRuntimeConfiguration({
+        registerNodeRuntimeConfiguration('custom-key', {
           idProvider: new FailingProvider(),
         });
         new ECIESService(getNodeRuntimeConfiguration());
@@ -262,18 +289,28 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
   });
 
   describe('Integration with Member Creation', () => {
-    it('should work seamlessly with Member.newMember() (conceptual)', () => {
-      const guidConfig = registerNodeRuntimeConfiguration({
+    it('should work seamlessly with Member.newMember()', () => {
+      const guidConfig = registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
       const service = new ECIESService<Buffer>(guidConfig);
 
-      // This should work without issues due to proper validation
-      expect(() => {
-        // Note: We can't actually test Member.newMember here because it's not available
-        // in node-ecies-lib, but we can verify the service is properly configured
-        expect(service.idProvider.byteLength).toBe(16);
-      }).not.toThrow();
+      // Verify service is properly configured
+      expect(service.idProvider.byteLength).toBe(16);
+
+      // Actually test Member.newMember with the configured service
+      const { member, mnemonic } = Member.newMember<Buffer>(
+        service,
+        MemberType.User,
+        'Test User',
+        new EmailString('test@example.com'),
+      );
+
+      // Verify the member was created with the correct ID provider
+      expect(member).toBeDefined();
+      expect(member.idBytes.length).toBe(16); // GUID is 16 bytes
+      expect(mnemonic).toBeDefined();
+      expect(member.name).toBe('Test User');
     });
 
     it('should maintain consistency across service configuration', () => {
@@ -317,7 +354,7 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
 
     it('should work with registerNodeRuntimeConfiguration', () => {
       const customProvider = new CustomIdProvider(24, 'Custom24Byte');
-      const customConfig = registerNodeRuntimeConfiguration({
+      const customConfig = registerNodeRuntimeConfiguration('custom-config', {
         idProvider: customProvider,
       });
 
@@ -336,16 +373,11 @@ describe('Enhanced ID Provider Validation (Node.js)', () => {
       );
 
       // Test encryption/decryption with Buffer types
-      const encrypted = service.encryptSimpleOrSingle(
-        true, // simple mode
-        keyPair.publicKey,
-        testMessage,
-      );
+      const encrypted = service.encryptBasic(keyPair.publicKey, testMessage);
 
       expect(Buffer.isBuffer(encrypted)).toBe(true);
 
-      const decrypted = service.decryptSimpleOrSingleWithHeader(
-        true, // simple mode
+      const decrypted = service.decryptBasicWithHeader(
         keyPair.privateKey,
         encrypted,
       );

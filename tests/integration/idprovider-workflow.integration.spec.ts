@@ -15,7 +15,7 @@ import {
   createRuntimeConfiguration,
   GuidV4Provider,
   ObjectIdProvider,
-  Guid,
+  GuidUint8Array,
   EmailString,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
@@ -51,7 +51,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(result.member.idBytes.length).toBe(16);
 
       // Step 5: Verify Guid.fromBuffer succeeds (this was failing before the fix)
-      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+      const guid = GuidUint8Array.fromPlatformBuffer(result.member.idBytes);
       expect(guid).toBeDefined();
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -75,23 +75,18 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify Member ID is UUID-compatible
       expect(result.member.idBytes.length).toBe(16);
-      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+      const guid = GuidUint8Array.fromPlatformBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
 
       // Use the Member's keys for encryption
       const message = Buffer.from('Hello, World!');
-      const encrypted = service.encryptSimpleOrSingle(
-        true,
-        result.member.publicKey,
-        message,
-      );
+      const encrypted = service.encryptBasic(result.member.publicKey, message);
 
       // Decrypt using the mnemonic-derived private key
       const keyPair = service.mnemonicToSimpleKeyPairBuffer(result.mnemonic);
-      const decrypted = service.decryptSimpleOrSingleWithHeader(
-        true,
+      const decrypted = service.decryptBasicWithHeader(
         keyPair.privateKey,
         encrypted,
       );
@@ -123,7 +118,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(originalId.length).toBe(16);
 
       // Step 3: Convert to UUID string
-      const originalGuid = Guid.fromPlatformBuffer(originalId);
+      const originalGuid = GuidUint8Array.fromPlatformBuffer(originalId);
       const uuidString = originalGuid.asFullHexGuid;
       expect(uuidString).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -143,7 +138,9 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       );
 
       // Step 7: Convert deserialized ID to UUID string
-      const deserializedGuid = Guid.fromPlatformBuffer(deserialized.idBytes);
+      const deserializedGuid = GuidUint8Array.fromPlatformBuffer(
+        deserialized.idBytes,
+      );
       expect(deserializedGuid.asFullHexGuid).toBe(uuidString);
     });
 
@@ -223,7 +220,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(memberBufferNormalized.length).toBe(16);
 
       // Verify UUID conversion still works
-      const guid = Guid.fromPlatformBuffer(member.idBytes);
+      const guid = GuidUint8Array.fromPlatformBuffer(member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -253,7 +250,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(result.mnemonic).toBeDefined();
 
       // Verify UUID compatibility
-      const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+      const guid = GuidUint8Array.fromPlatformBuffer(result.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -290,8 +287,8 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(user.member.creatorId).toEqual(admin.member.id);
 
       // Verify both IDs are UUID-compatible
-      const adminGuid = Guid.fromPlatformBuffer(admin.member.idBytes);
-      const userGuid = Guid.fromPlatformBuffer(user.member.idBytes);
+      const adminGuid = GuidUint8Array.fromPlatformBuffer(admin.member.idBytes);
+      const userGuid = GuidUint8Array.fromPlatformBuffer(user.member.idBytes);
       expect(adminGuid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -368,7 +365,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Verify all IDs are unique
       const idStrings = members.map(
-        (m) => Guid.fromPlatformBuffer(m.idBytes).asFullHexGuid,
+        (m) => GuidUint8Array.fromPlatformBuffer(m.idBytes).asFullHexGuid,
       );
       const uniqueIds = new Set(idStrings);
       expect(uniqueIds.size).toBe(members.length);
@@ -455,7 +452,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       expect(objectIdMember.member.idBytes.length).toBe(12);
 
       // Verify each ID is compatible with its provider
-      const guid = Guid.fromPlatformBuffer(guidMember.member.idBytes);
+      const guid = GuidUint8Array.fromPlatformBuffer(guidMember.member.idBytes);
       expect(guid.asFullHexGuid).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
@@ -579,8 +576,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
 
       // Encrypt message for recipient
       const message = Buffer.from('Secret message');
-      const encrypted = service.encryptSimpleOrSingle(
-        true,
+      const encrypted = service.encryptBasic(
         recipient.member.publicKey,
         message,
       );
@@ -589,8 +585,7 @@ describe('Integration: idProvider End-to-End Workflows (Node.js)', () => {
       const recipientKeyPair = service.mnemonicToSimpleKeyPairBuffer(
         recipient.mnemonic,
       );
-      const decrypted = service.decryptSimpleOrSingleWithHeader(
-        true,
+      const decrypted = service.decryptBasicWithHeader(
         recipientKeyPair.privateKey,
         encrypted,
       );

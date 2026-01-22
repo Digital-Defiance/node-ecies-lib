@@ -49,8 +49,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
       ]);
 
       // Backend encrypts
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false, // single mode
+      const encrypted = backendService.encryptWithLength(
         publicKey,
         testPayload,
       );
@@ -61,7 +60,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
       // Parse the header to understand the structure
       const backendSingle = new EciesSingleRecipientCore(config);
       const parsed = backendSingle.parseEncryptedMessage(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         encrypted,
       );
 
@@ -76,8 +75,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
       expect(parsed.header.dataLength).toBe(parsed.data.length);
 
       // Try to decrypt with backend
-      const backendDecrypted = backendService.decryptSimpleOrSingleWithHeader(
-        false,
+      const backendDecrypted = backendService.decryptWithLengthAndHeader(
         Buffer.from(wallet.getPrivateKey()),
         encrypted,
       );
@@ -90,7 +88,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
 
       try {
         const frontendParsed = frontendSingle.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           new Uint8Array(encrypted),
         );
 
@@ -102,7 +100,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
         );
 
         const frontendDecrypted = await frontendSingle.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           new Uint8Array(wallet.getPrivateKey()),
           new Uint8Array(encrypted),
         );
@@ -167,8 +165,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
 
       // Create multiple encryptions to validate consistency
       for (let i = 0; i < 3; i++) {
-        const encrypted = backendService.encryptSimpleOrSingle(
-          false,
+        const encrypted = backendService.encryptWithLength(
           publicKey,
           testMessage,
         );
@@ -178,7 +175,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
         // Parse and validate
         const backendSingle = new EciesSingleRecipientCore(config);
         const parsed = backendSingle.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
         );
 
@@ -187,8 +184,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
         expect(parsed.header.dataLength).toEqual(parsed.data.length);
 
         // Verify decryption works
-        const decrypted = backendService.decryptSimpleOrSingleWithHeader(
-          false,
+        const decrypted = backendService.decryptWithLengthAndHeader(
           Buffer.from(wallet.getPrivateKey()),
           encrypted,
         );
@@ -212,7 +208,7 @@ describe('ECIES Debug - Length Mismatch Issue', () => {
       ]);
 
       const encrypted = backendSingle.encrypt(
-        false, // single mode
+        EciesEncryptionTypeEnum.WithLength, // single mode
         publicKey,
         testMessage,
       );

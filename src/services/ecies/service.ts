@@ -13,6 +13,7 @@ import {
   IECIESConstants,
   IIdProvider,
   SecureString,
+  TranslatableEciesError,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 
@@ -115,7 +116,9 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     this.signature = new EciesSignature(this.cryptoCore);
     this.singleRecipient = new EciesSingleRecipientCore(this._config);
     this.multiRecipient = new EciesMultiRecipient(
-      this.cryptoCore,
+      Constants,
+      Constants.ECIES_CONFIG,
+      this.eciesConsts,
       this._constants.idProvider as IIdProvider<TID>,
     );
     this.utilities = new EciesUtilities();
@@ -270,11 +273,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
         'function' &&
       typeof (idProvider as Record<string, unknown>)['byteLength'] === 'number';
 
-    const hasOtherConstants =
-      'OBJECT_ID_LENGTH' in configRecord &&
-      typeof configRecord['OBJECT_ID_LENGTH'] === 'number';
-
-    return hasECIES && hasIdProvider && hasOtherConstants;
+    return hasECIES && hasIdProvider;
   }
 
   public get core(): EciesCryptoCore {
@@ -335,14 +334,26 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     return this.cryptoCore.getPublicKey(privateKey);
   }
 
-  public encryptSimpleOrSingle(
-    encryptSimple: boolean,
+  public encryptBasic(
     receiverPublicKey: Buffer,
     message: Buffer,
     preamble: Buffer = Buffer.alloc(0),
   ): Buffer {
     return this.singleRecipient.encrypt(
-      encryptSimple,
+      EciesEncryptionTypeEnum.Basic,
+      receiverPublicKey,
+      message,
+      preamble,
+    );
+  }
+
+  public encryptWithLength(
+    receiverPublicKey: Buffer,
+    message: Buffer,
+    preamble: Buffer = Buffer.alloc(0),
+  ): Buffer {
+    return this.singleRecipient.encrypt(
+      EciesEncryptionTypeEnum.WithLength,
       receiverPublicKey,
       message,
       preamble,
@@ -354,21 +365,18 @@ export class ECIESService<TID extends PlatformID = Buffer> {
    */
   public encrypt(
     encryptionType: EciesEncryptionTypeEnum,
-    recipientPublicKey: Buffer,
+    receiverPublicKey: Buffer,
     message: Buffer,
     preamble?: Buffer,
   ): Buffer {
     if (encryptionType === EciesEncryptionTypeEnum.Multiple) {
-      throw new Error(
-        getEciesI18nEngine().translate(
-          EciesComponentId,
-          EciesStringKey.Error_ECIESError_MultipleEncryptionTypeNotSupportedInSingleRecipientMode,
-        ),
+      throw new TranslatableEciesError(
+        EciesStringKey.Error_ECIESError_MultipleEncryptionTypeNotSupportedInSingleRecipientMode,
       );
     }
     return this.singleRecipient.encrypt(
-      encryptionType === EciesEncryptionTypeEnum.Simple,
-      recipientPublicKey,
+      encryptionType,
+      receiverPublicKey,
       message,
       preamble,
     );
@@ -389,17 +397,14 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     return header;
   }
 
-  public decryptSimpleOrSingleWithHeader(
-    decryptSimple: boolean,
+  public decryptBasicWithHeader(
     privateKey: Buffer,
     encryptedData: Buffer,
     preambleSize: number = 0,
     options?: { dataLength?: number },
   ): Buffer {
     return this.singleRecipient.decryptWithHeader(
-      decryptSimple
-        ? EciesEncryptionTypeEnum.Simple
-        : EciesEncryptionTypeEnum.Single,
+      EciesEncryptionTypeEnum.Basic,
       privateKey,
       encryptedData,
       preambleSize,
@@ -407,15 +412,29 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     );
   }
 
-  public decryptSimpleOrSingleWithHeaderEx(
-    encryptionType: EciesEncryptionTypeEnum,
+  public decryptWithLengthAndHeader(
+    privateKey: Buffer,
+    encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: { dataLength?: number },
+  ): Buffer {
+    return this.singleRecipient.decryptWithHeader(
+      EciesEncryptionTypeEnum.WithLength,
+      privateKey,
+      encryptedData,
+      preambleSize,
+      options,
+    );
+  }
+
+  public decryptBasicWithHeaderEx(
     privateKey: Buffer,
     encryptedData: Buffer,
     preambleSize: number = 0,
     options?: { dataLength?: number },
   ): { decrypted: Buffer; consumedBytes: number } {
     return this.singleRecipient.decryptWithHeaderEx(
-      encryptionType,
+      EciesEncryptionTypeEnum.Basic,
       privateKey,
       encryptedData,
       preambleSize,
@@ -423,7 +442,22 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     );
   }
 
-  public decryptSingleWithComponents(
+  public decryptWithLengthAndHeaderEx(
+    privateKey: Buffer,
+    encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: { dataLength?: number },
+  ): { decrypted: Buffer; consumedBytes: number } {
+    return this.singleRecipient.decryptWithHeaderEx(
+      EciesEncryptionTypeEnum.WithLength,
+      privateKey,
+      encryptedData,
+      preambleSize,
+      options,
+    );
+  }
+
+  public decryptWithLengthWithComponents(
     privateKey: Buffer,
     ephemeralPublicKey: Buffer,
     iv: Buffer,
@@ -560,10 +594,10 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     }
 
     switch (encryptionMode) {
-      case 'simple':
-        return dataLength + this.eciesConsts.SIMPLE.FIXED_OVERHEAD_SIZE;
-      case 'single':
-        return dataLength + this.eciesConsts.SINGLE.FIXED_OVERHEAD_SIZE;
+      case 'basic':
+        return dataLength + this.eciesConsts.BASIC.FIXED_OVERHEAD_SIZE;
+      case 'withLength':
+        return dataLength + this.eciesConsts.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       case 'multiple':
         // Basic calculation for multiple recipients
         return (
@@ -597,7 +631,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
       );
     }
 
-    const overhead = this.eciesConsts.SINGLE.FIXED_OVERHEAD_SIZE;
+    const overhead = this.eciesConsts.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
     const actualPadding = padding !== undefined ? padding : 0;
     const decryptedLength = encryptedDataLength - overhead - actualPadding;
 

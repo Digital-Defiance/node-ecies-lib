@@ -129,14 +129,9 @@ describe('Property-Based Tests: ECIESService Constructor', () => {
             const keyPair = service.mnemonicToSimpleKeyPairBuffer(mnemonic);
             const message = Buffer.from('Test message');
 
-            const encrypted = service.encryptSimpleOrSingle(
-              true,
-              keyPair.publicKey,
-              message,
-            );
+            const encrypted = service.encryptBasic(keyPair.publicKey, message);
 
-            const decrypted = service.decryptSimpleOrSingleWithHeader(
-              true,
+            const decrypted = service.decryptBasicWithHeader(
               keyPair.privateKey,
               encrypted,
             );

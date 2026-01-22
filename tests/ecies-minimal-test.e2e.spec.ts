@@ -44,16 +44,14 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const privateKey = Buffer.from(wallet.getPrivateKey());
 
       // Backend encrypts
-      const encrypted = backendService.encryptSimpleOrSingle(
-        false,
+      const encrypted = backendService.encryptWithLength(
         publicKey,
         testMessage,
       );
       expect(encrypted.length).toBeGreaterThan(testMessage.length);
 
       // Frontend decrypts
-      const decrypted = await frontendService.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await frontendService.decryptWithLengthAndHeader(
         new Uint8Array(privateKey),
         new Uint8Array(encrypted),
       );
@@ -71,16 +69,14 @@ describe('ECIES Minimal Cross-Platform Test', () => {
       const privateKey = Buffer.from(wallet.getPrivateKey());
 
       // Frontend encrypts
-      const encrypted = await frontendService.encryptSimpleOrSingle(
-        false,
+      const encrypted = await frontendService.encryptWithLength(
         new Uint8Array(publicKey),
         new Uint8Array(testMessage),
       );
       expect(encrypted.length).toBeGreaterThan(testMessage.length);
 
       // Backend decrypts
-      const decrypted = backendService.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = backendService.decryptWithLengthAndHeader(
         privateKey,
         Buffer.from(encrypted),
       );

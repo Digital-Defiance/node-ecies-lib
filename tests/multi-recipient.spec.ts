@@ -35,7 +35,12 @@ describe('MultiRecipientProcessor', () => {
     idProvider = new BufferIdProvider(
       Constants.ECIES.MULTIPLE.RECIPIENT_ID_SIZE,
     );
-    processor = new MultiRecipientProcessor(cryptoCore, idProvider);
+    processor = new MultiRecipientProcessor(
+      Constants,
+      Constants.ECIES_CONFIG,
+      cryptoCore,
+      idProvider,
+    );
 
     const keyPair1 = await cryptoCore.generateEphemeralKeyPair();
     recipient1 = {

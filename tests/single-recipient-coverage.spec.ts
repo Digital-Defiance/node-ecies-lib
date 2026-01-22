@@ -39,13 +39,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
   });
 
   describe('getHeaderSize', () => {
-    it('should return simple header size', () => {
-      const size = singleRecipient.getHeaderSize('simple');
+    it('should return basic header size', () => {
+      const size = singleRecipient.getHeaderSize('basic');
       expect(size).toBeGreaterThan(0);
     });
 
-    it('should return single header size', () => {
-      const size = singleRecipient.getHeaderSize('single');
+    it('should return withLength header size', () => {
+      const size = singleRecipient.getHeaderSize('withLength');
       expect(size).toBeGreaterThan(0);
     });
 
@@ -65,7 +65,11 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for message exceeding max size', () => {
       const hugeMessage = Buffer.alloc(0xffffffff + 1);
       expect(() =>
-        singleRecipient.encrypt(false, publicKey, hugeMessage),
+        singleRecipient.encrypt(
+          EciesEncryptionTypeEnum.WithLength,
+          publicKey,
+          hugeMessage,
+        ),
       ).toThrow();
     });
 
@@ -74,7 +78,11 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const message = Buffer.from('test');
         const invalidKey = Buffer.from('invalid');
         expect(() =>
-          singleRecipient.encrypt(false, invalidKey, message),
+          singleRecipient.encrypt(
+            EciesEncryptionTypeEnum.WithLength,
+            invalidKey,
+            message,
+          ),
         ).toThrow(ECIESError);
       });
     });
@@ -84,9 +92,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
         const message = Buffer.from('test');
         const badKey = randomBytes(65);
         badKey[0] = 0x04; // Set prefix but use random data
-        expect(() => singleRecipient.encrypt(false, badKey, message)).toThrow(
-          ECIESError,
-        );
+        expect(() =>
+          singleRecipient.encrypt(
+            EciesEncryptionTypeEnum.WithLength,
+            badKey,
+            message,
+          ),
+        ).toThrow(ECIESError);
       });
     });
   });
@@ -94,18 +106,22 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
   describe('parseEncryptedMessage', () => {
     it('should throw error for encryption type mismatch', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
 
       expect(() =>
         singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Simple,
+          EciesEncryptionTypeEnum.Basic,
           encrypted,
           0,
         ),
       ).toThrow(ECIESError);
       expect(() =>
         singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Simple,
+          EciesEncryptionTypeEnum.Basic,
           encrypted,
           0,
         ),
@@ -131,7 +147,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       const tooShort = Buffer.alloc(10);
       tooShort.writeUInt8(EciesVersionEnum.V1, 0);
       tooShort.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256, 1);
-      tooShort.writeUInt8(EciesEncryptionTypeEnum.Single, 2);
+      tooShort.writeUInt8(EciesEncryptionTypeEnum.WithLength, 2);
 
       expect(() =>
         singleRecipient.parseEncryptedMessage(undefined, tooShort, 0),
@@ -147,11 +163,15 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for data length mismatch', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
 
       expect(() =>
         singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
           0,
           { dataLength: 999999 },
@@ -163,7 +183,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       const data = Buffer.alloc(200);
       data.writeUInt8(EciesVersionEnum.V1, 0);
       data.writeUInt8(EciesCipherSuiteEnum.Secp256k1_Aes256Gcm_Sha256, 1);
-      data.writeUInt8(EciesEncryptionTypeEnum.Single, 2);
+      data.writeUInt8(EciesEncryptionTypeEnum.WithLength, 2);
       // Write invalid key (wrong length)
       const invalidKey = Buffer.alloc(32);
       invalidKey.copy(data, 3);
@@ -175,7 +195,11 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for invalid IV length', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
       // Corrupt AuthTag section (IV is 12 bytes, AuthTag is 16 bytes)
       // Offset: Preamble(0) + Ver(1) + Suite(1) + Type(1) + PubKey(33) = 36
       // IV: 36 -> 48
@@ -186,7 +210,7 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
       // This will fail during decryption due to auth tag mismatch
       expect(() =>
         singleRecipient.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           privateKey,
           corrupted,
         ),
@@ -195,13 +219,17 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should throw error for encrypted data length mismatch', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
       // Truncate the encrypted data
       const truncated = encrypted.subarray(0, encrypted.length - 5);
 
       expect(() =>
         singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           truncated,
           0,
         ),
@@ -212,11 +240,15 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
   describe('decryptWithHeader', () => {
     it('should throw error for encryption type mismatch', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(true, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.Basic,
+        publicKey,
+        message,
+      );
 
       expect(() =>
         singleRecipient.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           privateKey,
           encrypted,
         ),
@@ -225,19 +257,23 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should handle decryption failure gracefully', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
       const wrongKey = randomBytes(32);
 
       expect(() =>
         singleRecipient.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           wrongKey,
           encrypted,
         ),
       ).toThrow(ECIESError);
       expect(() =>
         singleRecipient.decryptWithHeader(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           wrongKey,
           encrypted,
         ),
@@ -250,10 +286,14 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
   describe('decryptWithHeaderEx', () => {
     it('should return decrypted data and consumed bytes', () => {
       const message = Buffer.from('test message');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
 
       const result = singleRecipient.decryptWithHeaderEx(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         privateKey,
         encrypted,
       );
@@ -264,12 +304,16 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
 
     it('should handle decryption errors', () => {
       const message = Buffer.from('test');
-      const encrypted = singleRecipient.encrypt(false, publicKey, message);
+      const encrypted = singleRecipient.encrypt(
+        EciesEncryptionTypeEnum.WithLength,
+        publicKey,
+        message,
+      );
       const wrongKey = randomBytes(32);
 
       expect(() =>
         singleRecipient.decryptWithHeaderEx(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           wrongKey,
           encrypted,
         ),
@@ -281,9 +325,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for invalid auth tag length', async () => {
       await withConsoleMocks({ mute: true }, async () => {
         const message = Buffer.from('test');
-        const encrypted = singleRecipient.encrypt(false, publicKey, message);
+        const encrypted = singleRecipient.encrypt(
+          EciesEncryptionTypeEnum.WithLength,
+          publicKey,
+          message,
+        );
         const { header, data } = singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
         );
 
@@ -323,9 +371,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for invalid IV length', async () => {
       await withConsoleMocks({ mute: true }, async () => {
         const message = Buffer.from('test');
-        const encrypted = singleRecipient.encrypt(false, publicKey, message);
+        const encrypted = singleRecipient.encrypt(
+          EciesEncryptionTypeEnum.WithLength,
+          publicKey,
+          message,
+        );
         const { header, data } = singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
         );
 
@@ -365,9 +417,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for empty encrypted data', async () => {
       await withConsoleMocks({ mute: true }, async () => {
         const message = Buffer.from('test');
-        const encrypted = singleRecipient.encrypt(false, publicKey, message);
+        const encrypted = singleRecipient.encrypt(
+          EciesEncryptionTypeEnum.WithLength,
+          publicKey,
+          message,
+        );
         const { header } = singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
         );
 
@@ -407,9 +463,13 @@ describe('EciesSingleRecipientCore - Coverage Tests', () => {
     it('should throw error for shared secret computation failure', async () => {
       await withConsoleMocks({ mute: true }, async () => {
         const message = Buffer.from('test');
-        const encrypted = singleRecipient.encrypt(false, publicKey, message);
+        const encrypted = singleRecipient.encrypt(
+          EciesEncryptionTypeEnum.WithLength,
+          publicKey,
+          message,
+        );
         const { header, data } = singleRecipient.parseEncryptedMessage(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           encrypted,
         );
 

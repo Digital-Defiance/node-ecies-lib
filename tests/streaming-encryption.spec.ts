@@ -14,7 +14,7 @@ describe('Streaming Encryption', () => {
 
   beforeEach(() => {
     ecies = new ECIESService();
-    stream = new EncryptionStream(ecies);
+    stream = new EncryptionStream(Constants, Constants.ECIES_CONFIG, ecies);
     const mnemonic = ecies.generateNewMnemonic();
     const keyPair = ecies.mnemonicToSimpleKeyPair(mnemonic);
     publicKey = keyPair.publicKey;

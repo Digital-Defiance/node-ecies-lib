@@ -6,12 +6,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+
 import {
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
-import { PlatformID } from '../interfaces';
+import { IConstants, PlatformID } from '../interfaces';
 import { IEncryptedChunk } from '../interfaces/encrypted-chunk';
 import { IMultiRecipientChunk } from '../interfaces/multi-recipient-chunk';
 import {
@@ -44,6 +46,8 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
   private readonly engine = getNodeEciesI18nEngine();
 
   constructor(
+    private readonly constants: IConstants,
+    private readonly eciesConfig: IECIESConfig,
     private readonly ecies: ECIESService<TID>,
     private readonly config: IStreamConfig = DEFAULT_STREAM_CONFIG,
     processor?: ChunkProcessor<TID>,
@@ -56,6 +60,8 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     this.multiRecipientProcessor =
       multiRecipientProcessor ??
       new MultiRecipientProcessor<TID>(
+        constants,
+        eciesConfig,
         ecies.core,
         enhancedProvider, // Use enhanced provider for better type safety
         ecies.constants.ECIES, // Pass ECIES constants instead of full constants

@@ -45,7 +45,7 @@ describe('ECIESService - Coverage Tests', () => {
     it('should encrypt with simple mode and single recipient', () => {
       const message = Buffer.from('test');
       const encrypted = service.encrypt(
-        EciesEncryptionTypeEnum.Simple,
+        EciesEncryptionTypeEnum.Basic,
         member1.publicKey,
         message,
       );
@@ -56,7 +56,7 @@ describe('ECIESService - Coverage Tests', () => {
     it('should encrypt with single mode and single recipient', () => {
       const message = Buffer.from('test');
       const encrypted = service.encrypt(
-        EciesEncryptionTypeEnum.Single,
+        EciesEncryptionTypeEnum.WithLength,
         member1.publicKey,
         message,
       );
@@ -68,7 +68,7 @@ describe('ECIESService - Coverage Tests', () => {
       const message = Buffer.from('test');
       const preamble = Buffer.from('preamble');
       const encrypted = service.encrypt(
-        EciesEncryptionTypeEnum.Simple,
+        EciesEncryptionTypeEnum.Basic,
         member1.publicKey,
         message,
         preamble,
@@ -82,13 +82,12 @@ describe('ECIESService - Coverage Tests', () => {
       if (!member1.privateKey) throw new Error('Private key required');
 
       const message = Buffer.from('test message');
-      const encrypted = service.encryptSimpleOrSingle(
-        false,
-        member1.publicKey,
-        message,
-      );
+      const encrypted = service.encryptWithLength(member1.publicKey, message);
 
-      const header = service.parseSingleEncryptedHeader(undefined, encrypted);
+      const header = service.parseSingleEncryptedHeader(
+        EciesEncryptionTypeEnum.WithLength,
+        encrypted,
+      );
 
       // Construct AAD
       const versionBuffer = Buffer.alloc(1);
@@ -108,7 +107,7 @@ describe('ECIESService - Coverage Tests', () => {
         header.ephemeralPublicKey,
       ]);
 
-      const result = service.decryptSingleWithComponents(
+      const result = service.decryptWithLengthWithComponents(
         Buffer.from(member1.privateKey.value),
         header.ephemeralPublicKey,
         header.iv,

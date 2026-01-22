@@ -166,19 +166,32 @@ describe('Module Load Integration', () => {
       const {
         MultiRecipientProcessor,
         ECIESService,
+        Constants,
       } = require('../../src/index');
 
       const eciesService = new ECIESService();
-      const processor = new MultiRecipientProcessor(eciesService);
+      const processor = new MultiRecipientProcessor(
+        Constants,
+        Constants.ECIES_CONFIG,
+        eciesService.core,
+      );
 
       expect(processor).toBeDefined();
     });
 
     it('should verify encryption stream can be created', () => {
-      const { EncryptionStream, ECIESService } = require('../../src/index');
+      const {
+        EncryptionStream,
+        ECIESService,
+        Constants,
+      } = require('../../src/index');
 
       const eciesService = new ECIESService();
-      const stream = new EncryptionStream(eciesService);
+      const stream = new EncryptionStream(
+        Constants,
+        Constants.ECIES_CONFIG,
+        eciesService,
+      );
 
       expect(stream).toBeDefined();
     });

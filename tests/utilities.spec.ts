@@ -12,10 +12,10 @@ describe('EciesUtilities', () => {
   describe('computeEncryptedLengthFromDataLength', () => {
     it('should throw error for negative data length', () => {
       expect(() =>
-        utilities.computeEncryptedLengthFromDataLength(-1, 'simple'),
+        utilities.computeEncryptedLengthFromDataLength(-1, 'basic'),
       ).toThrow(ECIESError);
       expect(() =>
-        utilities.computeEncryptedLengthFromDataLength(-1, 'simple'),
+        utilities.computeEncryptedLengthFromDataLength(-1, 'basic'),
       ).toThrow(
         expect.objectContaining({ type: ECIESErrorTypeEnum.InvalidDataLength }),
       );
@@ -40,18 +40,18 @@ describe('EciesUtilities', () => {
       );
     });
 
-    it('should compute length for simple encryption', () => {
+    it('should compute length for basic encryption', () => {
       const result = utilities.computeEncryptedLengthFromDataLength(
         100,
-        'simple',
+        'basic',
       );
       expect(result).toBeGreaterThan(100);
     });
 
-    it('should compute length for single encryption', () => {
+    it('should compute length for withLength encryption', () => {
       const result = utilities.computeEncryptedLengthFromDataLength(
         100,
-        'single',
+        'withLength',
       );
       expect(result).toBeGreaterThan(100);
     });

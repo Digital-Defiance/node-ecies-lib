@@ -11,12 +11,13 @@ import {
 import {
   ECIESError,
   ECIESErrorTypeEnum,
+  IECIESConfig,
   IECIESConstants,
   IIdProvider,
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
 
-import type { PlatformID } from '../interfaces';
+import type { IConstants, PlatformID } from '../interfaces';
 import { AuthenticatedCipher } from '../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../interfaces/authenticated-decipher';
 import type { IMember } from '../interfaces/member';
@@ -57,6 +58,8 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
   private readonly idProvider: IIdProvider<TID>;
 
   constructor(
+    constants: IConstants,
+    config: IECIESConfig,
     cryptoCoreOrService: EciesCryptoCore | { core?: EciesCryptoCore },
     idProvider?: IIdProvider<TID>,
     consts?: IECIESConstants,
@@ -77,7 +80,7 @@ export class MultiRecipientProcessor<TID extends PlatformID = Buffer> {
     this.aesGcm = aesGcm ?? new AESGCMService();
     this.eciesMultiRecipient =
       eciesMultiRecipient ??
-      new EciesMultiRecipient<TID>(core, resolvedIdProvider);
+      new EciesMultiRecipient<TID>(constants, config, consts, idProvider);
     this.recipientIdSize =
       this.consts?.MULTIPLE?.RECIPIENT_ID_SIZE ?? resolvedIdProvider.byteLength;
     this.constants = getMultiRecipientConstants(this.recipientIdSize);

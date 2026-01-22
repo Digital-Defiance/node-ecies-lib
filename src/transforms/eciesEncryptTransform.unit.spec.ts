@@ -77,8 +77,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = eciesService.decryptSimpleOrSingleWithHeader(
-        true,
+      const decryptedData = eciesService.decryptBasicWithHeader(
         keypair.privateKey,
         encryptedData,
       );
@@ -117,11 +116,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
 
       // Decrypt all blocks and concatenate
       const decryptedChunks = chunks.map((encryptedBlock) =>
-        eciesService.decryptSimpleOrSingleWithHeader(
-          true,
-          keypair.privateKey,
-          encryptedBlock,
-        ),
+        eciesService.decryptBasicWithHeader(keypair.privateKey, encryptedBlock),
       );
       const decryptedData = Buffer.concat(decryptedChunks);
       expect(decryptedData).toEqual(inputBuffer);

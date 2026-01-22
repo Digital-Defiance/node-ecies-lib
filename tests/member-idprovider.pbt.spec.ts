@@ -12,7 +12,7 @@ import {
   MemberType,
   GuidV4Provider,
   ObjectIdProvider,
-  Guid,
+  GuidUint8Array,
   createRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
 import { Member } from '../src/member';
@@ -231,7 +231,9 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
 
             // Verify Guid.fromBuffer succeeds
             expect(() => {
-              const guid = Guid.fromPlatformBuffer(result.member.idBytes);
+              const guid = GuidUint8Array.fromPlatformBuffer(
+                result.member.idBytes,
+              );
               expect(guid).toBeDefined();
               expect(guid.asFullHexGuid).toMatch(
                 /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
@@ -445,7 +447,7 @@ describe('Property-Based Tests: Member idProvider Integration (Node.js)', () => 
             expect(deserializedBuffer.length).toBe(16);
 
             // Verify UUID compatibility maintained
-            const guid = Guid.fromPlatformBuffer(deserializedBuffer);
+            const guid = GuidUint8Array.fromPlatformBuffer(deserializedBuffer);
             expect(guid).toBeDefined();
           },
         ),

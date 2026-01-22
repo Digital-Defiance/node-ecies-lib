@@ -22,9 +22,7 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     inputData: Buffer,
     publicKey: Buffer,
   ): Promise<Buffer> {
-    return Promise.resolve(
-      eciesService.encryptSimpleOrSingle(true, publicKey, inputData),
-    );
+    return Promise.resolve(eciesService.encryptBasic(publicKey, inputData));
   }
 
   const testEndToEndDecryption = async (inputData: Buffer): Promise<Buffer> => {
@@ -75,7 +73,7 @@ describe('EciesDecryptionTransform Integration Tests', () => {
 
   it('correctly decrypts data that was encrypted and is exactly one block', async () => {
     jest.setTimeout(10000); // Increase timeout to 10 seconds
-    const testDataLength = blockSize - ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+    const testDataLength = blockSize - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
     const inputData = randomBytes(testDataLength);
     const decryptedData = await testEndToEndDecryption(inputData);
     expect(decryptedData).toEqual(inputData);

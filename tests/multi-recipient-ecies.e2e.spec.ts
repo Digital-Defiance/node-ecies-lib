@@ -6,7 +6,7 @@ import {
   MemberType,
 } from '@digitaldefiance/ecies-lib';
 
-import { getNodeRuntimeConfiguration } from '../src/constants';
+import { Constants, getNodeRuntimeConfiguration } from '../src/constants';
 import { Member as BackendMember } from '../src/member';
 import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { EciesMultiRecipient } from '../src/services/ecies/multi-recipient';
@@ -32,7 +32,11 @@ describe('ECIES Multi-Recipient E2E', () => {
     };
     const cryptoCore = new EciesCryptoCore(config);
     eciesService = new ECIESService(config);
-    eciesMultiRecipient = new EciesMultiRecipient(cryptoCore);
+    eciesMultiRecipient = new EciesMultiRecipient(
+      Constants,
+      Constants.ECIES_CONFIG,
+      cryptoCore.consts,
+    );
 
     // Create mock recipients
     recipients = [

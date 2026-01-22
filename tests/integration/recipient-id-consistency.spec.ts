@@ -22,14 +22,14 @@ describe('Recipient ID Consistency Integration Tests', () => {
 
   beforeEach(() => {
     // Save original configuration
-    originalConfig = registerNodeRuntimeConfiguration({
+    originalConfig = registerNodeRuntimeConfiguration('object-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
 
   afterEach(() => {
     // Restore original configuration to prevent test interference
-    registerNodeRuntimeConfiguration({
+    registerNodeRuntimeConfiguration('object-config', {
       idProvider: new ObjectIdProvider(),
     });
   });
@@ -55,7 +55,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
     });
 
     it('should auto-sync MEMBER_ID_LENGTH when ID provider changes to GUID (16 bytes)', () => {
-      const config = registerNodeRuntimeConfiguration({
+      const config = registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -67,7 +67,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
     });
 
     it('should auto-sync MEMBER_ID_LENGTH when ID provider changes to UUID (16 bytes)', () => {
-      const config = registerNodeRuntimeConfiguration({
+      const config = registerNodeRuntimeConfiguration('uuid-config', {
         idProvider: new UuidProvider(),
       });
 
@@ -78,7 +78,7 @@ describe('Recipient ID Consistency Integration Tests', () => {
     });
 
     it('should validate configuration after ID provider change', () => {
-      const config = registerNodeRuntimeConfiguration({
+      const config = registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 
@@ -170,14 +170,14 @@ describe('Recipient ID Consistency Integration Tests', () => {
   describe('ID Provider Switching', () => {
     it('should support switching from ObjectID to GUID and back', () => {
       // Start with GUID
-      let config = registerNodeRuntimeConfiguration({
+      let config = registerNodeRuntimeConfiguration('guid-config', {
         idProvider: new GuidV4Provider(),
       });
       expect(config.idProvider.byteLength).toBe(16);
       expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(16);
 
       // Switch back to ObjectID
-      config = registerNodeRuntimeConfiguration({
+      config = registerNodeRuntimeConfiguration('object-config', {
         idProvider: new ObjectIdProvider(),
       });
       expect(config.idProvider.byteLength).toBe(12);
@@ -192,9 +192,12 @@ describe('Recipient ID Consistency Integration Tests', () => {
       ];
 
       for (const provider of providers) {
-        const config = registerNodeRuntimeConfiguration({
-          idProvider: provider,
-        });
+        const config = registerNodeRuntimeConfiguration(
+          provider.constructor.name,
+          {
+            idProvider: provider,
+          },
+        );
 
         expect(config.MEMBER_ID_LENGTH).toBe(provider.byteLength);
         expect(config.ECIES.MULTIPLE.RECIPIENT_ID_SIZE).toBe(

@@ -3,7 +3,7 @@
  * Addresses: Overall branch coverage gaps across node-ecies-lib
  */
 
-import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { IECIESConfig, SecureString } from '@digitaldefiance/ecies-lib';
 import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 
 import { Constants } from '../src/constants';
@@ -30,25 +30,45 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
       symmetricKeyMode: Constants.ECIES.SYMMETRIC.MODE,
     };
     cryptoCore = new EciesCryptoCore(config);
-    encryptionStream = new EncryptionStream(eciesService);
-    multiRecipientProcessor = new MultiRecipientProcessor(cryptoCore);
+    encryptionStream = new EncryptionStream(
+      Constants,
+      Constants.ECIES_CONFIG,
+      eciesService,
+    );
+    multiRecipientProcessor = new MultiRecipientProcessor(
+      Constants,
+      Constants.ECIES_CONFIG,
+      cryptoCore,
+    );
   });
 
   describe('Crypto Core Error Paths', () => {
     it('should handle invalid curve names', () => {
       expect(
-        () => new EciesCryptoCore({ curveName: 'invalid-curve' as any }),
+        () =>
+          new EciesCryptoCore({
+            ...Constants.ECIES_CONFIG,
+            curveName: 'invalid-curve' as any,
+          }),
       ).toThrow();
     });
 
     it('should handle malformed mnemonics', () => {
       expect(() =>
-        cryptoCore.mnemonicToSimpleKeyPair('invalid mnemonic'),
+        cryptoCore.mnemonicToSimpleKeyPairBuffer(
+          new SecureString('invalid mnemonic'),
+        ),
       ).toThrow();
 
-      expect(() => cryptoCore.mnemonicToSimpleKeyPair('')).toThrow();
+      expect(() =>
+        cryptoCore.mnemonicToSimpleKeyPairBuffer(new SecureString('')),
+      ).toThrow();
 
-      expect(() => cryptoCore.mnemonicToSimpleKeyPair('word '.repeat(11))) // 11 words
+      expect(() =>
+        cryptoCore.mnemonicToSimpleKeyPairBuffer(
+          new SecureString('word '.repeat(11)),
+        ),
+      ) // 11 words
         .toThrow();
     });
 
@@ -94,8 +114,8 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
       }
     });
 
-    it('should handle signature verification with malformed signatures', () => {
-      const keyPair = cryptoCore.generateEphemeralKeyPair();
+    it('should handle signature verification with malformed signatures', async () => {
+      const keyPair = await cryptoCore.generateEphemeralKeyPair();
       const message = Buffer.from('test message');
 
       const malformedSignatures = [
@@ -123,7 +143,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
 
         for (const invalidKey of invalidKeys) {
           try {
-            await eciesService.encryptSimpleOrSingle(true, invalidKey, message);
+            await eciesService.encryptBasic(invalidKey, message);
             // If we reach here, the test should fail because an error was expected
             expect(true).toBe(false);
           } catch (error) {
@@ -141,8 +161,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
         );
         const message = Buffer.from('test');
 
-        const encrypted = await eciesService.encryptSimpleOrSingle(
-          true,
+        const encrypted = await eciesService.encryptBasic(
           keyPair.publicKey,
           message,
         );
@@ -155,11 +174,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
 
         for (const invalidKey of invalidPrivateKeys) {
           try {
-            await eciesService.decryptSimpleOrSingleWithHeader(
-              true,
-              invalidKey,
-              encrypted,
-            );
+            await eciesService.decryptBasicWithHeader(invalidKey, encrypted);
             // If we reach here, the test should fail because an error was expected
             expect(true).toBe(false);
           } catch (error) {
@@ -177,8 +192,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
         );
         const message = Buffer.from('test message');
 
-        const encrypted = await eciesService.encryptSimpleOrSingle(
-          true,
+        const encrypted = await eciesService.encryptBasic(
           keyPair.publicKey,
           message,
         );
@@ -199,8 +213,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
           corrupted[test.pos] ^= 0xff;
 
           try {
-            await eciesService.decryptSimpleOrSingleWithHeader(
-              true,
+            await eciesService.decryptBasicWithHeader(
               keyPair.privateKey,
               corrupted,
             );
@@ -221,8 +234,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
         );
         const message = Buffer.from('test message');
 
-        const encrypted = await eciesService.encryptSimpleOrSingle(
-          false, // Single mode for length field
+        const encrypted = await eciesService.encryptWithLength(
           keyPair.publicKey,
           message,
         );
@@ -242,8 +254,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
           const truncated = encrypted.slice(0, point);
 
           try {
-            await eciesService.decryptSimpleOrSingleWithHeader(
-              false,
+            await eciesService.decryptWithLengthAndHeader(
               keyPair.privateKey,
               truncated,
             );
@@ -371,13 +382,25 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
     it('should handle invalid configuration', () => {
       // Test with null config - this might not throw, so we check behavior
       try {
-        new MultiRecipientProcessor(cryptoCore, null as any);
+        new MultiRecipientProcessor(
+          Constants,
+          Constants.ECIES_CONFIG,
+          cryptoCore,
+          null as any,
+        );
         expect(true).toBe(true); // Allow if it doesn't throw
       } catch (error) {
         expect(error).toBeDefined();
       }
 
-      expect(() => new MultiRecipientProcessor(null as any, {})).toThrow();
+      expect(
+        () =>
+          new MultiRecipientProcessor(
+            Constants,
+            Constants.ECIES_CONFIG,
+            null as any,
+          ),
+      ).toThrow();
     });
 
     it('should handle encryption with no recipients', async () => {
@@ -494,16 +517,14 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
         const largeMessage = Buffer.alloc(largeSize, 0xaa);
 
         const startTime = Date.now();
-        const encrypted = await eciesService.encryptSimpleOrSingle(
-          true,
+        const encrypted = await eciesService.encryptBasic(
           keyPair.publicKey,
           largeMessage,
         );
         const encryptTime = Date.now() - startTime;
 
         const decryptStart = Date.now();
-        const decrypted = await eciesService.decryptSimpleOrSingleWithHeader(
-          true,
+        const decrypted = await eciesService.decryptBasicWithHeader(
           keyPair.privateKey,
           encrypted,
         );
@@ -556,14 +577,12 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
           eciesService.generateNewMnemonic(),
         );
 
-        const encrypted = await eciesService.encryptSimpleOrSingle(
-          true,
+        const encrypted = await eciesService.encryptBasic(
           keyPair.publicKey,
           message,
         );
 
-        const decrypted = await eciesService.decryptSimpleOrSingleWithHeader(
-          true,
+        const decrypted = await eciesService.decryptBasicWithHeader(
           keyPair.privateKey,
           encrypted,
         );
@@ -606,6 +625,7 @@ describe('Node ECIES - Comprehensive Error Handling', () => {
       expect(
         () =>
           new EciesCryptoCore({
+            ...Constants.ECIES_CONFIG,
             curveName: 'secp256r1', // Valid curve but not supported
           }),
       ).toThrow();

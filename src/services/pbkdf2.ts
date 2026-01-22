@@ -16,7 +16,7 @@ import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { Constants } from '../constants';
 import { Pbkdf2ProfileEnum } from '../enumerations/pbkdf2-profile';
 import {
-  getNodeEciesTranslation,
+  getLazyNodeEciesTranslation,
   NodeEciesStringKey,
 } from '../i18n/ecies-i18n-factory';
 import { IConstants } from '../interfaces/constants';
@@ -109,7 +109,7 @@ export class Pbkdf2Service<
     const profileConfig = this.profiles[profile];
     if (!profileConfig) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
         ),
         Pbkdf2ErrorType.InvalidProfile,
@@ -177,7 +177,7 @@ export class Pbkdf2Service<
 
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
         ),
         Pbkdf2ErrorType.InvalidSaltLength,
@@ -194,7 +194,7 @@ export class Pbkdf2Service<
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
         ),
         Pbkdf2ErrorType.InvalidHashLength,
@@ -232,7 +232,7 @@ export class Pbkdf2Service<
 
     if (saltBytes_.length !== config.saltBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Pbkdf2_InvalidSaltLength,
         ),
         Pbkdf2ErrorType.InvalidSaltLength,
@@ -250,7 +250,7 @@ export class Pbkdf2Service<
 
     if (hashBytes.length !== config.hashBytes) {
       throw new NodePbkdf2Error(
-        getNodeEciesTranslation(
+        getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Pbkdf2_InvalidHashLength,
         ),
         Pbkdf2ErrorType.InvalidHashLength,

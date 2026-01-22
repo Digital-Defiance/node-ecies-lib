@@ -8,7 +8,7 @@ import {
   FullHexGuid,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
-import { Guid as GuidV4 } from '../../src/lib/guid';
+import { GuidBuffer as GuidV4 } from '../../src/lib/guid';
 import { RawGuidBuffer } from '../../src/types';
 
 describe('GuidV4', () => {

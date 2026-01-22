@@ -44,7 +44,7 @@ export interface IECIESConsts {
    */
   MAX_RAW_DATA_SIZE: number;
 
-  SIMPLE: {
+  BASIC: {
     /**
      * Length of the type (1) + public key (65) + IV (16) + auth tag (16)
      */
@@ -58,7 +58,7 @@ export interface IECIESConsts {
   /**
    * ECIES single recipient
    */
-  SINGLE: {
+  WITH_LENGTH: {
     /**
      * Length of the IV + auth tag + data length + crc16
      */

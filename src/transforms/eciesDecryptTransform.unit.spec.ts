@@ -69,8 +69,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(100);
-    const encryptedData = eciesService.encryptSimpleOrSingle(
-      true,
+    const encryptedData = eciesService.encryptBasic(
       Buffer.from(keypair.publicKey),
       inputData,
     );
@@ -95,13 +94,11 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     // Encrypt multiple blocks of data
     const inputData1 = randomBytes(500);
     const inputData2 = randomBytes(500);
-    const encryptedBlock1 = eciesService.encryptSimpleOrSingle(
-      true,
+    const encryptedBlock1 = eciesService.encryptBasic(
       Buffer.from(keypair.publicKey),
       inputData1,
     );
-    const encryptedBlock2 = eciesService.encryptSimpleOrSingle(
-      true,
+    const encryptedBlock2 = eciesService.encryptBasic(
       Buffer.from(keypair.publicKey),
       inputData2,
     );
@@ -136,8 +133,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
   it('should throw error with invalid private key', (done) => {
     const invalidPrivateKey = randomBytes(32); // Wrong format for private key
     const inputData = randomBytes(100);
-    const encryptedData = eciesService.encryptSimpleOrSingle(
-      true,
+    const encryptedData = eciesService.encryptBasic(
       Buffer.from(keypair.publicKey),
       inputData,
     );

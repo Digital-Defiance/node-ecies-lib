@@ -15,6 +15,7 @@ import {
 } from '../src/constants';
 import { Member as BackendMember } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
+import { randomBytes } from 'crypto';
 
 describe('ECIESService', () => {
   let service: ECIESService;
@@ -85,13 +86,8 @@ describe('ECIESService', () => {
         throw new Error('Recipient private key is undefined');
       }
       const message = Buffer.from('test message');
-      const encrypted = service.encryptSimpleOrSingle(
-        true, // simple mode
-        recipient1.publicKey,
-        message,
-      );
-      const decrypted = service.decryptSimpleOrSingleWithHeader(
-        true, // simple mode
+      const encrypted = service.encryptBasic(recipient1.publicKey, message);
+      const decrypted = service.decryptBasicWithHeader(
         Buffer.from(recipient1.privateKey.value),
         encrypted,
       );
@@ -105,23 +101,21 @@ describe('ECIESService', () => {
       const message = Buffer.from(
         'test message with more data for single mode',
       );
-      const encrypted = service.encryptSimpleOrSingle(
-        false, // single mode
+      const encrypted = service.encryptWithLength(
         recipient1.publicKey,
         message,
       );
-      const decrypted = service.decryptSimpleOrSingleWithHeader(
-        false, // single mode
+      const decrypted = service.decryptWithLengthAndHeader(
         Buffer.from(recipient1.privateKey.value),
         encrypted,
       );
       expect(decrypted).toEqual(message);
     });
 
-    it('should handle multiple recipients with in-memory objects', () => {
+    it('should handle multiple recipients with in-memory objects', async () => {
       const message = Buffer.from('test message for multiple recipients');
       const recipients = [sender, recipient1];
-      const encrypted = service.encryptMultiple(recipients, message);
+      const encrypted = await service.encryptMultiple(recipients, message);
 
       // Test decryption for each recipient
       recipients.forEach((member) => {
@@ -190,9 +184,9 @@ describe('ECIESService', () => {
       await withConsoleMocks({ mute: true }, async (spies) => {
         const message = Buffer.from('test message');
         const invalidPublicKey = randomBytes(ECIES.RAW_PUBLIC_KEY_LENGTH); // Wrong length
-        expect(() =>
-          service.encryptSimpleOrSingle(true, invalidPublicKey, message),
-        ).toThrow(ECIESError);
+        expect(() => service.encryptBasic(invalidPublicKey, message)).toThrow(
+          ECIESError,
+        );
         expect(spies.error).toHaveBeenCalledTimes(1);
       });
     });
@@ -264,14 +258,14 @@ describe('ECIESService', () => {
       const dataLength = 1000;
       const result = service.computeEncryptedLengthFromDataLength(
         dataLength,
-        'single',
+        'withLength',
       );
-      expect(result).toBe(dataLength + ECIES.SINGLE.FIXED_OVERHEAD_SIZE);
+      expect(result).toBe(dataLength + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE);
     });
 
     it('should compute decrypted length correctly', () => {
       const encryptedLength = 8192;
-      const overhead = ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+      const overhead = ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       const padding = 100;
 
       const decryptedLength =

@@ -17,6 +17,7 @@ import {
   ObjectIdProvider,
   createRuntimeConfiguration,
 } from '@digitaldefiance/ecies-lib';
+import { ObjectId } from 'bson';
 import { Member } from '../src/member';
 import { ECIESService } from '../src/services/ecies/service';
 import {
@@ -258,7 +259,7 @@ describe('Unit Tests: Member ID Generation (Node.js)', () => {
 
     it('should work with typed configuration for GUID', () => {
       // Arrange - Use typed configuration with GUID
-      const config = createNodeTypedConfiguration<string>({
+      const config = createNodeTypedConfiguration<string>('guid-config', {
         idProvider: new GuidV4Provider(),
       });
       const service = new ECIESService(config.constants);
@@ -290,7 +291,7 @@ describe('Unit Tests: Member ID Generation (Node.js)', () => {
     it('should demonstrate type safety benefits', () => {
       // Arrange - Create both ObjectId and GUID configurations
       const objectIdConfig = createNodeObjectIdConfiguration();
-      const guidConfig = createNodeTypedConfiguration<string>({
+      const guidConfig = createNodeTypedConfiguration<string>('guid-config', {
         idProvider: new GuidV4Provider(),
       });
 

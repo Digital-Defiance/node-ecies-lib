@@ -16,7 +16,7 @@ export class ChunkProcessor<TID extends PlatformID = Buffer> {
     isLast: boolean,
     includeChecksums: boolean = false,
   ): Promise<IEncryptedChunk> {
-    const encrypted = this.ecies.encryptSimpleOrSingle(false, publicKey, data);
+    const encrypted = this.ecies.encryptWithLength(publicKey, data);
 
     // Prepend chunk header: 4 bytes index + 1 byte flags
     const header = Buffer.alloc(5);
@@ -42,8 +42,7 @@ export class ChunkProcessor<TID extends PlatformID = Buffer> {
     const flags = chunkData.readUInt8(4);
     const encrypted = chunkData.subarray(5);
 
-    const decrypted = this.ecies.decryptSimpleOrSingleWithHeader(
-      false,
+    const decrypted = this.ecies.decryptWithLengthAndHeader(
       privateKey,
       encrypted,
     );

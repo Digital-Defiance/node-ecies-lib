@@ -76,7 +76,7 @@ describe('EciesEncryptTransform Integration Tests', () => {
   });
 
   it('encrypts and decrypts data that is exactly the chunk size', (done) => {
-    const size = (blockSize as number) - ECIES.SINGLE.FIXED_OVERHEAD_SIZE;
+    const size = (blockSize as number) - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
     const inputData = new Uint8Array(size);
     inputData.fill(97); // 'a' character code
     const inputBuffer = Buffer.from(inputData);
@@ -85,7 +85,7 @@ describe('EciesEncryptTransform Integration Tests', () => {
 
   it('encrypts and decrypts data that spans multiple chunks', (done) => {
     const size =
-      ((blockSize as number) - ECIES.SINGLE.FIXED_OVERHEAD_SIZE) * 2 + 10;
+      ((blockSize as number) - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE) * 2 + 10;
     const inputData = new Uint8Array(size);
     inputData.fill(97); // 'a' character code
     const inputBuffer = Buffer.from(inputData);

@@ -35,8 +35,7 @@ describe('Generate Vectors', () => {
 
     // Vector 1: Simple Text
     const textMessage = 'Hello, Enterprise Grade Security!';
-    const encryptedText = await service.encryptSimpleOrSingle(
-      false,
+    const encryptedText = await service.encryptWithLength(
       new Uint8Array(Buffer.from(publicKey, 'hex')),
       new Uint8Array(Buffer.from(textMessage)),
     );
@@ -51,8 +50,7 @@ describe('Generate Vectors', () => {
 
     // Vector 2: Unicode
     const unicodeMessage = '🔒 安全 Security 🔒';
-    const encryptedUnicode = await service.encryptSimpleOrSingle(
-      false,
+    const encryptedUnicode = await service.encryptWithLength(
       new Uint8Array(Buffer.from(publicKey, 'hex')),
       new Uint8Array(Buffer.from(unicodeMessage)),
     );
@@ -67,8 +65,7 @@ describe('Generate Vectors', () => {
 
     // Vector 3: Binary Data
     const binaryMessage = Buffer.from([0x00, 0xff, 0xaa, 0x55, 0x12, 0x34]);
-    const encryptedBinary = await service.encryptSimpleOrSingle(
-      false,
+    const encryptedBinary = await service.encryptWithLength(
       new Uint8Array(Buffer.from(publicKey, 'hex')),
       new Uint8Array(binaryMessage),
     );
@@ -83,8 +80,7 @@ describe('Generate Vectors', () => {
 
     // Vector 5: Large Data (10KB)
     const largeMessage = Buffer.alloc(1024 * 10, 'a');
-    const encryptedLarge = await service.encryptSimpleOrSingle(
-      false,
+    const encryptedLarge = await service.encryptWithLength(
       new Uint8Array(Buffer.from(publicKey, 'hex')),
       new Uint8Array(largeMessage),
     );
