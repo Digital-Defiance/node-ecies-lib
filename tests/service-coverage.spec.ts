@@ -107,7 +107,7 @@ describe('ECIESService - Coverage Tests', () => {
         header.ephemeralPublicKey,
       ]);
 
-      const result = service.decryptWithLengthWithComponents(
+      const result = service.decryptWithComponents(
         Buffer.from(member1.privateKey.value),
         header.ephemeralPublicKey,
         header.iv,

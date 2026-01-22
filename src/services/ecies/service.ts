@@ -457,7 +457,7 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     );
   }
 
-  public decryptWithLengthWithComponents(
+  public decryptWithComponents(
     privateKey: Buffer,
     ephemeralPublicKey: Buffer,
     iv: Buffer,
