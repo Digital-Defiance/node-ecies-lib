@@ -1,5 +1,4 @@
 import {
-  GuidV4Provider,
   ObjectIdProvider,
   SecureBuffer,
 } from '@digitaldefiance/ecies-lib';
@@ -11,7 +10,8 @@ import { EciesCryptoCore } from '../src/services/ecies/crypto-core';
 import { ECIESService } from '../src/services/ecies/service';
 import { EncryptionStream } from '../src/services/encryption-stream';
 import { MultiRecipientProcessor } from '../src/services/multi-recipient-processor';
-import { GuidV4Buffer } from '../src/types';
+import { GuidV4Buffer } from '../src/types/guid-versions';
+import { GuidV4Provider } from '../src/lib/id-providers/guidv4-provider';
 
 describe('Cross-Platform ID Size Compatibility', () => {
   let originalConfig: ReturnType<typeof registerNodeRuntimeConfiguration>;
@@ -52,13 +52,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
     const keyPair1 = nodeEcies.mnemonicToSimpleKeyPair(mnemonic1);
     const id1 = guidProvider.generate(); // 16 bytes
 
-    const idBytes1 = Buffer.isBuffer(id1)
-      ? Buffer.from(id1)
-      : id1 instanceof Uint8Array
-        ? Buffer.from(id1)
-        : Buffer.from(guidProvider.toBytes(id1));
-
-    const recipients = [{ id: idBytes1, publicKey: keyPair1.publicKey }];
+    const recipients = [{ id: id1, publicKey: keyPair1.publicKey }];
 
     const data = Buffer.from('GUID Test Data');
     const source = (async function* () {
@@ -84,7 +78,7 @@ describe('Cross-Platform ID Size Compatibility', () => {
     const decryptedChunks: Buffer[] = [];
     for await (const chunk of nodeStream.decryptStreamMultiple(
       decryptSource,
-      idBytes1,
+      id1,
       keyPair1.privateKey,
     )) {
       decryptedChunks.push(chunk);
@@ -122,37 +116,26 @@ describe('Cross-Platform ID Size Compatibility', () => {
 
     const keyPair = await cryptoCore.generateEphemeralKeyPair();
     const id1 = guidProvider.generate(); // This is a GuidV4 object
-
-    // Convert the GuidV4 to bytes properly
-    let idBytes1: Buffer;
-    if (Buffer.isBuffer(id1)) {
-      idBytes1 = id1;
-    } else if (id1 instanceof Uint8Array) {
-      idBytes1 = Buffer.from(id1);
-    } else {
-      // It's a GuidV4 object, use toBytes
-      const bytes = guidProvider.toBytes(id1);
-      idBytes1 = Buffer.from(bytes);
-    }
+    const id1Guid = guidProvider.fromBytes(id1);
 
     const recipients = [
-      { id: idBytes1, publicKey: Buffer.from(keyPair.publicKey) },
+      { id: id1Guid, publicKey: Buffer.from(keyPair.publicKey) },
     ];
 
     const message = Buffer.from('Test message');
     const encrypted = await processor.encryptMultiple(recipients, message);
 
     // Use decryptMultipleECIEForRecipient with proper parameters
-    const member: IMember<Buffer> = {
-      id: idBytes1, // Use the Buffer for consistency
+    const member: Partial<IMember<GuidV4Buffer>> = {
+      id: id1Guid, // Use the GuidV4 object for consistency
       publicKey: Buffer.from(keyPair.publicKey),
       privateKey: new SecureBuffer(Buffer.from(keyPair.privateKey)),
-      idBytes: idBytes1,
+      idBytes: id1,
     };
 
     const decrypted = await processor[
       'eciesMultiRecipient'
-    ].decryptMultipleECIEForRecipient(encrypted, member);
+    ].decryptMultipleECIEForRecipient(encrypted, member as IMember<GuidV4Buffer>);
 
     expect(decrypted).toEqual(message);
   });
