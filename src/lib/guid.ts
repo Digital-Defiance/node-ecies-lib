@@ -34,11 +34,6 @@ export class GuidBuffer extends GuidUint8Array implements IGuid {
         ? Buffer.from(value)
         : value;
     super(bufferValue);
-    // Ensure _value is a Buffer
-    if (!Buffer.isBuffer(this._value)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-      (this as any)._value = Buffer.from(this._value);
-    }
   }
 
   /**
