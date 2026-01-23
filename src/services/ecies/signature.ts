@@ -10,7 +10,7 @@ import {
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 
-import { SignatureBuffer, SignatureString } from '../../types';
+import { SignatureBuffer, SignatureString } from '../../node_ecies_types';
 
 import { EciesCryptoCore } from './crypto-core';
 

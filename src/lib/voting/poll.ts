@@ -9,9 +9,9 @@ import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
 import { getNodeRuntimeConfiguration } from '../../constants';
 import type { PlatformID } from '../../interfaces';
 import { Member } from '../../member';
+import { SignatureBuffer } from '../../node_ecies_types';
 import { ECIESService } from '../../services/ecies/service';
 import { VotingService } from '../../services/voting.service';
-import { SignatureBuffer } from '../../types';
 const Constants = getNodeRuntimeConfiguration();
 
 export interface ECKeyPairBuffer {

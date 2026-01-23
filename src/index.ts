@@ -23,6 +23,7 @@ export * from './i18n';
 export * from './interfaces';
 export * from './member';
 export * from './types';
+export * from './node_ecies_types';
 export * from './secure-buffer';
 
 // Transforms - stream transforms for encryption/decryption

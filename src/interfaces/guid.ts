@@ -9,7 +9,7 @@ import type {
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 
-import type { RawGuidPlatformBuffer } from '../types';
+import type { RawGuidPlatformBuffer } from '../node_ecies_types';
 
 import type { PlatformBuffer } from './platform-buffer';
 

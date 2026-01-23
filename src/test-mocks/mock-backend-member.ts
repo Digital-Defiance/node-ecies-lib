@@ -18,7 +18,7 @@ import { faker } from '@faker-js/faker';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { IMember } from '../interfaces';
-import { SignatureBuffer } from '../types';
+import { SignatureBuffer } from '../node_ecies_types';
 
 const createMockWallet = (): Wallet =>
   ({

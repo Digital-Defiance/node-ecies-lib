@@ -7,7 +7,7 @@ import { Transform, TransformCallback } from 'stream';
 
 import { Hasher, sha3_512 } from 'js-sha3';
 
-import { ChecksumBuffer } from '../types';
+import { ChecksumBuffer } from '../node_ecies_types';
 
 export class ChecksumTransform extends Transform {
   private sha3: Hasher;

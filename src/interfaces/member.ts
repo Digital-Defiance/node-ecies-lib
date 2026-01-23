@@ -12,7 +12,7 @@ import type {
 import type { Wallet } from '@ethereumjs/wallet';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
-import type { SignatureBuffer } from '../types';
+import type { SignatureBuffer } from '../node_ecies_types';
 
 import type { IEncryptedChunk } from './encrypted-chunk';
 import type { PlatformID } from './platform-id';

@@ -76,7 +76,7 @@ export class ImmutableAuditLog<
         const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
         // Type assertion is safe here as we know SignatureBuffer extends Buffer
         return authority.verify(
-          bufferSignature as import('../../types').SignatureBuffer,
+          bufferSignature as import('../../node_ecies_types').SignatureBuffer,
           bufferData,
         );
       },

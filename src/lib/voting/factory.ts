@@ -11,7 +11,7 @@ import {
 
 import type { PlatformID } from '../../interfaces';
 import type { IMember } from '../../interfaces/member';
-import type { SignatureBuffer } from '../../types';
+import type { SignatureBuffer } from '../../node_ecies_types';
 
 import { VotingMethod } from './enumerations';
 import { Poll } from './poll-core';

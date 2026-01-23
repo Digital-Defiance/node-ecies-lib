@@ -30,9 +30,10 @@ import { PlatformID } from './interfaces';
 import { IEncryptedChunk } from './interfaces/encrypted-chunk';
 import { IMember } from './interfaces/member';
 import { IStreamProgress } from './interfaces/stream-progress';
+import { SignatureBuffer } from './node_ecies_types';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
-import { SignatureBuffer, toUint8Array } from './types';
+import { toUint8Array } from './types/id-guards';
 const Constants = getNodeRuntimeConfiguration();
 
 /**

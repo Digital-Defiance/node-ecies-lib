@@ -25,7 +25,7 @@ import type { PlatformID } from '../../interfaces/platform-id';
 import type { ISimpleKeyPairBuffer } from '../../interfaces/simple-keypair-buffer';
 import type { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
 import type { IWalletSeed } from '../../interfaces/wallet-seed';
-import { SignatureBuffer, SignatureString } from '../../types';
+import { SignatureBuffer, SignatureString } from '../../node_ecies_types';
 
 import { EciesCryptoCore } from './crypto-core';
 import { EciesMultiRecipient } from './multi-recipient';
