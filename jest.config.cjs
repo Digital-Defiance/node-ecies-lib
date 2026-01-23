@@ -26,7 +26,7 @@ module.exports = {
   maxWorkers: 1,
   detectOpenHandles: false,
   transformIgnorePatterns: [
-    'node_modules/(?!(@faker-js|@noble|@scure|@ethereumjs))',
+    'node_modules/(?!(@faker-js|@noble|@scure|@ethereumjs|uuid))',
   ],
   transform: {
     '^.+\\.(ts|tsx)$': [

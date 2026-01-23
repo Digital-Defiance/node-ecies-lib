@@ -24,7 +24,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
    */
   generate(): Buffer {
     const guid = GuidBuffer.v4();
-    return guid.asRawGuidPlatformBufferUnsafe;
+    return guid.asBuffer;
   }
 
   /**
@@ -175,7 +175,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
   }
 
   override toBytes(id: GuidV4Buffer): Buffer {
-    return id.asRawGuidPlatformBuffer;
+    return id.asBuffer;
   }
 }
 

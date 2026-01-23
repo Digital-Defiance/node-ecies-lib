@@ -1,7 +1,4 @@
-import {
-  ObjectIdProvider,
-  SecureBuffer,
-} from '@digitaldefiance/ecies-lib';
+import { ObjectIdProvider, SecureBuffer } from '@digitaldefiance/ecies-lib';
 import { Constants } from '@digitaldefiance/node-ecies-lib';
 
 import { registerNodeRuntimeConfiguration } from '../src/constants';
@@ -135,7 +132,10 @@ describe('Cross-Platform ID Size Compatibility', () => {
 
     const decrypted = await processor[
       'eciesMultiRecipient'
-    ].decryptMultipleECIEForRecipient(encrypted, member as IMember<GuidV4Buffer>);
+    ].decryptMultipleECIEForRecipient(
+      encrypted,
+      member as IMember<GuidV4Buffer>,
+    );
 
     expect(decrypted).toEqual(message);
   });
