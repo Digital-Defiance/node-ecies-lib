@@ -391,11 +391,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:4.14.1":
-  version: 4.14.1
-  resolution: "@digitaldefiance/ecies-lib@npm:4.14.1"
+"@digitaldefiance/ecies-lib@npm:4.14.2":
+  version: 4.14.2
+  resolution: "@digitaldefiance/ecies-lib@npm:4.14.2"
   dependencies:
-    "@digitaldefiance/i18n-lib": "npm:4.0.1"
+    "@digitaldefiance/i18n-lib": "npm:4.0.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:1.9.0"
     "@noble/hashes": "npm:1.8.0"
@@ -405,7 +405,7 @@ __metadata:
     js-sha3: "npm:^0.9.3"
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
-  checksum: 10c0/c59edbe53ca50ff4036f2d555bebcd0d50138544fc86b713b098da81afc711dfafc89b4aca2828d2ad69421be027a47a5d08809c70a33ac965529b59a7564d24
+  checksum: 10c0/2488cbd5e595d69fbfd3976c1ac3c3d4ea7bd1297bb290e2c0d0657f6dd71287211297c63417ed8c29d36caaac1598d4a4fe594765b3a41d556f8a6777190d96
   languageName: node
   linkType: hard
 
@@ -423,16 +423,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/i18n-lib@npm:4.0.1":
-  version: 4.0.1
-  resolution: "@digitaldefiance/i18n-lib@npm:4.0.1"
+"@digitaldefiance/i18n-lib@npm:4.0.2":
+  version: 4.0.2
+  resolution: "@digitaldefiance/i18n-lib@npm:4.0.2"
   dependencies:
     "@digitaldefiance/branded-enum": "npm:0.0.5"
     currency-codes: "npm:^2.2.0"
     lru-cache: "npm:^5.1.1"
     moment: "npm:^2.30.1"
     moment-timezone: "npm:^0.6.0"
-  checksum: 10c0/d60426f41d5070f117fc134069c275f22c38c1bbd9d9be95a7b9fb499162b1617243f46fed254215df87f328678c52e7bad0d29794c98a309b6dc7531c4a277b
+  checksum: 10c0/f199cbae9223535d764eaeb3cb64bb1381367a2cbbfff35807340733cfd215ace80d04dd73bae7b36b457e4404c888ee5d3aa12742e2ca4dde0fdb1faff585f5
   languageName: node
   linkType: hard
 
@@ -440,9 +440,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@digitaldefiance/node-ecies-lib@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:4.14.1"
+    "@digitaldefiance/ecies-lib": "npm:4.14.2"
     "@digitaldefiance/express-suite-test-utils": "npm:1.0.12"
-    "@digitaldefiance/i18n-lib": "npm:4.0.1"
+    "@digitaldefiance/i18n-lib": "npm:4.0.2"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@noble/curves": "npm:1.9.0"
     "@noble/hashes": "npm:1.8.0"
