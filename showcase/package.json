@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "^4.15.1",
-    "@digitaldefiance/i18n-lib": "^4.0.3",
+    "@digitaldefiance/ecies-lib": "^4.15.2",
+    "@digitaldefiance/i18n-lib": "^4.0.4",
     "@ethereumjs/wallet": "^2.0.4",
     "@noble/curves": "^1.4.2",
     "@noble/hashes": "^1.4.0",
