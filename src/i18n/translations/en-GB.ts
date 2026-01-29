@@ -3,8 +3,12 @@
  * Contains all localized error messages and user-facing text in British English.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const britishEnglishTranslations: Record<NodeEciesStringKey, string> = {
+export const britishEnglishTranslations: Record<
+  NodeEciesStringKeyValue,
+  string
+> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     'Length encoding type is invalid',
 

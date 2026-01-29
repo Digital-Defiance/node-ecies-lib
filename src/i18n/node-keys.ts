@@ -1,7 +1,14 @@
+import {
+  createI18nStringKeysFromEnum,
+  BrandedStringKeyValue,
+} from '@digitaldefiance/i18n-lib';
+
+export const NodeEciesComponentId = 'node-ecies';
+
 /**
- * ECIES-specific string keys for the node ECIES library
+ * ECIES-specific string keys for the node ECIES library (TypeScript enum)
  */
-export enum NodeEciesStringKey {
+enum NodeEciesStringKeyEnum {
   Error_LengthError_LengthIsInvalidType = 'error_length_error_length_is_invalid_type',
 
   // Member errors
@@ -66,4 +73,19 @@ export enum NodeEciesStringKey {
   Error_Invariant_EncryptionRecipientIdSizeMismatchTemplate = 'error_invariant_encryption_recipient_id_size_mismatch_template',
 }
 
-export const NodeEciesComponentId = 'node-ecies';
+/**
+ * Branded enum for node-ecies string keys.
+ * Use this for type-safe i18n operations with runtime identification.
+ */
+export const NodeEciesStringKey = createI18nStringKeysFromEnum(
+  NodeEciesComponentId,
+  NodeEciesStringKeyEnum,
+);
+
+/**
+ * Type for individual NodeEciesStringKey values (string literal union).
+ * Use this when typing variables or function parameters that accept a string key value.
+ */
+export type NodeEciesStringKeyValue = BrandedStringKeyValue<
+  typeof NodeEciesStringKey
+>;

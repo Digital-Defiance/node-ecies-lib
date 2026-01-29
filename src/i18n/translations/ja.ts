@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in Japanese.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const japaneseTranslations: Record<NodeEciesStringKey, string> = {
+export const japaneseTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     '長さエンコーディングタイプが無効です',
   [NodeEciesStringKey.Error_Member_MissingMemberName]: 'メンバー名は必須です',

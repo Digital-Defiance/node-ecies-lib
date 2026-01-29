@@ -16,7 +16,11 @@ import {
   RegistryConfig,
 } from '@digitaldefiance/i18n-lib';
 
-import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
+import {
+  NodeEciesComponentId,
+  NodeEciesStringKey,
+  NodeEciesStringKeyValue,
+} from './node-keys';
 import {
   frenchTranslations,
   germanTranslations,
@@ -29,21 +33,24 @@ import { britishEnglishTranslations } from './translations/en-GB';
 import { englishTranslations } from './translations/en-US';
 
 export { NodeEciesComponentId, NodeEciesStringKey };
+export type { NodeEciesStringKeyValue };
 
 /**
  * Component definition for Node ECIES strings
  */
-export function createNodeEciesComponentDefinition(): ComponentDefinition<NodeEciesStringKey> {
-  const NodeEciesComponent: ComponentDefinition<NodeEciesStringKey> = {
+export function createNodeEciesComponentDefinition(): ComponentDefinition<
+  typeof NodeEciesStringKey
+> {
+  const NodeEciesComponent: ComponentDefinition<typeof NodeEciesStringKey> = {
     id: NodeEciesComponentId,
     name: 'Node ECIES Library Strings',
-    stringKeys: Object.values(NodeEciesStringKey),
+    stringKeys: NodeEciesStringKey,
   };
   return NodeEciesComponent;
 }
 
 export function createNodeEciesComponentRegistration(): ComponentRegistration<
-  NodeEciesStringKey,
+  typeof NodeEciesStringKey,
   string
 > {
   const component = createNodeEciesComponentDefinition();
@@ -107,7 +114,7 @@ export function resetEciesPluginI18nEngine(): void {
  * Get a translation from the Node ECIES component
  */
 export function getLazyNodeEciesTranslation(
-  key: NodeEciesStringKey,
+  key: NodeEciesStringKeyValue,
   variables?: Record<string, string | number>,
   language?: CoreLanguageCode,
 ): string {

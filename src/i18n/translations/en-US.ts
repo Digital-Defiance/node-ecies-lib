@@ -4,11 +4,12 @@
  * for the Node.js-specific ECIES implementation.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
 /**
  * Node ECIES string translations
  */
-export const englishTranslations: Record<NodeEciesStringKey, string> = {
+export const englishTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     'Length encoding type is invalid',
 

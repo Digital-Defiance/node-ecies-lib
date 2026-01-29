@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in Spanish.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const spanishTranslations: Record<NodeEciesStringKey, string> = {
+export const spanishTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     'El tipo de codificación de longitud es inválido',
   [NodeEciesStringKey.Error_Member_MissingMemberName]:

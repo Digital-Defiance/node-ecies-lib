@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in German.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const germanTranslations: Record<NodeEciesStringKey, string> = {
+export const germanTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     'Längencodierungstyp ist ungültig',
   [NodeEciesStringKey.Error_Member_MissingMemberName]:

@@ -21,6 +21,7 @@ import {
   NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n';
+import type { NodeEciesStringKeyValue } from './i18n';
 import type { IChecksumConsts } from './interfaces/checksum-consts';
 import type { IConstants } from './interfaces/constants';
 import type { IEncryptionConsts } from './interfaces/encryption-consts';
@@ -200,7 +201,7 @@ export const Constants: IConstants = Object.freeze({
  * @param fallback - The fallback message if i18n is not available
  * @returns The translated message or fallback
  */
-function safeTranslate(key: NodeEciesStringKey, fallback: string): string {
+function safeTranslate(key: NodeEciesStringKeyValue, fallback: string): string {
   try {
     const engine = getNodeEciesI18nEngine();
     return engine.translate(NodeEciesComponentId, key);

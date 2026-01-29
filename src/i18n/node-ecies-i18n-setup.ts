@@ -11,7 +11,8 @@ import {
   LanguageCodes,
 } from '@digitaldefiance/i18n-lib';
 
-import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
+import { NodeEciesComponentId } from './node-keys';
+import type { NodeEciesStringKeyValue } from './node-keys';
 import {
   britishEnglishTranslations,
   englishTranslations,
@@ -72,7 +73,7 @@ function createNodeEciesStrings(): Record<string, Record<string, string>> {
  * Helper to translate Node ECIES strings
  */
 export function getNodeEciesTranslation(
-  stringKey: NodeEciesStringKey,
+  stringKey: NodeEciesStringKeyValue,
   variables?: Record<string, string | number>,
   language?: string,
 ): string {

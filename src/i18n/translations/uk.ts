@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in Ukrainian.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const ukrainianTranslations: Record<NodeEciesStringKey, string> = {
+export const ukrainianTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     'Тип кодування довжини недійсний',
   [NodeEciesStringKey.Error_Member_MissingMemberName]:

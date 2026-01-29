@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in French.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const frenchTranslations: Record<NodeEciesStringKey, string> = {
+export const frenchTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     "Le type d'encodage de longueur est invalide",
   [NodeEciesStringKey.Error_Member_MissingMemberName]:

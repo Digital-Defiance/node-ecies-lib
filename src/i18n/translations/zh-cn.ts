@@ -3,8 +3,9 @@
  * Contains all localized error messages and user-facing text in Simplified Chinese.
  */
 import { NodeEciesStringKey } from '../node-keys';
+import type { NodeEciesStringKeyValue } from '../node-keys';
 
-export const mandarinTranslations: Record<NodeEciesStringKey, string> = {
+export const mandarinTranslations: Record<NodeEciesStringKeyValue, string> = {
   [NodeEciesStringKey.Error_LengthError_LengthIsInvalidType]:
     '长度编码类型无效',
   [NodeEciesStringKey.Error_Member_MissingMemberName]: '需要成员名称',
