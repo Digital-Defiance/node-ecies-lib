@@ -7,8 +7,8 @@ import {
   ECIESErrorTypeEnum,
   HexString,
 } from '@digitaldefiance/ecies-lib';
-import { secp256k1 } from '@noble/curves/secp256k1.js';
-import { sha256 } from '@noble/hashes/sha2.js';
+import { secp256k1 } from '@noble/curves/secp256k1';
+import { sha256 } from '@noble/hashes/sha2';
 
 import { SignatureBuffer, SignatureString } from '../../node_ecies_types';
 
@@ -32,12 +32,14 @@ export class EciesSignature {
    */
   public signMessage(privateKey: Buffer, data: Buffer): SignatureBuffer {
     const hash = sha256(data);
-    // In v1.9.x, sign() returns a Signature object
-    const signature = secp256k1.sign(hash, privateKey, {
-      extraEntropy: false,
-    });
-    // Get compact format (64 bytes: r || s)
-    return Buffer.from(signature.toCompactRawBytes()) as SignatureBuffer;
+    // sign() returns a RecoveredSignature object with toCompactRawBytes() for 64-byte output
+    const signature = secp256k1
+      .sign(hash, privateKey, {
+        extraEntropy: false,
+        prehash: false,
+      })
+      .toCompactRawBytes();
+    return Buffer.from(signature) as SignatureBuffer;
   }
 
   /**
@@ -64,7 +66,7 @@ export class EciesSignature {
     }
 
     const hash = sha256(data);
-    return secp256k1.verify(signature, hash, publicKey);
+    return secp256k1.verify(signature, hash, publicKey, { prehash: false });
   }
 
   /**

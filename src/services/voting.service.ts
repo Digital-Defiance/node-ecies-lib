@@ -37,7 +37,7 @@ import {
   IsolatedPrivateKey as SharedIsolatedPrivateKey,
   IsolatedPublicKey as SharedIsolatedPublicKey,
 } from '@digitaldefiance/ecies-lib';
-import { secp256k1 } from '@noble/curves/secp256k1.js';
+import { secp256k1 } from '@noble/curves/secp256k1';
 import type { KeyPair, PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { VotingErrorType } from '../enumerations/voting-error-type';

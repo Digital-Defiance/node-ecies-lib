@@ -12,8 +12,8 @@ import {
   registerRuntimeConfiguration,
   Constants as BaseConstants,
 } from '@digitaldefiance/ecies-lib';
-import { sha256 } from '@noble/hashes/sha2.js';
-import { bytesToHex } from '@noble/hashes/utils.js';
+import { sha256 } from '@noble/hashes/sha2';
+import { bytesToHex } from '@noble/hashes/utils';
 
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
 import {
