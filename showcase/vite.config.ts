@@ -26,6 +26,7 @@ export default defineConfig({
       '@noble/hashes',
       '@scure/bip32',
       '@scure/bip39',
+      'ethereum-cryptography',
       'bson',
       'currency-codes',
       'lru-cache',
@@ -42,7 +43,14 @@ export default defineConfig({
     force: true,
   },
   resolve: {
-    dedupe: ['tslib', '@noble/hashes', '@noble/curves', '@scure/bip32'],
+    dedupe: [
+      'tslib',
+      '@noble/hashes',
+      '@noble/curves',
+      '@scure/bip32',
+      '@scure/bip39',
+      'ethereum-cryptography',
+    ],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
   },
   define: {

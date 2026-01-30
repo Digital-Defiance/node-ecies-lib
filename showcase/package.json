@@ -12,11 +12,12 @@
   "dependencies": {
     "@digitaldefiance/ecies-lib": "^4.15.2",
     "@digitaldefiance/i18n-lib": "^4.0.4",
-    "@ethereumjs/wallet": "^2.0.4",
-    "@noble/curves": "^1.4.2",
-    "@noble/hashes": "^1.4.0",
-    "@scure/bip32": "^1.4.0",
-    "@scure/bip39": "^1.5.0",
+    "@ethereumjs/wallet": "^10.0.0",
+    "@noble/curves": "^1.9.0",
+    "@noble/hashes": "^1.8.0",
+    "@scure/bip32": "^1.7.0",
+    "@scure/bip39": "^1.6.0",
+    "ethereum-cryptography": "^3.2.0",
     "bson": "^6.10.4",
     "currency-codes": "^2.2.0",
     "framer-motion": "^12.23.26",
@@ -48,5 +49,12 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
+  },
+  "resolutions": {
+    "@noble/curves": "1.9.0",
+    "@noble/hashes": "1.8.0",
+    "@scure/bip32": "1.7.0",
+    "@scure/bip39": "1.6.0",
+    "ethereum-cryptography": "3.2.0"
   }
 }

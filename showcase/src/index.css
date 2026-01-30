@@ -11,6 +11,11 @@
   --accent-primary: #00ff88;
   --accent-secondary: #0099ff;
   --accent-tertiary: #ff6b9d;
+  
+  /* Voting Demo Color Scheme - map to accent colors */
+  --primary-color: #8b5cf6;
+  --accent-color: #ec4899;
+  --border-color: rgba(255, 255, 255, 0.1);
 
   color-scheme: dark;
   color: var(--text-primary);
@@ -67,9 +72,10 @@ a:hover {
 
 .gradient-text {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
 }
 
 .btn {
