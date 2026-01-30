@@ -8,7 +8,7 @@ A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve 
 
 Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
 
-> Current Version: v4.13.0
+> Current Version: v4.16.0
 
 This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuring HKDF key derivation, AAD binding, and optimized multi-recipient encryption. It includes a pluggable ID provider system, memory-efficient streaming encryption, and comprehensive internationalization.
 
@@ -670,6 +670,8 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.16.0 - Voting key derivation now uses X&Y coordinates for improved security
 
 ### v4.13.0 - API Naming Improvements & Configuration Enhancements
 
