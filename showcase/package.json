@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "^4.15.4",
+    "@digitaldefiance/ecies-lib": "^4.15.5",
     "@digitaldefiance/i18n-lib": "^4.0.4",
     "@ethereumjs/rlp": "^5.0.2",
     "@ethereumjs/util": "^9.1.0",
