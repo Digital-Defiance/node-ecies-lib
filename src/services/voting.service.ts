@@ -547,15 +547,15 @@ export function deriveVotingKeysFromECDH(
   }
 
   // Compute shared secret using @noble/secp256k1 (same as frontend implementation)
-  // We use @noble/curves to ensure exact compatibility with the browser version
-  // which uses the full uncompressed point (65 bytes) as the shared secret
+  // Use uncompressed format (65 bytes with 0x04 prefix) for maximum entropy
   const sharedSecret = secp256k1.getSharedSecret(
     ecdhPrivKey,
     fullPubKey,
-    false,
+    false, // false = uncompressed (65 bytes with 0x04 prefix)
   );
 
-  // Derive seed using HKDF
+  // Use FULL shared secret (65 bytes) for HKDF - includes both X and Y coordinates
+  // This provides maximum entropy and is cryptographically superior to using X alone
   const seed = hkdf(
     sharedSecret,
     Buffer.alloc(0), // Empty salt to match frontend's null/empty salt
