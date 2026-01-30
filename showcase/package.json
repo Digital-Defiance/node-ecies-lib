@@ -12,6 +12,8 @@
   "dependencies": {
     "@digitaldefiance/ecies-lib": "^4.15.4",
     "@digitaldefiance/i18n-lib": "^4.0.4",
+    "@ethereumjs/rlp": "^5.0.2",
+    "@ethereumjs/util": "^9.1.0",
     "@ethereumjs/wallet": "^2.0.4",
     "@noble/curves": "^1.4.2",
     "@noble/hashes": "^1.4.0",

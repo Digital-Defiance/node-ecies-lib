@@ -20,6 +20,7 @@ export default defineConfig({
       '@digitaldefiance/i18n-lib',
       '@ethereumjs/wallet',
       '@ethereumjs/util',
+      '@ethereumjs/rlp',
       '@scure/base',
       'js-md5',
       '@noble/hashes',
