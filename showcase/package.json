@@ -23,6 +23,7 @@
     "bson": "^6.10.4",
     "currency-codes": "^2.2.0",
     "ethereum-cryptography": "^2.2.1",
+    "events": "^3.3.0",
     "framer-motion": "^12.23.26",
     "lru-cache": "^5.1.1",
     "moment": "^2.30.1",

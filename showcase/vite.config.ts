@@ -37,6 +37,7 @@ export default defineConfig({
       'ethereum-cryptography/utils',
       'bson',
       'uuid',
+      'events',
     ],
     esbuildOptions: {
       mainFields: ['module', 'main'],
@@ -44,6 +45,9 @@ export default defineConfig({
     force: true,
   },
   resolve: {
+    alias: {
+      events: 'events',
+    },
     dedupe: [
       '@noble/hashes',
       '@noble/curves',
