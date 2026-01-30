@@ -12,30 +12,25 @@ export default defineConfig({
       transformMixedEsModules: true,
       requireReturnsDefault: 'auto',
     },
-    rollupOptions: {
-      // Ensure these are bundled, not externalized
-      external: [],
-    },
   },
   optimizeDeps: {
     include: [
+      'tslib',
       '@digitaldefiance/ecies-lib',
       '@digitaldefiance/i18n-lib',
       '@ethereumjs/wallet',
-      '@noble/curves',
+      '@ethereumjs/util',
       '@noble/hashes',
+      '@noble/hashes/sha256',
+      '@noble/hashes/sha512',
+      '@noble/hashes/hmac',
+      '@noble/curves',
+      '@noble/curves/secp256k1',
       '@scure/bip32',
       '@scure/bip39',
       'ethereum-cryptography',
       'bson',
-      'currency-codes',
-      'lru-cache',
-      'moment',
-      'moment-timezone',
-      'ts-brand',
-      'tslib',
       'uuid',
-      'validator',
     ],
     esbuildOptions: {
       mainFields: ['module', 'main'],
@@ -44,16 +39,16 @@ export default defineConfig({
   },
   resolve: {
     dedupe: [
-      'tslib',
       '@noble/hashes',
       '@noble/curves',
       '@scure/bip32',
       '@scure/bip39',
       'ethereum-cryptography',
+      '@ethereumjs/util',
     ],
-    extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
   },
   define: {
+    // Required for some packages that check for Node.js environment
     global: 'globalThis',
   },
 });
