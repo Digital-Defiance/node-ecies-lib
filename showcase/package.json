@@ -10,16 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "^4.15.2",
+    "@digitaldefiance/ecies-lib": "^4.15.3",
     "@digitaldefiance/i18n-lib": "^4.0.4",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "^1.9.0",
     "@noble/hashes": "^1.8.0",
     "@scure/bip32": "^1.7.0",
     "@scure/bip39": "^1.6.0",
-    "ethereum-cryptography": "^3.2.0",
     "bson": "^6.10.4",
     "currency-codes": "^2.2.0",
+    "ethereum-cryptography": "^3.2.0",
     "framer-motion": "^12.23.26",
     "lru-cache": "^5.1.1",
     "moment": "^2.30.1",
