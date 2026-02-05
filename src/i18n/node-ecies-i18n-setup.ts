@@ -9,9 +9,11 @@ import {
   EngineConfig,
   I18nEngine,
   LanguageCodes,
+  type BrandedMasterStringsCollection,
+  type CoreLanguageCode,
 } from '@digitaldefiance/i18n-lib';
 
-import { NodeEciesComponentId } from './node-keys';
+import { NodeEciesComponentId, NodeEciesStringKey } from './node-keys';
 import type { NodeEciesStringKeyValue } from './node-keys';
 import {
   britishEnglishTranslations,
@@ -51,23 +53,28 @@ export function resetNodeEciesI18nEngine(): void {
 export function createNodeEciesComponentConfig(): ComponentConfig {
   return {
     id: NodeEciesComponentId,
-    strings: createNodeEciesStrings(),
+    strings: NodeEciesComponentStrings,
     aliases: ['NodeEciesStringKey'],
   };
 }
 
-function createNodeEciesStrings(): Record<string, Record<string, string>> {
-  return {
-    [LanguageCodes.EN_US]: englishTranslations,
-    [LanguageCodes.EN_GB]: britishEnglishTranslations,
-    [LanguageCodes.FR]: frenchTranslations,
-    [LanguageCodes.ES]: spanishTranslations,
-    [LanguageCodes.DE]: germanTranslations,
-    [LanguageCodes.ZH_CN]: mandarinTranslations,
-    [LanguageCodes.JA]: japaneseTranslations,
-    [LanguageCodes.UK]: ukrainianTranslations,
-  };
-}
+/**
+ * Master strings collection for the Node ECIES component.
+ * Uses BrandedMasterStringsCollection for type-safe branded enum support.
+ */
+export const NodeEciesComponentStrings: BrandedMasterStringsCollection<
+  typeof NodeEciesStringKey,
+  CoreLanguageCode
+> = {
+  [LanguageCodes.EN_US]: englishTranslations,
+  [LanguageCodes.EN_GB]: britishEnglishTranslations,
+  [LanguageCodes.FR]: frenchTranslations,
+  [LanguageCodes.ES]: spanishTranslations,
+  [LanguageCodes.DE]: germanTranslations,
+  [LanguageCodes.ZH_CN]: mandarinTranslations,
+  [LanguageCodes.JA]: japaneseTranslations,
+  [LanguageCodes.UK]: ukrainianTranslations,
+};
 
 /**
  * Helper to translate Node ECIES strings
