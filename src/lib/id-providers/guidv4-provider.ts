@@ -24,7 +24,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
    */
   generate(): Buffer {
     const guid = GuidBuffer.v4();
-    return guid.asBuffer;
+    return guid.asRawBuffer;
   }
 
   /**
@@ -75,7 +75,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
 
     try {
       const guid = GuidBuffer.parse(str);
-      return guid.asBuffer;
+      return guid.asRawBuffer;
     } catch (error) {
       throw new IdProviderError(
         IdProviderErrorType.ParseFailed,
@@ -95,7 +95,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
    */
   fromNamespace(namespace: string, name: string): Buffer {
     const guid = GuidBuffer.v5(name, namespace);
-    return guid.asBuffer;
+    return guid.asRawBuffer;
   }
 
   /**
@@ -175,7 +175,7 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
   }
 
   override toBytes(id: GuidV4Buffer): Buffer {
-    return id.asBuffer;
+    return id.asRawBuffer;
   }
 }
 

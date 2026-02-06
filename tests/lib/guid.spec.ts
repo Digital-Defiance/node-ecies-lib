@@ -2216,23 +2216,36 @@ describe('GuidV4', () => {
   });
 
   describe('Immutability', () => {
-    it('should seal instances', () => {
+    // Note: GuidBuffer extends Buffer which extends Uint8Array
+    // TypedArrays have special behavior that prevents Object.seal/freeze
+    it('should be an instance of Buffer', () => {
       const guid = new GuidV4(testFullHexGuid);
-      expect(Object.isSealed(guid)).toBe(true);
+      expect(Buffer.isBuffer(guid)).toBe(true);
     });
 
-    it('should prevent property addition', () => {
-      const guid = new GuidV4(testFullHexGuid) as any;
-      expect(() => {
-        guid.newProperty = 'test';
-      }).toThrow();
+    it('should be an instance of Uint8Array', () => {
+      const guid = new GuidV4(testFullHexGuid);
+      expect(guid).toBeInstanceOf(Uint8Array);
     });
 
-    it('should prevent property deletion', () => {
-      const guid = new GuidV4(testFullHexGuid) as any;
-      expect(() => {
-        delete guid._value;
-      }).toThrow();
+    it('should have length 16', () => {
+      const guid = new GuidV4(testFullHexGuid);
+      expect(guid.length).toBe(16);
+    });
+
+    it('should be usable as a Uint8Array', () => {
+      const guid = new GuidV4(testFullHexGuid);
+      // Can iterate like a Uint8Array
+      const bytes = Array.from(guid);
+      expect(bytes.length).toBe(16);
+      expect(bytes.every((b) => typeof b === 'number')).toBe(true);
+    });
+
+    it('should be usable as a Buffer', () => {
+      const guid = new GuidV4(testFullHexGuid);
+      // Can use Buffer methods directly
+      expect(guid.toString('hex')).toBe(testShortHexGuid);
+      expect(guid.toString('base64')).toBe(testBase64Guid);
     });
 
     it('should still allow cache updates', () => {
@@ -2242,6 +2255,14 @@ describe('GuidV4', () => {
       // Second access uses cache
       const hex2 = guid.asFullHexGuid;
       expect(hex1).toBe(hex2);
+    });
+
+    it('should return Buffer from slice operations (not GuidBuffer)', () => {
+      const guid = new GuidV4(testFullHexGuid);
+      const sliced = guid.slice(0, 8);
+      // Due to Symbol.species, slice returns Buffer, not GuidBuffer
+      expect(Buffer.isBuffer(sliced)).toBe(true);
+      expect(sliced.length).toBe(8);
     });
   });
 
@@ -2477,7 +2498,7 @@ describe('GuidV4', () => {
       it('should return debug string for v4 GUID', () => {
         const v4Guid = GuidV4.generate();
         const debug = v4Guid.toDebugString();
-        expect(debug).toContain('Guid(');
+        expect(debug).toContain('GuidBuffer(');
         expect(debug).toContain('v4');
         expect(debug).toContain('variant=1');
       });
@@ -2485,7 +2506,7 @@ describe('GuidV4', () => {
       it('should return debug string for v1 GUID', () => {
         const v1Guid = GuidV4.v1();
         const debug = v1Guid.toDebugString();
-        expect(debug).toContain('Guid(');
+        expect(debug).toContain('GuidBuffer(');
         expect(debug).toContain('v1');
         expect(debug).toContain('variant=1');
       });
@@ -2493,7 +2514,7 @@ describe('GuidV4', () => {
       it('should return debug string for v3 GUID', () => {
         const v3Guid = GuidV4.v3('test', GuidV4.Namespaces.DNS);
         const debug = v3Guid.toDebugString();
-        expect(debug).toContain('Guid(');
+        expect(debug).toContain('GuidBuffer(');
         expect(debug).toContain('v3');
         expect(debug).toContain('variant=1');
       });
@@ -2501,7 +2522,7 @@ describe('GuidV4', () => {
       it('should return debug string for v5 GUID', () => {
         const v5Guid = GuidV4.v5('test', GuidV4.Namespaces.DNS);
         const debug = v5Guid.toDebugString();
-        expect(debug).toContain('Guid(');
+        expect(debug).toContain('GuidBuffer(');
         expect(debug).toContain('v5');
         expect(debug).toContain('variant=1');
       });
@@ -2515,7 +2536,7 @@ describe('GuidV4', () => {
       it('should handle boundary values', () => {
         const zeroGuid = new GuidV4(allZerosFullHex);
         const debug = zeroGuid.toDebugString();
-        expect(debug).toContain('Guid(');
+        expect(debug).toContain('GuidBuffer(');
         expect(debug).toContain(allZerosFullHex);
       });
     });
@@ -2661,7 +2682,7 @@ describe('GuidV4', () => {
         expect(guid.clone()).toBeDefined();
         expect(guid.hashCode()).toBeDefined();
         expect(guid.isEmpty()).toBe(false);
-        expect(guid.toDebugString()).toContain('Guid(');
+        expect(guid.toDebugString()).toContain('GuidBuffer(');
         expect(guid.asFullHexGuid).toBeDefined();
         expect(guid.asShortHexGuid).toBeDefined();
         expect(guid.asBase64Guid).toBeDefined();

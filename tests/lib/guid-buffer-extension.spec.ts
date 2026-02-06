@@ -1,5 +1,5 @@
 /**
- * Tests for GuidBuffer extension of GuidUint8Array
+ * Tests for GuidBuffer extension of Buffer
  * Ensures proper inheritance, Buffer handling, and version attachment
  */
 import { GuidUint8Array } from '@digitaldefiance/ecies-lib';
@@ -7,15 +7,25 @@ import { GuidBuffer } from '../../src/lib/guid';
 
 describe('GuidBuffer Extension Tests', () => {
   describe('Inheritance', () => {
-    it('should extend GuidUint8Array', () => {
+    it('should extend Buffer directly', () => {
       const guid = GuidBuffer.v4();
       expect(guid).toBeInstanceOf(GuidBuffer);
-      expect(guid).toBeInstanceOf(GuidUint8Array);
+      expect(guid).toBeInstanceOf(Buffer);
+      expect(guid).toBeInstanceOf(Uint8Array);
+      expect(Buffer.isBuffer(guid)).toBe(true);
     });
 
-    it('should be compatible with GuidUint8Array type', () => {
-      const guid: GuidUint8Array = GuidBuffer.v4();
+    it('should be compatible with Uint8Array type', () => {
+      const guid: Uint8Array = GuidBuffer.v4();
       expect(guid).toBeDefined();
+    });
+
+    it('should produce same bytes as GuidUint8Array for same input', () => {
+      const hexGuid = '550e8400-e29b-41d4-a716-446655440000';
+      const guidBuffer = new GuidBuffer(hexGuid);
+      const guidUint8Array = new GuidUint8Array(hexGuid);
+      
+      expect(Array.from(guidBuffer)).toEqual(Array.from(guidUint8Array));
     });
   });
 
@@ -24,14 +34,16 @@ describe('GuidBuffer Extension Tests', () => {
       const v4 = GuidUint8Array.v4();
       const uint8 = v4.asPlatformBuffer;
       const guid = new GuidBuffer(uint8);
-      expect(Buffer.isBuffer(guid.asBuffer)).toBe(true);
+      expect(Buffer.isBuffer(guid)).toBe(true);
+      expect(Buffer.isBuffer(guid.asRawBuffer)).toBe(true);
     });
 
     it('should keep Buffer as Buffer in constructor', () => {
       const v4 = GuidUint8Array.v4();
       const buffer = Buffer.from(v4.asPlatformBuffer);
       const guid = new GuidBuffer(buffer);
-      expect(Buffer.isBuffer(guid.asBuffer)).toBe(true);
+      expect(Buffer.isBuffer(guid)).toBe(true);
+      expect(Buffer.isBuffer(guid.asRawBuffer)).toBe(true);
     });
   });
 
@@ -113,11 +125,13 @@ describe('GuidBuffer Extension Tests', () => {
   });
 
   describe('Buffer-Specific Methods', () => {
-    it('should return Buffer from asBuffer', () => {
+    it('should return plain Buffer from asRawBuffer', () => {
       const guid = GuidBuffer.v4();
-      const buffer = guid.asBuffer;
+      const buffer = guid.asRawBuffer;
       expect(Buffer.isBuffer(buffer)).toBe(true);
       expect(buffer.length).toBe(16);
+      // asRawBuffer should return a copy, not the same instance
+      expect(buffer).not.toBe(guid);
     });
 
     it('should return Uint8Array from asUint8Array', () => {
@@ -181,7 +195,7 @@ describe('GuidBuffer Extension Tests', () => {
   describe('Type Compatibility', () => {
     it('should work with PlatformID type', () => {
       const guid = GuidBuffer.v4();
-      const buffer: Buffer = guid.asBuffer;
+      const buffer: Buffer = guid.asRawBuffer;
       expect(buffer).toBeDefined();
     });
 
@@ -214,7 +228,7 @@ describe('GuidBuffer Extension Tests', () => {
 
     it('should convert between Buffer and Uint8Array', () => {
       const guid = GuidBuffer.v4();
-      const buffer = guid.asBuffer;
+      const buffer = guid.asRawBuffer;
       const uint8 = guid.asUint8Array;
 
       expect(Buffer.compare(buffer, Buffer.from(uint8))).toBe(0);
