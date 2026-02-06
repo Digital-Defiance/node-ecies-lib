@@ -13,16 +13,14 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { I18nEngine } from '@digitaldefiance/i18n-lib';
 import { hdkey, Wallet } from '@ethereumjs/wallet';
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1.js';
 
 import { Constants } from '../../constants';
-import {
-  getEciesPluginI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../../i18n/ecies-i18n-factory';
+import { getNodeEciesI18nEngine } from '../../i18n';
+import { NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { IWalletSeed as IWalletSeedMain } from '../../interfaces/wallet-seed';
 
 import { ISimpleKeyPair } from './interfaces/simple-keypair';
@@ -103,14 +101,13 @@ export class EciesCryptoCore {
    */
   public normalizePublicKey(publicKey: Buffer): Buffer {
     if (!publicKey) {
-      const pluginEngine = getEciesPluginI18nEngine();
+      const engine: I18nEngine = getNodeEciesI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(
-            NodeEciesComponentId,
+          error: engine.translateStringKey(
             NodeEciesStringKey.Error_InvalidPublicKey,
           ),
         },
@@ -151,15 +148,14 @@ export class EciesCryptoCore {
       ]);
     }
 
-    const pluginEngine = getEciesPluginI18nEngine();
+    const engine: I18nEngine = getNodeEciesI18nEngine();
     // Invalid format
     throw new ECIESError(
       ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
       undefined,
       undefined,
       {
-        error: pluginEngine.translate(
-          NodeEciesComponentId,
+        error: engine.translateStringKey(
           NodeEciesStringKey.Error_InvalidPublicKeyFormat,
         ),
         keyLength: String(keyLength),

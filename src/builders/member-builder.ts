@@ -21,10 +21,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 
 import { getNodeRuntimeConfiguration } from '../constants';
-import {
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../i18n/ecies-i18n-factory';
+import { NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
 import { PlatformID } from '../interfaces';
 import { IBackendMemberWithMnemonic } from '../interfaces/member-with-mnemonic';
@@ -78,8 +75,7 @@ export class MemberBuilder {
     if (!this.eciesService) {
       const engine = getNodeEciesI18nEngine();
       throw new Error(
-        engine.translate(
-          NodeEciesComponentId,
+        engine.translateStringKey(
           NodeEciesStringKey.Error_Builder_ECIESServiceMustBeSetBeforeGeneratingMnemonic,
         ),
       );
@@ -92,16 +88,14 @@ export class MemberBuilder {
     const engine = getNodeEciesI18nEngine();
     if (!this.eciesService) {
       throw new Error(
-        engine.translate(
-          NodeEciesComponentId,
+        engine.translateStringKey(
           NodeEciesStringKey.Error_Builder_ECIESServiceIsRequired,
         ),
       );
     }
     if (!this.type || !this.name || !this.email) {
       throw new Error(
-        engine.translate(
-          NodeEciesComponentId,
+        engine.translateStringKey(
           NodeEciesStringKey.Error_Builder_TypeNameAndEmailAreRequired,
         ),
       );

@@ -10,10 +10,9 @@ import {
   LengthEncodingType,
 } from '@digitaldefiance/ecies-lib';
 
+import { getNodeEciesI18nEngine } from './i18n';
 import {
-  getEciesPluginI18nEngine,
   getLazyNodeEciesTranslation,
-  NodeEciesComponentId,
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
 
@@ -61,13 +60,10 @@ export function decodeLengthEncodedData(buffer: Buffer): {
   data: Buffer;
   totalLength: number;
 } {
-  const pluginEngine = getEciesPluginI18nEngine();
+  const engine = getNodeEciesI18nEngine();
   if (buffer.length < 1) {
     throw new RangeError(
-      pluginEngine.translate(
-        NodeEciesComponentId,
-        NodeEciesStringKey.Error_BufferIsTooShort,
-      ),
+      engine.translateStringKey(NodeEciesStringKey.Error_BufferIsTooShort),
     );
   }
   const lengthType: LengthEncodingType = getLengthEncodingTypeFromValue(
@@ -77,8 +73,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
 
   if (buffer.length < 1 + lengthTypeSize) {
     throw new RangeError(
-      pluginEngine.translate(
-        NodeEciesComponentId,
+      engine.translateStringKey(
         NodeEciesStringKey.Error_BufferIsTooShortToReadFullLengthValue,
       ),
     );
@@ -99,8 +94,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
       length = buffer.readBigUInt64BE(1);
       if (Number(length) > Number.MAX_SAFE_INTEGER) {
         throw new RangeError(
-          pluginEngine.translate(
-            NodeEciesComponentId,
+          engine.translateStringKey(
             NodeEciesStringKey.Error_LengthExceedsMaximumSafeInteger,
           ),
         );
@@ -117,8 +111,7 @@ export function decodeLengthEncodedData(buffer: Buffer): {
   const totalLength = 1 + lengthTypeSize + Number(length);
   if (totalLength > buffer.length) {
     throw new RangeError(
-      pluginEngine.translate(
-        NodeEciesComponentId,
+      engine.translateStringKey(
         NodeEciesStringKey.Error_BufferIsTooShortForDeclaredDataLength,
       ),
     );

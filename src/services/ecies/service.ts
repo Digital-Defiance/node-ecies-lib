@@ -2,11 +2,9 @@
  * Service implementation for service.
  */
 import {
-  EciesComponentId,
   EciesEncryptionType,
   EciesEncryptionTypeEnum,
   EciesStringKey,
-  getEciesI18nEngine,
   HexString,
   IConstants,
   IECIESConfig,
@@ -18,6 +16,7 @@ import {
 import { Wallet } from '@ethereumjs/wallet';
 
 import { Constants, getNodeRuntimeConfiguration } from '../../constants';
+import { getNodeEciesI18nEngine } from '../../i18n';
 import type { IMember } from '../../interfaces/member';
 import type { IMultiEncryptedMessage } from '../../interfaces/multi-encrypted-message';
 import type { IMultiEncryptedParsedHeader } from '../../interfaces/multi-encrypted-parsed-header';
@@ -584,10 +583,9 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     recipientCount?: number,
   ): number {
     if (dataLength < 0) {
-      const engine = getEciesI18nEngine();
+      const engine = getNodeEciesI18nEngine();
       throw new Error(
-        engine.translate(
-          EciesComponentId,
+        engine.translateStringKey(
           EciesStringKey.Error_Service_InvalidDataLength,
         ),
       );
@@ -606,10 +604,9 @@ export class ECIESService<TID extends PlatformID = Buffer> {
           (recipientCount ?? 1) * this.eciesConsts.MULTIPLE.ENCRYPTED_KEY_SIZE
         );
       default: {
-        const engine = getEciesI18nEngine();
+        const engine = getNodeEciesI18nEngine();
         throw new Error(
-          engine.translate(
-            EciesComponentId,
+          engine.translateStringKey(
             EciesStringKey.Error_Service_InvalidEncryptionType,
           ),
         );
@@ -622,10 +619,9 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     padding?: number,
   ): number {
     if (encryptedDataLength < 0) {
-      const engine = getEciesI18nEngine();
+      const engine = getNodeEciesI18nEngine();
       throw new Error(
-        engine.translate(
-          EciesComponentId,
+        engine.translateStringKey(
           EciesStringKey.Error_Service_InvalidEncryptedDataLength,
         ),
       );
@@ -636,10 +632,9 @@ export class ECIESService<TID extends PlatformID = Buffer> {
     const decryptedLength = encryptedDataLength - overhead - actualPadding;
 
     if (decryptedLength < 0) {
-      const engine = getEciesI18nEngine();
+      const engine = getNodeEciesI18nEngine();
       throw new Error(
-        engine.translate(
-          EciesComponentId,
+        engine.translateStringKey(
           EciesStringKey.Error_Service_ComputedDecryptedLengthNegative,
         ),
       );

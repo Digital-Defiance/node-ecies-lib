@@ -11,20 +11,16 @@ import {
   randomBytes,
 } from 'crypto';
 
-import { CoreLanguageCode, PluginI18nEngine } from '@digitaldefiance/i18n-lib';
+import { I18nEngine } from '@digitaldefiance/i18n-lib';
 
 import { Constants } from '../constants';
-import {
-  getEciesPluginI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../i18n';
+import { getNodeEciesI18nEngine, NodeEciesStringKey } from '../i18n';
 import { IConstants } from '../interfaces/constants';
 
 export class AESGCMService {
   public static readonly ALGORITHM_NAME = 'AES-GCM';
   private readonly configuration: IConstants;
-  private readonly engine: PluginI18nEngine<CoreLanguageCode>;
+  private readonly engine: I18nEngine;
   private readonly algorithmName: string;
   private readonly mode: string;
   private readonly keyBits: number;
@@ -33,7 +29,7 @@ export class AESGCMService {
 
   constructor(constants?: IConstants) {
     this.configuration = constants ?? Constants;
-    this.engine = getEciesPluginI18nEngine();
+    this.engine = getNodeEciesI18nEngine();
     this.algorithmName = this.configuration.KEYRING.ALGORITHM;
     this.mode = this.configuration.KEYRING.MODE;
     this.keyBits = this.configuration.KEYRING.KEY_BITS;
@@ -71,8 +67,7 @@ export class AESGCMService {
     const requiredKeyLength = this.keyBits / 8;
     if (key.length !== requiredKeyLength) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_InvalidAESKeyLength,
         ),
       );
@@ -81,8 +76,7 @@ export class AESGCMService {
     // Security fix 11: Data null/undefined check
     if (data === null || data === undefined) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_CannotEncryptEmptyData,
         ),
       );
@@ -91,8 +85,7 @@ export class AESGCMService {
     // Security fix 12: Data size validation (max 2GB)
     if (data.length > 0x7fffffff) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_MessageTooLarge,
         ),
       );
@@ -180,8 +173,7 @@ export class AESGCMService {
 
     if (combinedData.length < minLength) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_CombinedDataTooShort,
         ),
       );
@@ -213,8 +205,7 @@ export class AESGCMService {
     const requiredKeyLength = this.keyBits / 8;
     if (key.length !== requiredKeyLength) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_InvalidAESKeyLength,
         ),
       );
@@ -223,8 +214,7 @@ export class AESGCMService {
     // Security fix 10: IV length validation
     if (iv.length !== 16) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_InvalidIVLength,
         ),
       );
@@ -233,8 +223,7 @@ export class AESGCMService {
     // Security fix 13: Decrypt input validation
     if (encryptedData === null || encryptedData === undefined) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_CannotDecryptEmptyData,
         ),
       );
@@ -242,8 +231,7 @@ export class AESGCMService {
 
     if (encryptedData.length > 0x7fffffff) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_MessageTooLarge,
         ),
       );

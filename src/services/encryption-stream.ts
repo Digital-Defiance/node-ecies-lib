@@ -8,10 +8,7 @@
 
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 
-import {
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../i18n/ecies-i18n-factory';
+import { NodeEciesStringKey } from '../i18n/ecies-i18n-factory';
 import { getNodeEciesI18nEngine } from '../i18n/node-ecies-i18n-setup';
 import { IConstants, PlatformID } from '../interfaces';
 import { IEncryptedChunk } from '../interfaces/encrypted-chunk';
@@ -75,8 +72,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
   ): AsyncGenerator<IEncryptedChunk, void, unknown> {
     if (!publicKey || (publicKey.length !== 65 && publicKey.length !== 33)) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_InvalidPublicKeyLength,
         ),
       );
@@ -97,8 +93,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     for await (const data of source) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_EncryptionCancelled,
           ),
         );
@@ -106,8 +101,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
 
       if (data.length > maxSingleChunk) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_BufferOverflow,
           ),
         );
@@ -122,8 +116,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
       while (buffer.length >= chunkSize) {
         if (signal?.aborted) {
           throw new Error(
-            this.engine.translate(
-              NodeEciesComponentId,
+            this.engine.translateStringKey(
               NodeEciesStringKey.Error_Stream_EncryptionCancelled,
             ),
           );
@@ -152,8 +145,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     if (buffer.length > 0) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_EncryptionCancelled,
           ),
         );
@@ -186,16 +178,14 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
   ): AsyncGenerator<IMultiRecipientChunk, void, unknown> {
     if (recipients.length === 0) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_AtLeastOneRecipientRequired,
         ),
       );
     }
     if (recipients.length > 65535) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_MaxRecipientsExceeded,
         ),
       );
@@ -207,8 +197,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
         (recipient.publicKey.length !== 65 && recipient.publicKey.length !== 33)
       ) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_InvalidRecipientPublicKeyLength,
           ),
         );
@@ -219,8 +208,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
         recipient.id.length !== enhancedProvider.byteLength
       ) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength,
           ),
         );
@@ -241,8 +229,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     for await (const data of source) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_EncryptionCancelled,
           ),
         );
@@ -250,8 +237,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
 
       if (data.length > maxSingleChunk) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_BufferOverflow,
           ),
         );
@@ -266,8 +252,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
       while (buffer.length >= chunkSize) {
         if (signal?.aborted) {
           throw new Error(
-            this.engine.translate(
-              NodeEciesComponentId,
+            this.engine.translateStringKey(
               NodeEciesStringKey.Error_Stream_EncryptionCancelled,
             ),
           );
@@ -295,8 +280,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     if (buffer.length > 0) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_EncryptionCancelled,
           ),
         );
@@ -325,8 +309,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
   ): AsyncGenerator<Buffer, void, unknown> {
     if (!privateKey || privateKey.length !== 32) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength,
         ),
       );
@@ -344,8 +327,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     for await (const chunkData of source) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_DecryptionCancelled,
           ),
         );
@@ -358,8 +340,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
 
       if (header.index !== expectedIndex) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_ChunkSequenceError,
           ),
         );
@@ -388,16 +369,14 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     const enhancedProvider = getEnhancedNodeIdProvider<Buffer>();
     if (!recipientId || recipientId.length !== enhancedProvider.byteLength) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_InvalidRecipientIdLength,
         ),
       );
     }
     if (!privateKey || privateKey.length !== 32) {
       throw new Error(
-        this.engine.translate(
-          NodeEciesComponentId,
+        this.engine.translateStringKey(
           NodeEciesStringKey.Error_Stream_InvalidPrivateKeyLength,
         ),
       );
@@ -415,8 +394,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
     for await (const chunkData of source) {
       if (signal?.aborted) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_DecryptionCancelled,
           ),
         );
@@ -430,8 +408,7 @@ export class EncryptionStream<TID extends PlatformID = Buffer> {
 
       if (header.chunkIndex !== expectedIndex) {
         throw new Error(
-          this.engine.translate(
-            NodeEciesComponentId,
+          this.engine.translateStringKey(
             NodeEciesStringKey.Error_Stream_ChunkSequenceError,
           ),
         );

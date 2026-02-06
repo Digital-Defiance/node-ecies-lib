@@ -16,11 +16,7 @@ import { sha256 } from '@noble/hashes/sha2';
 import { bytesToHex } from '@noble/hashes/utils';
 
 import { Pbkdf2ProfileEnum as NodePbkdf2ProfileEnum } from './enumerations/pbkdf2-profile';
-import {
-  getNodeEciesI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from './i18n';
+import { getNodeEciesI18nEngine, NodeEciesStringKey } from './i18n';
 import type { NodeEciesStringKeyValue } from './i18n';
 import type { IChecksumConsts } from './interfaces/checksum-consts';
 import type { IConstants } from './interfaces/constants';
@@ -204,7 +200,7 @@ export const Constants: IConstants = Object.freeze({
 function safeTranslate(key: NodeEciesStringKeyValue, fallback: string): string {
   try {
     const engine = getNodeEciesI18nEngine();
-    return engine.translate(NodeEciesComponentId, key);
+    return engine.translateStringKey(key);
   } catch {
     return fallback;
   }

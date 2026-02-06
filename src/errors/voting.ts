@@ -10,7 +10,7 @@ import {
 } from '@digitaldefiance/i18n-lib';
 
 import { VotingErrorType } from '../enumerations/voting-error-type';
-import { EciesComponentId } from '../i18n-setup';
+import { NodeEciesComponentId } from '../i18n';
 
 /**
  * Error class for voting-related operations.
@@ -35,7 +35,7 @@ export class VotingError extends TypedHandleableError<
     const source =
       options?.cause instanceof Error ? options.cause : new Error();
     super(
-      EciesComponentId,
+      NodeEciesComponentId,
       type,
       buildReasonMap(VotingErrorType, ['Error', 'VotingError']),
       source,

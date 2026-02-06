@@ -1,10 +1,10 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 
+import { NodeEciesStringKey } from '../src/i18n/ecies-i18n-factory';
 import {
+  getNodeEciesI18nEngine,
   NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../src/i18n/ecies-i18n-factory';
-import { getNodeEciesI18nEngine } from '../src/i18n/node-ecies-i18n-setup';
+} from '../src/i18n/node-ecies-i18n-setup';
 
 describe('Node ECIES i18n Integration', () => {
   beforeEach(() => {

@@ -8,7 +8,19 @@ A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve 
 
 Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
 
-> Current Version: v4.16.0
+> Current Version: v4.16.25
+
+## What's New in v4.16.x
+
+✨ **Voting Key Derivation Security Improvements** - Enhanced voting key derivation to use both X and Y coordinates of the shared secret for improved security and cross-platform consistency with the browser implementation.
+
+**Key Changes:**
+- **HKDF Salt Handling**: Per RFC 5869, when salt is not provided or empty, it now uses a string of HashLen zeros instead of an empty buffer, ensuring consistency with Web Crypto API implementation
+- **Private Key Normalization**: `deriveVotingKeysFromECDH` now handles 31-byte private keys (which can occur ~0.4% of the time when Node.js createECDH returns keys with leading zeros) by padding to 32 bytes
+- **Uncompressed Public Keys**: Voting key derivation now uses uncompressed format (65 bytes with 0x04 prefix) for maximum entropy in ECDH shared secret computation
+- **Simplified Prime Generation**: Removed constant-time padding in `generateDeterministicPrime` for cleaner implementation
+- **i18n Improvements**: Uses `I18nBuilder` pattern with `withStringKeyEnums()` for registering branded enums
+- **String Key Enum Registration**: Added `registerStringKeyEnum()` for direct translation via `translateStringKey()`
 
 This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuring HKDF key derivation, AAD binding, and optimized multi-recipient encryption. It includes a pluggable ID provider system, memory-efficient streaming encryption, and comprehensive internationalization.
 
@@ -263,6 +275,47 @@ const encryptedJson = await aesGcm.encryptJson(userData, key);
 const decryptedJson = await aesGcm.decryptJson<typeof userData>(encryptedJson, key);
 console.log(decryptedJson); // { name: 'Alice', email: 'alice@example.com', age: 30 }
 ```
+
+### Internationalization (i18n)
+
+The library provides automatic error translation in 8 languages with helper functions for direct translation:
+
+```typescript
+import { 
+  getNodeEciesI18nEngine,
+  getNodeEciesTranslation,
+  safeGetNodeEciesTranslation,
+  NodeEciesStringKey 
+} from '@digitaldefiance/node-ecies-lib';
+
+// Initialize the i18n engine (required once at startup)
+const engine = getNodeEciesI18nEngine();
+
+// Direct translation using branded string keys (v4.16.0+)
+// Component ID is automatically resolved from the branded enum
+const errorMessage = getNodeEciesTranslation(NodeEciesStringKey.Error_InvalidKey);
+
+// With variables
+const message = getNodeEciesTranslation(
+  NodeEciesStringKey.Error_InvalidKeyLength,
+  { expected: 32, actual: 16 }
+);
+
+// With specific language
+const frenchMessage = getNodeEciesTranslation(
+  NodeEciesStringKey.Error_InvalidKey,
+  {},
+  'fr'
+);
+
+// Safe translation (returns placeholder on failure instead of throwing)
+const safeMessage = safeGetNodeEciesTranslation(NodeEciesStringKey.Error_InvalidKey);
+
+// Or use the engine directly with translateStringKey
+const directTranslation = engine.translateStringKey(NodeEciesStringKey.Error_InvalidKey);
+```
+
+**Supported Languages:** en-US, en-GB, fr, es, de, zh-CN, ja, uk
 
 ### 3. Using Custom ID Providers (e.g., GUID)
 
@@ -671,7 +724,16 @@ describe('Integration with suite-core-lib', () => {
 
 ## ChangeLog
 
-### v4.16.0 - Voting key derivation now uses X&Y coordinates for improved security
+### v4.16.x (v4.16.0 - v4.16.20)
+
+**Voting Key Derivation Security Improvements**
+
+- **HKDF RFC 5869 Compliance**: When salt is not provided or empty, now uses HashLen zeros instead of empty buffer for consistency with Web Crypto API
+- **Private Key Normalization**: `deriveVotingKeysFromECDH` handles 31-byte private keys by padding to 32 bytes (occurs ~0.4% of the time with Node.js createECDH)
+- **Uncompressed Public Keys**: Voting key derivation uses uncompressed format (65 bytes) for maximum entropy
+- **Simplified Prime Generation**: Cleaner `generateDeterministicPrime` implementation
+- **i18n Builder Pattern**: Uses `I18nBuilder.withStringKeyEnums()` for registering branded enums
+- **String Key Enum Registration**: Added `registerStringKeyEnum()` for direct translation via `translateStringKey()`
 
 ### v4.13.0 - API Naming Improvements & Configuration Enhancements
 

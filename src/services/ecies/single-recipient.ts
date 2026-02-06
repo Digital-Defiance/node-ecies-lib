@@ -19,12 +19,10 @@ import {
   UINT32_MAX,
   UINT64_SIZE,
 } from '@digitaldefiance/ecies-lib';
+import { I18nEngine } from '@digitaldefiance/i18n-lib';
 
-import {
-  getEciesPluginI18nEngine,
-  NodeEciesComponentId,
-  NodeEciesStringKey,
-} from '../../i18n/ecies-i18n-factory';
+import { getNodeEciesI18nEngine } from '../../i18n';
+import { NodeEciesStringKey } from '../../i18n/ecies-i18n-factory';
 import { AuthenticatedCipher } from '../../interfaces/authenticated-cipher';
 import { AuthenticatedDecipher } from '../../interfaces/authenticated-decipher';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/single-encrypted-parsed-header';
@@ -103,14 +101,13 @@ export class EciesSingleRecipientCore {
     );
 
     if (message.length > this.cryptoCore.consts.MAX_RAW_DATA_SIZE) {
-      const pluginEngine = getEciesPluginI18nEngine();
+      const engine: I18nEngine = getNodeEciesI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidDataLength,
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(
-            NodeEciesComponentId,
+          error: engine.translateStringKey(
             NodeEciesStringKey.Error_MessageLengthExceedsMaximumAllowedSize,
           ),
           maxLength: String(UINT32_MAX),
@@ -378,14 +375,13 @@ export class EciesSingleRecipientCore {
       options?.dataLength !== undefined &&
       dataLength !== options.dataLength
     ) {
-      const pluginEngine = getEciesPluginI18nEngine();
+      const engine: I18nEngine = getNodeEciesI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEncryptedDataLength,
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(
-            NodeEciesComponentId,
+          error: engine.translateStringKey(
             NodeEciesStringKey.Error_EncryptedDataLengthMismatch,
           ),
           expected: String(dataLength),
@@ -424,14 +420,13 @@ export class EciesSingleRecipientCore {
 
     // Security fix 7: Component extraction validation
     if (normalizedKey.length !== this.cryptoCore.consts.PUBLIC_KEY_LENGTH) {
-      const pluginEngine = getEciesPluginI18nEngine();
+      const engine: I18nEngine = getNodeEciesI18nEngine();
       throw new ECIESError(
         ECIESErrorTypeEnum.InvalidEphemeralPublicKey,
         undefined,
         undefined,
         {
-          error: pluginEngine.translate(
-            NodeEciesComponentId,
+          error: engine.translateStringKey(
             NodeEciesStringKey.Error_EphemeralPublicKeyLengthMismatch,
           ),
           expected: String(this.cryptoCore.consts.PUBLIC_KEY_LENGTH),
@@ -710,11 +705,10 @@ export class EciesSingleRecipientCore {
       // Decrypt the data
       try {
         // Handle edge case where encrypted data might be empty or malformed
-        const pluginEngine = getEciesPluginI18nEngine();
+        const engine: I18nEngine = getNodeEciesI18nEngine();
         if (encrypted.length === 0) {
           throw new Error(
-            pluginEngine.translate(
-              NodeEciesComponentId,
+            engine.translateStringKey(
               NodeEciesStringKey.Error_EncryptedDataIsEmpty,
             ),
           );
