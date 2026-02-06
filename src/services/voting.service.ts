@@ -207,8 +207,12 @@ export function hkdf(
   hmacAlgorithm: string = 'sha512',
 ): Uint8Array {
   // Step 1: Extract - HKDF-Extract(salt, IKM) -> PRK
+  // Per RFC 5869: if salt is not provided, use a string of HashLen zeros
+  // Treat empty salt the same as null for consistency with Web Crypto API
   const actualSalt =
-    salt || Buffer.alloc(createHash(hmacAlgorithm).digest().length);
+    salt && salt.length > 0
+      ? salt
+      : Buffer.alloc(createHash(hmacAlgorithm).digest().length);
   const prk = createHmac(hmacAlgorithm, actualSalt).update(secret).digest();
 
   // Step 2: Expand - HKDF-Expand(PRK, info, L) -> OKM
@@ -323,17 +327,7 @@ export function generateDeterministicPrime(
   const numBytes = Math.ceil(numBits / 8);
   const topBitMask = 1 << ((numBits - 1) % 8);
 
-  // Always perform exactly maxAttempts iterations for timing attack mitigation
-  let foundPrime: bigint | null = null;
-
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Continue checking even after finding prime to maintain constant timing
-    if (foundPrime !== null) {
-      // Perform dummy operations to maintain timing consistency
-      drbg.generate(numBytes);
-      continue;
-    }
-
     // Generate random bytes
     const bytes = drbg.generate(numBytes);
 
@@ -361,15 +355,11 @@ export function generateDeterministicPrime(
 
     // Miller-Rabin primality test (using function from this module)
     if (millerRabinTest(candidate, primeTestIterations)) {
-      foundPrime = candidate;
+      return candidate;
     }
   }
 
-  if (foundPrime === null) {
-    throw new Error(`Failed to generate prime after ${maxAttempts} attempts`);
-  }
-
-  return foundPrime;
+  throw new Error(`Failed to generate prime after ${maxAttempts} attempts`);
 }
 
 /**
@@ -502,10 +492,17 @@ export function deriveVotingKeysFromECDH(
     throw new Error('ECDH private key is required');
   }
 
-  // Validate private key length (32 bytes for secp256k1)
-  if (ecdhPrivKey.length !== 32) {
+  // Handle private key length - Node.js createECDH can return 31 bytes
+  // when the key has a leading zero (happens ~0.4% of the time)
+  let normalizedPrivKey: Uint8Array = ecdhPrivKey;
+  if (ecdhPrivKey.length === 31) {
+    // Pad with leading zero to get 32 bytes
+    const padded = new Uint8Array(32);
+    padded.set(ecdhPrivKey, 1); // Copy to offset 1, leaving 0 at offset 0
+    normalizedPrivKey = padded;
+  } else if (ecdhPrivKey.length !== 32) {
     throw new Error(
-      `Invalid ECDH private key length: expected 32 bytes, got ${ecdhPrivKey.length}`,
+      `Invalid ECDH private key length: expected 31-32 bytes, got ${ecdhPrivKey.length}`,
     );
   }
 
@@ -519,7 +516,7 @@ export function deriveVotingKeysFromECDH(
   if (ecdhPubKey.length === 33) {
     // Compressed key - need to decompress it
     const ecdh = createECDH(curveName);
-    ecdh.setPrivateKey(Buffer.from(ecdhPrivKey));
+    ecdh.setPrivateKey(Buffer.from(normalizedPrivKey));
 
     // Use a temporary ECDH instance to decompress the public key
     const tempEcdh = createECDH(curveName);
@@ -549,7 +546,7 @@ export function deriveVotingKeysFromECDH(
   // Compute shared secret using @noble/secp256k1 (same as frontend implementation)
   // Use uncompressed format (65 bytes with 0x04 prefix) for maximum entropy
   const sharedSecret = secp256k1.getSharedSecret(
-    ecdhPrivKey,
+    normalizedPrivKey,
     fullPubKey,
     false, // false = uncompressed (65 bytes with 0x04 prefix)
   );

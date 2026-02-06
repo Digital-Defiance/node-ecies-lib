@@ -323,8 +323,10 @@ describe('VotingService', () => {
         deriveVotingKeysFromECDH(new Uint8Array(0), ecdhKeyPair.publicKey);
       }).toThrow('ECDH private key is required');
 
+      // Need to use a valid 32-byte private key to test empty public key
+      const validPrivKey = randomBytes(32);
       expect(() => {
-        deriveVotingKeysFromECDH(ecdhKeyPair.privateKey, new Uint8Array(0));
+        deriveVotingKeysFromECDH(validPrivKey, new Uint8Array(0));
       }).toThrow('ECDH public key is required');
     });
 
