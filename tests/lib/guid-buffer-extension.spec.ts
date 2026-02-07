@@ -24,7 +24,7 @@ describe('GuidBuffer Extension Tests', () => {
       const hexGuid = '550e8400-e29b-41d4-a716-446655440000';
       const guidBuffer = new GuidBuffer(hexGuid);
       const guidUint8Array = new GuidUint8Array(hexGuid);
-      
+
       expect(Array.from(guidBuffer)).toEqual(Array.from(guidUint8Array));
     });
   });
