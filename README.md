@@ -2,25 +2,11 @@
 
 [![npm version](https://badge.fury.io/js/%40digitaldefiance%2Fnode-ecies-lib.svg)](https://www.npmjs.com/package/@digitaldefiance/node-ecies-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/tests-1100%2B%20passing-brightgreen)](https://github.com/Digital-Defiance/ecies-lib)
+[![Tests](https://img.shields.io/badge/tests-1953%20passing-brightgreen)](https://github.com/Digital-Defiance/ecies-lib)
 
 A Node.js-specific implementation of the Digital Defiance ECIES (Elliptic Curve Integrated Encryption Scheme) library, providing secure encryption, decryption, and key management capabilities using Node.js crypto primitives. This package is designed to be binary compatible with similarly numbered releases of the browser-based `@digitaldefiance/ecies-lib`, enabling seamless cross-platform cryptographic operations.
 
 Part of [Express Suite](https://github.com/Digital-Defiance/express-suite)
-
-> Current Version: v4.16.25
-
-## What's New in v4.16.x
-
-✨ **Voting Key Derivation Security Improvements** - Enhanced voting key derivation to use both X and Y coordinates of the shared secret for improved security and cross-platform consistency with the browser implementation.
-
-**Key Changes:**
-- **HKDF Salt Handling**: Per RFC 5869, when salt is not provided or empty, it now uses a string of HashLen zeros instead of an empty buffer, ensuring consistency with Web Crypto API implementation
-- **Private Key Normalization**: `deriveVotingKeysFromECDH` now handles 31-byte private keys (which can occur ~0.4% of the time when Node.js createECDH returns keys with leading zeros) by padding to 32 bytes
-- **Uncompressed Public Keys**: Voting key derivation now uses uncompressed format (65 bytes with 0x04 prefix) for maximum entropy in ECDH shared secret computation
-- **Simplified Prime Generation**: Removed constant-time padding in `generateDeterministicPrime` for cleaner implementation
-- **i18n Improvements**: Uses `I18nBuilder` pattern with `withStringKeyEnums()` for registering branded enums
-- **String Key Enum Registration**: Added `registerStringKeyEnum()` for direct translation via `translateStringKey()`
 
 This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuring HKDF key derivation, AAD binding, and optimized multi-recipient encryption. It includes a pluggable ID provider system, memory-efficient streaming encryption, and comprehensive internationalization.
 
@@ -37,10 +23,12 @@ This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuri
   - **Curve**: `secp256k1` for ECDH key exchange and ECDSA signatures.
   - **Symmetric**: `AES-256-GCM` for authenticated symmetric encryption.
   - **Hashing**: `SHA-256` and `SHA-512`.
+  - **Key Derivation**: `PBKDF2` with configurable profiles.
+  - **Checksums**: `CRC8`, `CRC16-CCITT`, `CRC32` for data integrity.
 - **Modes**:
-  - **Basic**: Minimal overhead (no length prefix).
-  - **WithLength**: Includes data length prefix.
-  - **Multiple**: Efficient encryption for up to 65,535 recipients.
+  - **Basic**: Minimal overhead (no length prefix) - Use for fixed-size data
+  - **WithLength**: Includes data length prefix - Use for variable-size data or streaming
+  - **Multiple**: Efficient encryption for up to 65,535 recipients - Use for group messaging
 
 ### 🆔 Identity & Management
 
@@ -55,14 +43,28 @@ This library implements a modern, enterprise-grade ECIES protocol (v4.0) featuri
 
 ### 🚀 Advanced Capabilities
 
-- **Streaming Encryption**: Memory-efficient processing for large files (<10MB RAM usage for any file size).
+- **Streaming Encryption**: Memory-efficient processing for large files (<10MB RAM usage for any file size) with Node.js Transform streams.
+- **Fluent Builders**: Type-safe configuration with `ECIESBuilder` and `MemberBuilder` for clean, chainable APIs.
 - **Internationalization (i18n)**: Automatic error translation in 8 languages (en-US, en-GB, fr, es, de, zh-CN, ja, uk).
 - **Runtime Configuration**: Injectable configuration profiles via `ConstantsRegistry` for dependency injection and testing.
 - **Cross-Platform**: Fully compatible with similarly numbered releases of `@digitaldefiance/ecies-lib` (browser).
 
 ### 🗳️ Government-Grade Voting System
 
-A comprehensive voting system built on homomorphic encryption with 17 voting methods and 1100+ test cases:
+A comprehensive voting system built on homomorphic encryption with 17 voting methods and 1100+ test cases.
+
+**When to use:**
+- Government elections requiring verifiable results and audit trails
+- Corporate governance and shareholder voting with privacy guarantees
+- Anonymous surveys with cryptographic receipt verification
+- Multi-round elections (IRV, STAR, STV) with intermediate tallies
+- Stakeholder voting with weighted votes and role separation
+- Any voting scenario requiring homomorphic encryption and tamper-proof audit logs
+
+**When NOT to use:**
+- Simple polls where privacy is not a concern (use a basic database instead)
+- Real-time result displays during voting (results are encrypted until poll closure)
+- Systems where the computational overhead of homomorphic encryption is prohibitive
 
 - **All 17 Methods Fully Implemented**: Plurality, Approval, Weighted, Borda Count, Score, Yes/No, Yes/No/Abstain, Supermajority, Ranked Choice (IRV), Two-Round, STAR, STV, Quadratic, Consensus, Consent-Based
 - **Node.js Optimized**: Uses Buffer instead of Uint8Array for better Node.js performance
@@ -156,24 +158,31 @@ import {
 } from '@digitaldefiance/node-ecies-lib';
 import { ObjectIdProvider } from '@digitaldefiance/ecies-lib';
 
-// 1. Configure (Optional - defaults to ObjectIdProvider)
-registerNodeRuntimeConfiguration('my-app-config', {
-  idProvider: new ObjectIdProvider()
-});
+try {
+  // 1. Configure (Optional - defaults to ObjectIdProvider)
+  registerNodeRuntimeConfiguration('my-app-config', {
+    idProvider: new ObjectIdProvider()
+  });
 
-// 2. Initialize Service
-const ecies = new ECIESService();
+  // 2. Initialize Service
+  const ecies = new ECIESService();
 
-// 3. Generate Keys
-const mnemonic = ecies.generateNewMnemonic();
-const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(mnemonic);
+  // 3. Generate Keys
+  const mnemonic = ecies.generateNewMnemonic();
+  const { privateKey, publicKey } = ecies.mnemonicToSimpleKeyPair(mnemonic);
 
-// 4. Encrypt & Decrypt
-const message = Buffer.from('Hello, Secure World!');
-const encrypted = ecies.encryptWithLength(publicKey, message);
-const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
+  // 4. Encrypt & Decrypt
+  const message = Buffer.from('Hello, Secure World!');
+  const encrypted = ecies.encryptWithLength(publicKey, message);
+  const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
 
-console.log(decrypted.toString()); // "Hello, Secure World!"
+  console.log(decrypted.toString()); // "Hello, Secure World!"
+} catch (error) {
+  console.error('Encryption error:', error.message);
+  if (error.code === 'INVALID_KEY') {
+    console.error('Invalid key provided');
+  }
+}
 ```
 
 ### 2. Strong Typing with ID Providers (New in v4.10.7)
@@ -478,6 +487,35 @@ const encrypted = member.encryptData('My Secrets');
 - **`EciesMultiRecipient`**: Specialized service for handling multi-recipient messages.
 - **`EncryptionStream`**: Helper for chunked file encryption.
 - **`Pbkdf2Service`**: Secure authentication using PBKDF2 and encrypted key bundles.
+- **`AESGCMService`**: Instance-based AES-256-GCM encryption with JSON support.
+  - **Methods**: `encrypt()`, `decrypt()`, `encryptJson()`, `decryptJson()`, `combineEncryptedDataAndTag()`
+  - Supports authenticated encryption with optional AAD
+- **`CrcService`**: CRC checksum computation and verification.
+  - **Algorithms**: CRC8, CRC16-CCITT, CRC32
+  - **Methods**: `crc8()`, `crc16()`, `crc32()`, `verifyCrc8()`, `verifyCrc16()`, `verifyCrc32()`
+  - Supports async stream processing
+- **`ChunkProcessor`**: Processes data in chunks for streaming encryption.
+- **`MultiRecipientProcessor`**: Handles multi-recipient encryption operations.
+- **`ProgressTracker`**: Tracks progress for long-running encryption operations.
+
+### Builders
+
+- **`ECIESBuilder`**: Fluent builder for ECIESService configuration
+  - **Methods**: `create()`, `withServiceConfig()`, `withConstants()`, `withI18n()`, `build()`
+  - Simplifies service initialization with method chaining
+- **`MemberBuilder`**: Fluent builder for creating Member instances
+  - **Methods**: `withId()`, `withName()`, `withEmail()`, `withPhone()`, `withType()`, `withKeys()`, `build()`
+  - Provides type-safe member construction with validation
+
+### Stream Transforms
+
+- **`EciesEncryptTransform`**: Node.js Transform stream for ECIES encryption
+- **`EciesDecryptTransform`**: Node.js Transform stream for ECIES decryption
+- **`ChecksumTransform`**: Transform stream for CRC checksum computation
+- **`XorTransform`**: Transform stream for XOR cipher operations
+- **`XorMultipleTransform`**: Transform stream for multiple XOR operations
+
+All transforms extend Node.js `Transform` class for use with Node.js streams.
 
 ### Configuration & Registry
 
