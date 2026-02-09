@@ -240,6 +240,17 @@ All remaining requirements (4-14) from the browser implementation apply identica
 - Performance optimizations leverage Node.js V8 engine
 - Stream support available for large datasets
 
+### 4.1 Threshold Cryptography
+**Status:** ✅ Implemented
+
+**Implementation:** `voting/threshold/` module - Node.js Buffer-based extensions of all ecies-lib threshold components including ThresholdKeyGenerator, GuardianRegistry, CeremonyCoordinator, DecryptionCombiner, PartialDecryptionService, PublicTallyFeed, TallyVerifier, IntervalScheduler, ThresholdPollFactory, and hierarchical ThresholdAggregators with Buffer support
+
+✅ Shamir's Secret Sharing key splitting via `ThresholdKeyGenerator`
+✅ K-of-N threshold decryption via `DecryptionCombiner` with Lagrange interpolation
+✅ Guardian management via `GuardianRegistry` with Buffer-based IDs
+✅ ZK proofs for partial decryptions and combined decryption verification
+✅ Buffer-based serialization/deserialization for all threshold data structures
+
 For complete requirements 4-14, see the browser implementation documentation or the full GOVERNMENT-REQUIREMENTS.md file.
 
 ---
@@ -247,7 +258,7 @@ For complete requirements 4-14, see the browser implementation documentation or 
 ## Implementation Priority
 
 ### Phase 1: Critical Security (Q1 2025)
-1. Threshold Cryptography (4.1) - **HIGHEST PRIORITY**
+1. Threshold Cryptography (4.1) ✅ - **HIGHEST PRIORITY**
 2. Zero-Knowledge Proofs (5.4)
 3. Public Bulletin Board (1.2) ✅
 4. Secure Key Storage (8.6)
@@ -286,15 +297,15 @@ For complete requirements 4-14, see the browser implementation documentation or 
 ## Summary Statistics
 
 **Total Requirements:** 100+
-**Implemented:** 3 (3%)
+**Implemented:** 4 (4%)
 **In Progress:** 0 (0%)
-**Not Started:** 95+ (95%)
+**Not Started:** 94+ (94%)
 **Needs Design Review:** 2 (2%)
 **Under Investigation:** 2 (2%)
 
 **Critical Path Items (Top 3 Blockers for Government Use):**
 1. **Coercion Resistance (3.2)** - Current receipts enable vote buying/coercion
-2. **Distributed Trust (4.1)** - Single authority is unacceptable for elections
+2. ~~**Distributed Trust (4.1)** - Single authority is unacceptable for elections~~ ✅ Resolved via threshold voting module
 3. **Universal Verifiability (5.2)** - Cannot prove election integrity to public
 
 **Additional Critical Items:**

@@ -27,6 +27,8 @@ Government-grade voting system built on node-ecies-lib with comprehensive crypto
 
 ### Core Security Features
 - ✅ **Homomorphic Encryption** - Votes remain encrypted until tally using Paillier cryptosystem
+- ✅ **Threshold Decryption** - Distributed trust with k-of-n Guardians; no single party can decrypt alone
+- ✅ **Real-Time Tallies** - Configurable interval decryption during voting with ZK proofs
 - ✅ **Verifiable Receipts** - Cryptographically signed confirmations with ECDSA
 - ✅ **Public Bulletin Board** - Transparent, append-only vote publication with Merkle tree integrity
 - ✅ **Immutable Audit Log** - Cryptographic hash chain for all operations
@@ -750,6 +752,92 @@ This Node.js implementation differs from the browser implementation in these way
 | Performance | Browser-optimized | V8-optimized |
 
 All cryptographic operations, security properties, and voting methods are identical between platforms.
+
+## Threshold Voting (Node.js Extensions)
+
+The threshold voting module enables real-time, distributed vote tallying where no single party can decrypt votes alone. The Node.js implementation extends the browser `ecies-lib` threshold module with Buffer support for improved performance.
+
+For full API documentation, see the [ecies-lib Threshold Voting documentation](../../../../../../digitaldefiance-ecies-lib/src/lib/voting/README.md#threshold-voting). All shared APIs (GuardianRegistry, CeremonyCoordinator, IntervalScheduler, DecryptionCombiner, PublicTallyFeed, TallyVerifier) are re-exported from ecies-lib and work identically.
+
+### Node.js-Specific Extensions
+
+The following classes extend the ecies-lib base with Node.js Buffer support:
+
+| Export | Purpose |
+|--------|---------|
+| `ThresholdKeyGenerator` | Buffer-based key share handling (`BufferKeyShare`, `BufferThresholdKeyPair`) |
+| `PartialDecryptionService` | Buffer-based partial decryption serialization (`BufferPartialDecryption`) |
+| `ThresholdPoll` | Threshold poll specialized for Buffer-based PlatformID |
+| `ThresholdPollFactory` | Creates threshold polls with Buffer support |
+| `ThresholdAuditLog` | Audit logging with Buffer-based entry handling |
+| `ThresholdPrecinctAggregator` | Precinct-level threshold aggregation with Buffer |
+| `ThresholdCountyAggregator` | County-level threshold aggregation with Buffer |
+| `ThresholdStateAggregator` | State-level threshold aggregation with Buffer |
+| `ThresholdNationalAggregator` | National-level threshold aggregation with Buffer |
+
+### Quick Start
+
+```typescript
+import {
+  ThresholdKeyGenerator,
+  GuardianRegistry,
+  GuardianStatus,
+  ThresholdPollFactory,
+  IntervalTriggerType,
+} from '@digitaldefiance/node-ecies-lib';
+
+// 1. Generate threshold keys (3-of-5 configuration)
+const keyGen = new ThresholdKeyGenerator();
+const keyPair = await keyGen.generate({ totalShares: 5, threshold: 3 });
+
+// Key shares use Buffer for serialization
+const serialized: Buffer = keyGen.serializeKeyShare(keyPair.keyShares[0]);
+const deserialized = keyGen.deserializeKeyShare(serialized);
+
+// 2. Register Guardians (uses Buffer-based PlatformID)
+const registry = new GuardianRegistry<Buffer>({ totalShares: 5, threshold: 3 });
+keyPair.keyShares.forEach((share, i) => {
+  registry.register({
+    id: Buffer.from([i + 1]),
+    name: `Guardian ${i + 1}`,
+    shareIndex: share.index,
+    verificationKey: share.verificationKey,
+    status: GuardianStatus.Online,
+  });
+});
+
+// 3. Create threshold poll with Buffer support
+const factory = new ThresholdPollFactory(auditLog);
+const poll = factory.createThresholdPoll(
+  ['Alice', 'Bob', 'Charlie'],
+  VotingMethod.Plurality,
+  authority,
+  {
+    thresholdConfig: { totalShares: 5, threshold: 3 },
+    intervalConfig: {
+      triggerType: IntervalTriggerType.TimeBased,
+      timeIntervalMs: 3600000,
+      minimumIntervalMs: 60000,
+      ceremonyTimeoutMs: 300000,
+    },
+    guardianRegistry: registry,
+    keyPair,
+  }
+);
+```
+
+### Cross-Platform Compatibility
+
+Threshold voting data is fully interoperable between Node.js and browser environments:
+
+```typescript
+// Serialize in Node.js with Buffer
+const partialService = new PartialDecryptionService();
+const serialized: Buffer = partialService.serialize(partial);
+
+// Deserialize in browser with Uint8Array (ecies-lib)
+const deserialized = browserPartialService.deserialize(new Uint8Array(serialized));
+```
 
 ## Summary
 

@@ -62,3 +62,6 @@ export { NodeVoteLogger, NodeCheckpointManager } from './persistent-state';
 
 // Export legacy Node.js-specific wrapper (for backward compatibility)
 export { VotingPoll, type ECKeyPairBuffer } from './poll';
+
+// Re-export threshold voting module
+export * from './threshold';

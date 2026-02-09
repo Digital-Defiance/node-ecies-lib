@@ -63,10 +63,12 @@ A comprehensive voting system built on homomorphic encryption with 17 voting met
 
 **When NOT to use:**
 - Simple polls where privacy is not a concern (use a basic database instead)
-- Real-time result displays during voting (results are encrypted until poll closure)
 - Systems where the computational overhead of homomorphic encryption is prohibitive
 
+> **Note**: Real-time result displays during voting are now supported via the [Threshold Voting](src/lib/voting/README.md#threshold-voting-nodejs-extensions) module, which enables configurable interval decryption.
+
 - **All 17 Methods Fully Implemented**: Plurality, Approval, Weighted, Borda Count, Score, Yes/No, Yes/No/Abstain, Supermajority, Ranked Choice (IRV), Two-Round, STAR, STV, Quadratic, Consensus, Consent-Based
+- **Threshold Decryption**: Distributed trust with k-of-n Guardians, real-time interval tallies, and zero-knowledge proofs ([details](src/lib/voting/README.md#threshold-voting-nodejs-extensions))
 - **Node.js Optimized**: Uses Buffer instead of Uint8Array for better Node.js performance
 - **Extended PlatformID**: Supports Buffer and mongoose ObjectId in addition to base types
 - **Core Security Features**:
@@ -546,6 +548,7 @@ All transforms extend Node.js `Transform` class for use with Node.js streams.
 - **`EncryptedVote<TID extends PlatformID>`**: Encrypted vote structure with generic ID support (defaults to Buffer).
 - **`PollResults<TID extends PlatformID>`**: Tally results with winner(s) and generic ID support (defaults to Buffer).
 - **`VoteReceipt`**: Cryptographic vote receipt with signature verification.
+- **Threshold Voting**: `ThresholdKeyGenerator`, `GuardianRegistry`, `CeremonyCoordinator`, `DecryptionCombiner`, `IntervalScheduler`, `PublicTallyFeed`, `TallyVerifier`, `ThresholdPoll`, `ThresholdPollFactory`, `ThresholdAuditLog` — see [Threshold Voting docs](src/lib/voting/README.md#threshold-voting-nodejs-extensions)
 
 ## API Reference
 
@@ -761,6 +764,8 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+
+### v4.18.0 Threshold voting
 
 ### v4.16.x (v4.16.0 - v4.16.20)
 
