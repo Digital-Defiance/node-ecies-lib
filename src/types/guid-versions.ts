@@ -26,10 +26,13 @@ export type GuidV4Buffer = GuidBuffer & { readonly __version: 4 };
 export type GuidV5Buffer = GuidBuffer & { readonly __version: 5 };
 
 /**
- * Union type of all versioned GUIDs
+ * Brand for v6 GUIDs
  */
-export type VersionedGuidBuffer =
-  | GuidV1Buffer
-  | GuidV3Buffer
-  | GuidV4Buffer
-  | GuidV5Buffer;
+export type GuidV6Buffer = GuidBuffer & { readonly __version: 6 };
+
+/**
+ * Brand for v7 GUIDs
+ */
+export type GuidV7Buffer = GuidBuffer & { readonly __version: 7 };
+
+// Note: VersionedGuidBuffer is exported from ../lib/guid.ts to avoid conflicts
