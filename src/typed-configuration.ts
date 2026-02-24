@@ -257,6 +257,10 @@ class EnhancedNodeIdProvider<TID> implements IEnhancedNodeIdProvider<TID> {
     return this.provider.idFromString(str);
   }
 
+  parseSafe(str: string): TID | undefined {
+    return this.provider.parseSafe(str) as TID | undefined;
+  }
+
   get underlyingProvider(): IIdProvider<TID> {
     return this.provider;
   }

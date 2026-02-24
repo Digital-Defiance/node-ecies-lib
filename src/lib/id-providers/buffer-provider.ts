@@ -120,4 +120,13 @@ export class BufferIdProvider extends BaseIdProvider<Buffer> {
   equals(a: Buffer, b: Buffer): boolean {
     return a.equals(b);
   }
+
+  parseSafe(str: string): Buffer<ArrayBufferLike> | undefined {
+    try {
+      const cleaned = str.trim().replace(/^0x/i, '');
+      return this.deserialize(cleaned);
+    } catch {
+      return undefined;
+    }
+  }
 }

@@ -177,6 +177,14 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
   override toBytes(id: GuidV4Buffer): Buffer {
     return id.asRawBuffer;
   }
+
+  parseSafe(str: string): GuidV4Buffer | undefined {
+    try {
+      return GuidBuffer.parse(str.trim()) as GuidV4Buffer;
+    } catch {
+      return undefined;
+    }
+  }
 }
 
 export { GuidV4Provider as GuidProvider };
