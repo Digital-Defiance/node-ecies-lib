@@ -765,13 +765,71 @@ describe('Integration with suite-core-lib', () => {
 
 ## ChangeLog
 
-### v4.19.11 Guid improvements, version sync
+### v4.19.11 - GUID Improvements & Version Sync
 
-### v4.18.0 Threshold voting
+- Added `fromProviderId()` and `fromProviderIdBytes()` utilities for converting any provider's native ID to a `GuidBuffer`
+- Deterministic UUID v5 derivation for non-16-byte providers (ObjectId, Custom, Buffer) using provider-specific namespaces
+- Direct reinterpretation for 16-byte providers (GuidV4, UUID)
+- Comprehensive tests for GUID-from-provider conversions (300+ test cases)
+- Dependency version sync
 
-### v4.16.x (v4.16.0 - v4.16.20)
+### v4.19.7 - ID Provider `parseSafe()` & Test Coverage
 
-**Voting Key Derivation Security Improvements**
+- Added `parseSafe(str)` method to `GuidV4Provider` and `BufferIdProvider` for safe string-to-ID parsing (returns `undefined` on failure)
+- Added `parseSafe()` to `EnhancedNodeIdProvider` wrapper in typed-configuration
+- Comprehensive tests for ID provider operations (630+ tests) and `parseSafe` behavior (612+ tests)
+
+### v4.19.6 - GUID Version Type Expansion
+
+- Added `GuidV6Buffer` and `GuidV7Buffer` branded types for RFC 9562 GUID versions
+- Exported `GuidBuffer` class from `src/lib/index.ts`
+- `VersionedGuidBuffer` union now exported from `guid.ts` to avoid type conflicts
+
+### Versions v4.19.1 - v4.19.5 - Dependency Bumps
+
+- Package dependency updates for ecies-lib and i18n-lib alignment
+
+### v4.18.0 - Threshold Voting
+
+**Major Feature: Distributed Threshold Voting System**
+
+- **Threshold Key Generation**: `ThresholdKeyGenerator` with Buffer-based key share handling (`BufferKeyShare`, `BufferThresholdKeyPair`)
+- **Partial Decryption**: `PartialDecryptionService` with Buffer-based serialization (`BufferPartialDecryption`)
+- **Threshold Polls**: `ThresholdPoll` and `ThresholdPollFactory` specialized for Buffer-based PlatformID
+- **Threshold Audit Log**: `ThresholdAuditLog` with Buffer-based entry handling
+- **Hierarchical Aggregation**: `ThresholdPrecinctAggregator`, `ThresholdCountyAggregator`, `ThresholdStateAggregator`, `ThresholdNationalAggregator` — all with Buffer support
+- **Distributed Trust**: k-of-n Guardian model; no single party can decrypt votes alone
+- **Real-Time Tallies**: Configurable interval decryption during voting with ZK proofs
+- Re-exports shared APIs from ecies-lib (GuardianRegistry, CeremonyCoordinator, IntervalScheduler, DecryptionCombiner, PublicTallyFeed, TallyVerifier)
+
+### Versions v4.17.2 - v4.17.10 - i18n Modernization & Dependency Updates
+
+**v4.17.2 - i18n Setup Refactoring**
+
+- Migrated from `I18nBuilder` pattern to `createI18nSetup` factory for engine initialization
+- Replaced `createEciesComponentConfig` with `createEciesComponentPackage`
+- Added `createNodeEciesComponentPackage()` for bundling ComponentConfig with branded string key enum
+- Simplified i18n engine lifecycle management
+
+**v4.17.4 - i18n Setup Simplification**
+
+- Simplified `node-ecies-i18n-setup.ts` (reduced from 114 to 27 lines of setup code)
+
+**v4.17.5, v4.17.10** - Dependency version bumps
+
+### v4.16.25 - v4.16.30 - GuidBuffer Rewrite & Extensions
+
+**v4.16.27 - GuidBuffer Extends Buffer Directly**
+
+- **Breaking Internal Change**: `GuidBuffer` now extends `Buffer` directly instead of `GuidUint8Array`
+- Full Buffer API compatibility in Node.js environments
+- Cached hex, short-hex, and base64 representations for performance
+- Added `Base64Guid`, `BigIntGuid`, `FullHexGuid`, `ShortHexGuid`, `RawGuidPlatformBuffer` type imports
+- Comprehensive GUID test suite (700+ lines)
+
+**v4.16.25, v4.16.26, v4.16.30** - Dependency bumps
+
+### v4.16.x (v4.16.0 - v4.16.20) - Voting Key Derivation Security
 
 - **HKDF RFC 5869 Compliance**: When salt is not provided or empty, now uses HashLen zeros instead of empty buffer for consistency with Web Crypto API
 - **Private Key Normalization**: `deriveVotingKeysFromECDH` handles 31-byte private keys by padding to 32 bytes (occurs ~0.4% of the time with Node.js createECDH)
@@ -779,6 +837,71 @@ describe('Integration with suite-core-lib', () => {
 - **Simplified Prime Generation**: Cleaner `generateDeterministicPrime` implementation
 - **i18n Builder Pattern**: Uses `I18nBuilder.withStringKeyEnums()` for registering branded enums
 - **String Key Enum Registration**: Added `registerStringKeyEnum()` for direct translation via `translateStringKey()`
+
+### v4.15.1 - v4.15.6 - Showcase & Dependency Maintenance
+
+**v4.15.1 - Dependency & Signature Updates**
+
+- Removed root `yarn.lock` (dependencies managed at monorepo level)
+- Updated `@noble/curves` and `@noble/hashes` imports (removed `.js` extensions for ESM compatibility)
+- Updated `secp256k1.sign()` and `secp256k1.verify()` calls with explicit `prehash: false` option
+- Showcase dependency updates
+
+**v4.15.3 - Showcase Build Improvements**
+
+- Simplified showcase Vite configuration
+- Updated showcase dependencies
+
+**v4.15.5 - i18n Key Modernization**
+
+- Migrated `NodeEciesStringKey` from TypeScript enum to `createI18nStringKeys()` branded enum pattern
+- Showcase Vite config improvements
+
+**v4.15.2, v4.15.4, v4.15.6** - Dependency bumps
+
+### v4.14.0 - i18n String Key Value Types
+
+- Introduced `NodeEciesStringKeyValue` type for branded string key values
+- Updated `TranslatableNodeEciesError` to use `NodeEciesStringKeyValue` instead of raw enum
+- Updated `safeTranslate()` to accept `NodeEciesStringKeyValue`
+- `createNodeEciesComponentDefinition()` now uses `typeof NodeEciesStringKey` for proper branded enum typing
+- Exported `NodeEciesStringKeyValue` type from i18n factory
+- Added new i18n translation strings across 8 languages
+
+### Versions v4.14.1 - v4.14.2 - Dependency Bumps
+
+- Package dependency updates
+
+### v4.13.9 - CRC Service Export
+
+- Exported `CrcService` from services index
+
+### v4.13.8 - GuidBuffer Cleanup
+
+- Removed dead code from `GuidBuffer` class
+
+### v4.13.7 - Import Consistency
+
+- Standardized imports across services (consistent `import type` usage)
+- Minor code style fixes
+
+### v4.13.6 - GuidBuffer Refactoring & Test Expansion
+
+- Major `GuidBuffer` refactoring (1376 → ~400 lines of source, cleaner implementation)
+- Added `GuidBufferExtension` test suite (236 tests)
+- Updated GUID test suite with expanded coverage
+- Updated `PlatformID` interface
+- Switched jest config for improved test isolation
+
+### v4.13.2 - PlatformID Type Fix
+
+- Fixed `PlatformID` type definition
+- Updated cross-platform ID size tests
+
+### v4.13.1 - Service & Test Fixes
+
+- Fixed `ECIESService` import
+- Updated service coverage tests
 
 ### v4.13.0 - API Naming Improvements & Configuration Enhancements
 
@@ -830,7 +953,39 @@ const encrypted = ecies.encryptWithLength(publicKey, data);
 const decrypted = ecies.decryptWithLengthAndHeader(privateKey, encrypted);
 ```
 
-### v4.12.0 - AESGCMService Refactoring & JSON Encryption
+### v4.12.8 - CRC Service
+
+- Added `CrcService` with synchronous and streaming CRC-8, CRC-16 (CCITT), and CRC-32 support
+- 372 comprehensive CRC tests
+- Showcase dependency updates
+
+### v4.12.7 - Stream Transforms
+
+- Added `ChecksumTransform` (SHA3-512 streaming checksum via `js-sha3`)
+- Added `XorTransform` and `XorMultipleTransform` for streaming XOR operations
+- Exported transforms from main package index
+- Comprehensive transform test suites
+
+### v4.12.5 - Typed Configuration Enhancements
+
+- Enhanced `typed-configuration.ts` with additional provider support
+- Added `ensureEnhancedNodeIdProvider()` for safe initialization
+- Expanded typed configuration tests (129+ additional tests)
+- Switched from `mongodb` to `bson` for ObjectId (lighter dependency)
+
+### v4.12.3 - Runtime Configuration Safety
+
+- Added `ensureNodeRuntimeConfiguration()` for explicit initialization
+- Added defensive null check in `getEnhancedNodeIdProvider()` with descriptive error message
+- Added constants exports for typed configuration
+
+### v4.12.2 - Code Quality Fixes
+
+- Fixed `MemberBuilder` import ordering
+- Improved `Member` type annotations
+- Fixed `ChunkProcessor` and `EncryptionStream` type handling
+
+### v4.12.1 - AESGCMService Refactoring & JSON Encryption
 
 **Breaking Changes:**
 - **AESGCMService is now instance-based**: Changed from abstract static class to regular instance-based class
@@ -859,7 +1014,7 @@ import { AESGCMService } from '@digitaldefiance/node-ecies-lib';
 const { encrypted, iv, tag } = await AESGCMService.encrypt(data, key, true);
 const combined = AESGCMService.combineEncryptedDataAndTag(encrypted, tag);
 
-// AFTER (v4.12.0+)
+// AFTER (v4.12.1+)
 import { AESGCMService } from '@digitaldefiance/node-ecies-lib';
 
 const aesGcm = new AESGCMService(); // Create instance
@@ -876,6 +1031,25 @@ const decrypted = await aesGcm.decryptJson<typeof userData>(encrypted, key);
 - Added 17 comprehensive tests for JSON encryption methods
 - Added 3 e2e tests for real-world JSON scenarios
 - All 1,100+ existing tests updated and passing
+
+### v4.11.3 - AES-GCM Interface Extraction & Test Expansion
+
+- Extracted ECIES service interfaces into dedicated files (`multi-encrypted-parsed-header.ts`, `multi-recipient.ts`, `simple-keypair.ts`, `single-encrypted-parsed-header.ts`, `wallet-seed.ts`)
+- Added comprehensive AES-GCM test suites (183 unit tests + 67 e2e tests)
+- Multi-recipient processor export fix
+
+### Versions v4.11.1 - v4.11.2 - Dependency Bumps
+
+- Showcase and package dependency updates
+
+### v4.10.8 - GUID System & Typed Configuration Foundation
+
+- Added `IGuidV4` interface with full GUID operation signatures
+- Added `GuidBuffer` class with comprehensive GUID implementation
+- Added GUID version types (`GuidV1Buffer` through `GuidV5Buffer`, `VersionedGuidBuffer`)
+- Added `typed-configuration.ts` with `IEnhancedNodeIdProvider`, `ITypedNodeIdProvider`, `INodeTypedConfiguration`
+- Added `member-idprovider` tests (120 tests)
+- Comprehensive GUID test suite (2829 tests)
 
 ### v4.10.7 - Strong Typing for ID Providers
 
@@ -956,37 +1130,21 @@ const guidId = guidConfig.generateId(); // Returns GUID object (strongly typed)
 - 100% binary compatible with `@digitaldefiance/ecies-lib` voting system
 - Cross-platform vote encryption/decryption verified
 
-### v4.8.2 - Voting System Foundation
+### v4.8.0 - v4.8.2 - Voting System Foundation
 
-**Features:**
-- Initial voting system architecture
-- Core voting method implementations
+- Initial voting system architecture and core voting method implementations
+- Foundation for cryptographic voting system with voting method definitions
+- Enhanced Member system for voting key management
 - Basic showcase application structure
 
-### v4.8.1 - Voting System Initialization
+### v4.7.15 - SecureBuffer & Pre-Voting Enhancements
 
-**Features:**
-- Foundation for cryptographic voting system
-- Initial voting method definitions
-- Enhanced Member system for voting key management
-
-### v4.8.0 - Voting System Introduction
-
-**Major Features:**
-- **Initial Voting System**: Introduced cryptographic voting system architecture
-- **Voting Method Enumerations**: Defined all 17+ voting methods with security classifications
-- **Enhanced Member System**: Added voting key derivation capabilities
-- **Showcase Application**: Started development of interactive voting demos
-
-### v4.7.15 - Pre-Voting System Enhancements
-
-**Improvements:**
-- Enhanced core ECIES functionality
-- Improved ID provider system
+- Added `SecureBuffer` class (252 lines) for secure memory handling with auto-zeroing
+- Comprehensive SecureBuffer test suite (169 tests)
+- Enhanced core ECIES functionality and ID provider system
 - Bug fixes and stability improvements
-- Updated showcase components
 
-### v4.7.14
+### v4.7.14 - idProvider Configuration Bug Fix
 
 **Bug Fix: idProvider Configuration Now Respected by Member.newMember()**
 
@@ -1020,6 +1178,93 @@ console.log(member.id.length); // 16 (correct - uses configured GuidV4Provider)
 - The `ECIESService.config` getter still returns `IECIESConfig` for backward compatibility
 - `Member.fromJson()` warns but doesn't fail on ID length mismatch (for compatibility with existing serialized data)
 
+### v4.7.10 - v4.7.11 - idProvider Test Expansion & README
+
+- Enhanced `Member` and `ECIESService` idProvider integration with improved test coverage
+- Added property-based tests for member-builder idProvider behavior (205 tests)
+- Added cross-platform idProvider integration tests (628 tests)
+- Added idProvider workflow integration tests (550 tests)
+- Added member-idProvider property-based tests (493 tests)
+- Added member-idProvider unit tests (414 tests)
+- Expanded service-constructor property-based and unit tests
+- README documentation updates
+
+### v4.7.5 - v4.7.6 - ECIESService Constructor Testing
+
+- Added comprehensive ECIESService constructor tests (234 unit + 237 PBT tests)
+- Added cross-platform constructor property-based tests (256 tests)
+- Added documented usage pattern integration tests (191 tests)
+- Updated `ECIESService` constructor for improved configuration handling
+- Test fixes for documented usage patterns
+
+### v4.7.0 - v4.7.2 - Voting System Core Implementation
+
+**v4.7.0 - Voting System Core**
+
+- Added `Poll` class with full vote aggregation and receipt generation (479 lines)
+- Added voting stress tests (373 tests for 1000+ voter scenarios)
+- Added comprehensive voting unit tests (502 tests)
+- Added voting types, security validators, tallier, and audit log infrastructure
+- 23 files changed, 1920 insertions
+
+**v4.7.1 - Export Fix**
+
+- Fixed voting service index export
+
+**v4.7.2 - Poll Implementation**
+
+- Extended Poll with additional voting method implementations
+
+### v4.6.4 - Voting Constants & Error Types
+
+- Added `VotingErrorType` enum with 20+ error codes for voting operations
+- Added `VOTING` constants to main `Constants` object
+- Added voting constants interface (`IVotingConsts`)
+- Enhanced `ProgressTracker` for voting progress
+- Updated voting service with improved error handling
+- Updated tsconfig and test infrastructure
+- 27 files changed, 1575 insertions
+
+### v4.5.17 - v4.5.19 - Voting Service Refinements
+
+**v4.5.18 - Voting Service Improvements**
+
+- Refactored voting service with improved method implementations
+- Updated voting service tests
+- Cross-platform Paillier test fixes
+
+**v4.5.19 - Member Fix**
+
+- Fixed member voting key type annotation
+
+**v4.5.17** - Dependency bumps and lint fixes
+
+### v4.5.0 - Voting Service & Member Voting Keys
+
+**Major Feature: Initial Voting Service**
+
+- Added `VotingService` with Paillier homomorphic encryption (743 lines)
+- Added comprehensive voting service tests (826 tests)
+- Added `Member` voting key properties (`votingPublicKey`, `votingPrivateKey`, `hasVotingPrivateKey`)
+- Added `loadVotingKeys()`, `deriveVotingKeys()`, `unloadVotingPrivateKey()` to Member interface
+- Added Paillier cross-platform e2e tests (609 tests)
+- Added member spec tests (850 tests)
+- Re-exported Paillier types (`PrivateKey`, `PublicKey`, `PaillierKeyPair`) from main package
+
+### Versions v4.4.7 - v4.4.23 - Code Quality & Dependency Maintenance
+
+Large-scale code quality pass across 112 files (3238 insertions, 2477 deletions):
+- Standardized import ordering (alphabetical, `import type` separation)
+- Consistent code formatting (trailing commas, bracket spacing)
+- Updated test infrastructure and test setup files
+- Dependency bumps throughout (ecies-lib, i18n-lib alignment)
+
+### v4.4.6 - Test Configuration & Dependencies
+
+- Updated jest configuration
+- Fixed e2e test file service tests
+- Dependency updates
+
 ### v4.4.2
 
 - Update ecies lib
@@ -1029,23 +1274,35 @@ console.log(member.id.length); // 16 (correct - uses configured GuidV4Provider)
 
 - Update ecies lib
 
-### v4.4.0
+### v4.4.0 - Dependency Loop Fixes & Import Cleanup
 
-- Improving dependency loops/constants/direcular dependency
+- Fixed circular dependency issues in constants and imports
+- Standardized `import type` usage across the codebase
+- Improved `IBackendMemberOperational` generic type signatures
+- Code formatting improvements
 
-### v4.2.5
+### v4.3.0 - Integration Testing & Architecture Validation
 
-**Type Safety Improvements**:
+- Added backward compatibility integration tests (505 tests)
+- Added dependency injection integration tests (305 tests)
+- Added module load integration tests (180 tests)
+- Added business logic independence property-based tests (245 tests)
+- Updated `ECIESService` with improved configuration handling
+- Updated mock backend member
+- 17 files changed, 1486 insertions
+
+### v4.2.7
+
+- Minor bump. Fix tests
+
+### v4.2.5 - Type Safety Improvements
+
 - Added comprehensive ID type guards and converters (`isBuffer`, `isUint8Array`, `toBuffer`, `toUint8Array`, `convertId`)
 - Created `AuthenticatedCipher` and `AuthenticatedDecipher` interfaces for proper crypto type handling
 - Removed unsafe type casts throughout the codebase, replacing with type-safe conversions
 - Enhanced member ID serialization with proper type guards
 - Added 30+ unit tests and property-based tests for type safety validation
 - Improved TypeScript type inference and compile-time safety
-
-### v4.2.7
-
-- Minor bump. Fix tests
 
 ### v4.2.0
 
@@ -1055,7 +1312,7 @@ console.log(member.id.length); // 16 (correct - uses configured GuidV4Provider)
 
 - Upgrade ecies
 
-### v4.1.0
+### v4.1.0 - ID Provider Integration
 
 - **ID Provider Integration**: The `Member` model now fully utilizes the configured `IdProvider` for all ID operations, removing hard dependencies on specific ID formats.
 - **Type Safety**: Enhanced type definitions for `Member` and `MemberBuilder` to support generic ID types (defaults to `Buffer`).
