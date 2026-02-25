@@ -765,6 +765,8 @@ describe('Integration with suite-core-lib', () => {
 
 ## ChangeLog
 
+### v4.19.11 Guid improvements, version sync
+
 ### v4.18.0 Threshold voting
 
 ### v4.16.x (v4.16.0 - v4.16.20)
