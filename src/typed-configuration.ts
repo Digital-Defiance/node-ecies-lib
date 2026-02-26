@@ -264,6 +264,10 @@ class EnhancedNodeIdProvider<TID> implements IEnhancedNodeIdProvider<TID> {
   get underlyingProvider(): IIdProvider<TID> {
     return this.provider;
   }
+
+  toString(id: TID, format: 'hex' | 'base64' | 'int'): string {
+    return this.provider.toString(id, format);
+  }
 }
 
 /**

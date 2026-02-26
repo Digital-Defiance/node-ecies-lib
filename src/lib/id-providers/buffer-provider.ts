@@ -129,4 +129,17 @@ export class BufferIdProvider extends BaseIdProvider<Buffer> {
       return undefined;
     }
   }
+
+  toString(id: Buffer, format: 'hex' | 'base64' | 'int'): string {
+    switch (format) {
+      case 'hex':
+        return id.toString('hex');
+      case 'base64':
+        return id.toString('base64');
+      case 'int':
+        return BigInt(`0x${id.toString('hex')}`).toString();
+      default:
+        throw new IdProviderError(IdProviderErrorType.InvalidFormat);
+    }
+  }
 }

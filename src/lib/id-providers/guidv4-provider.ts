@@ -185,6 +185,19 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
       return undefined;
     }
   }
+
+  toString(id: GuidV4Buffer, format: 'hex' | 'base64' | 'int'): string {
+    switch (format) {
+      case 'hex':
+        return id.asShortHexGuid as string;
+      case 'base64':
+        return id.asBase64Guid;
+      case 'int':
+        return BigInt(`0x${id.asShortHexGuid}`).toString();
+      default:
+        throw new IdProviderError(IdProviderErrorType.InvalidFormat);
+    }
+  }
 }
 
 export { GuidV4Provider as GuidProvider };
