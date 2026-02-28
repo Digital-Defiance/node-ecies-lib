@@ -128,11 +128,14 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
   }
 
   /**
-   * Convert an ID of unknown type to a string representation.
-   * Handles Uint8Array, Guid instances, and falls back to String().
+   * Convert an ID to its canonical string representation.
+   * Returns the 32-character lowercase hex (ShortHexGuid) format, which is
+   * the storage format required by the member index schema and used throughout
+   * the system. idFromString() accepts all formats (short hex, full hex, base64)
+   * so round-trips are preserved.
    */
   override idToString(id: GuidV4Buffer): string {
-    return id.asFullHexGuid;
+    return id.asShortHexGuid as string;
   }
 
   /**
