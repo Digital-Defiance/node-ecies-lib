@@ -1,30 +1,25 @@
 /**
  * Interface definitions for member.
+ * Extends the base IMember from ecies-lib with Node.js-specific
+ * Buffer types and additional methods.
  */
 import type {
-  EmailString,
   IECIESConstants,
-  IIdProvider,
-  MemberType,
-  SecureBuffer,
-  SecureString,
+  IMember as IBaseMember,
 } from '@digitaldefiance/ecies-lib';
-import type { Wallet } from '@ethereumjs/wallet';
-import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import type { SignatureBuffer } from '../node_ecies_types';
 
-import type { IEncryptedChunk } from './encrypted-chunk';
 import type { PlatformID } from './platform-id';
-import type { IStreamProgress } from './stream-progress';
 
 /**
  * Interface representing a member with cryptographic capabilities.
- * This interface extends the shared IMember interface from ecies-lib
- * with Node.js-specific types (Buffer instead of Uint8Array).
+ * Extends the base IMember interface from ecies-lib with Node.js-specific
+ * types (Buffer instead of Uint8Array) and additional methods.
  *
- * Note: When TID includes ObjectId, we don't strictly extend ISharedMember
- * because ObjectId is not compatible with the shared interface's constraints.
+ * Streaming methods (encryptDataStream, decryptDataStream) are inherited
+ * from the base interface. The node-ecies-lib Member class provides
+ * Buffer-typed implementations that satisfy the base Uint8Array contract.
  *
  * @template TID - The ID type (Buffer, string, or ObjectId)
  * @template TSignature - The signature type (SignatureBuffer for Node.js)
@@ -32,81 +27,34 @@ import type { IStreamProgress } from './stream-progress';
 export interface IMember<
   TID extends PlatformID = Buffer,
   TSignature extends Buffer = SignatureBuffer,
-> {
-  // Required properties
-  readonly id: TID;
-  readonly idBytes: Buffer; // Canonical storage format for crypto operations
-  readonly type: MemberType;
-  readonly name: string;
-  readonly email: EmailString;
-  readonly publicKey: Buffer;
-  readonly creatorId: TID;
-  readonly dateCreated: Date;
-  readonly dateUpdated: Date;
+> extends IBaseMember<TID, TSignature> {
+  // --- Node.js-specific additions (not in base IMember) ---
 
-  // ID provider for voting system compatibility
-  readonly idProvider: IIdProvider<TID>;
-
-  // Optional private data properties
-  readonly privateKey: SecureBuffer | undefined;
-  readonly wallet: Wallet;
-
-  // Optional wallet getter for compatibility
-  get walletOptional(): Wallet | undefined;
-
-  // Optional voting keys (for homomorphic encryption voting systems)
-  readonly votingPublicKey?: PublicKey;
-  readonly votingPrivateKey?: PrivateKey;
-
-  // State properties
-  readonly hasPrivateKey: boolean;
-  readonly hasVotingPrivateKey: boolean;
-
-  // Constants
+  /** ECIES constants from the underlying service */
   readonly constants: IECIESConstants;
 
-  // Key management methods
-  unloadPrivateKey(): void;
-  unloadWallet(): void;
-  unloadWalletAndPrivateKey(): void;
-  loadWallet(mnemonic: SecureString, eciesParams?: IECIESConstants): void;
-  loadPrivateKey(privateKey: SecureBuffer): void;
-
-  // Voting key management methods
-  loadVotingKeys(
-    votingPublicKey: PublicKey,
-    votingPrivateKey?: PrivateKey,
-  ): void;
-  deriveVotingKeys(options?: Record<string, unknown>): Promise<void>;
-  unloadVotingPrivateKey(): void;
-
-  // Utility methods
+  /** Returns the hex-encoded public key string */
   getPublicKeyString(): string;
+
+  /** Returns the string representation of the member ID */
   getIdString(): string;
 
-  // Signature methods with Node.js-specific types
+  /** Creator ID as Buffer (not in base IMember interface) */
+  readonly creatorIdBytes: Buffer;
+
+  // --- Narrowed property types (covariant: Buffer extends Uint8Array) ---
+
+  readonly publicKey: Buffer;
+  readonly idBytes: Buffer;
+
+  // --- Narrowed method signatures (Buffer params) ---
+
   sign(data: Buffer): TSignature;
   signData(data: Buffer): TSignature;
   verify(signature: TSignature, data: Buffer): boolean;
   verifySignature(data: Buffer, signature: Buffer, publicKey: Buffer): boolean;
 
-  // Encryption/decryption methods with Node.js-specific types
-  encryptDataStream(
-    source: AsyncIterable<Buffer> | ReadableStream<Buffer>,
-    options?: {
-      recipientPublicKey?: Buffer;
-      onProgress?: (progress: IStreamProgress) => void;
-      signal?: AbortSignal;
-    },
-  ): AsyncGenerator<IEncryptedChunk, void, unknown>;
-
-  decryptDataStream(
-    source: AsyncIterable<Buffer> | ReadableStream<Buffer>,
-    options?: {
-      onProgress?: (progress: IStreamProgress) => void;
-      signal?: AbortSignal;
-    },
-  ): AsyncGenerator<Buffer, void, unknown>;
+  // --- Narrowed encryption/decryption return types ---
 
   encryptData(
     data: string | Buffer,
@@ -114,8 +62,4 @@ export interface IMember<
   ): Promise<Buffer> | Buffer;
 
   decryptData(encryptedData: Buffer): Promise<Buffer> | Buffer;
-
-  // Serialization methods
-  toJson(): string;
-  dispose(): void;
 }

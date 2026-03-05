@@ -29,7 +29,13 @@ export class ChunkProcessor<TID extends PlatformID = Buffer> {
       index: chunkIndex,
       data: dataWithHeader,
       isLast,
-      metadata: includeChecksums ? { totalChunks: chunkIndex + 1 } : undefined,
+      metadata: includeChecksums
+        ? {
+            originalSize: data.length,
+            encryptedSize: encrypted.length,
+            timestamp: Date.now(),
+          }
+        : undefined,
     };
   }
 

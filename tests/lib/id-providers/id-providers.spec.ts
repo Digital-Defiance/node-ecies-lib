@@ -486,14 +486,13 @@ describe('Node.js ID Providers', () => {
         expect(provider.equals(guid, restored)).toBe(true);
       });
 
-      it('should produce full hex GUID string from idToString', () => {
+      it('should produce short hex GUID string from idToString', () => {
         const guid = provider.fromBytes(provider.generate());
         const str = provider.idToString(guid);
 
-        // Full hex GUID format: xxxxxxxx-xxxx-4xxx-Nxxx-xxxxxxxxxxxx
-        expect(str).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-        );
+        // ShortHexGuid format: 32-character lowercase hex without hyphens
+        // Version nibble (position 12) must be 4, variant nibble (position 16) must be 8-b
+        expect(str).toMatch(/^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$/);
       });
 
       it('idFromString should reject non-v4 GUIDs', () => {
