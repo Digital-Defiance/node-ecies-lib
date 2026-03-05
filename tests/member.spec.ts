@@ -4,6 +4,7 @@ import {
   IECIESConfig,
   InvalidEmailError,
   InvalidEmailErrorType,
+  MemberError,
   MemberErrorType,
   MemberType,
   SecureString,
@@ -245,8 +246,8 @@ describe('DigitalDefiance ECIES Member', () => {
       newMember.member.unloadWalletAndPrivateKey();
       expect(newMember.member.hasPrivateKey).toBeFalsy();
       expect(() => newMember.member.wallet).toThrowType(
-        NodeMemberError,
-        (error: NodeMemberError) => {
+        MemberError,
+        (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
         },
       );
@@ -263,8 +264,8 @@ describe('DigitalDefiance ECIES Member', () => {
       // The member should still not have a private key
       expect(newMember.member.hasPrivateKey).toBeFalsy();
       expect(() => newMember.member.wallet).toThrowType(
-        NodeMemberError,
-        (error: NodeMemberError) => {
+        MemberError,
+        (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
         },
       );

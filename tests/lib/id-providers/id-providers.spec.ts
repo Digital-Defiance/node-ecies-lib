@@ -486,13 +486,13 @@ describe('Node.js ID Providers', () => {
         expect(provider.equals(guid, restored)).toBe(true);
       });
 
-      it('should produce full hex GUID string from idToString', () => {
+      it('should produce short hex GUID string from idToString', () => {
         const guid = provider.fromBytes(provider.generate());
         const str = provider.idToString(guid);
 
-        // Full hex GUID format: xxxxxxxx-xxxx-4xxx-Nxxx-xxxxxxxxxxxx
+        // Short hex GUID format: xxxxxxxxxxxx4xxxNxxxxxxxxxxxxxxx
         expect(str).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+          /^[0-9a-f]{8}[0-9a-f]{4}4[0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$/,
         );
       });
 

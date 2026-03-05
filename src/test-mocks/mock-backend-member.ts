@@ -142,6 +142,9 @@ export class MockBackendMember implements IMember<Buffer, SignatureBuffer> {
   get idBytes(): Buffer {
     return this._id;
   }
+  get creatorIdBytes(): Buffer {
+    return this._creatorId;
+  }
 
   get constants(): IECIESConstants {
     return {} as IECIESConstants;

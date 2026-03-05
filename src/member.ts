@@ -10,7 +10,10 @@
 import {
   EmailString,
   IIdProvider,
+  IEncryptedChunk as IBaseEncryptedChunk,
+  IMemberECIESService,
   IMemberStorageData,
+  Member as BaseMember,
   MemberErrorType,
   MemberType,
   SecureBuffer,
@@ -27,9 +30,7 @@ import {
   NodeEciesStringKey,
 } from './i18n/ecies-i18n-factory';
 import { PlatformID } from './interfaces';
-import { IEncryptedChunk } from './interfaces/encrypted-chunk';
 import { IMember } from './interfaces/member';
-import { IStreamProgress } from './interfaces/stream-progress';
 import { SignatureBuffer } from './node_ecies_types';
 import { ECIESService } from './services/ecies/service';
 import { EncryptionStream } from './services/encryption-stream';
@@ -52,24 +53,11 @@ export class NodeMemberError extends Error {
 /**
  * A member of an ECIES interchange
  */
-export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
-  private readonly _eciesService: ECIESService<TID>;
-  private readonly _id: TID;
-  private readonly _idBytes: Buffer;
-  private readonly _type: MemberType;
-  private readonly _name: string;
-  private readonly _email: EmailString;
-  private readonly _publicKey: Buffer;
-  private readonly _creatorId: TID;
-  private readonly _creatorIdBytes: Buffer;
-  private readonly _dateCreated: Date;
-  private readonly _dateUpdated: Date;
-  private _privateKey?: SecureBuffer;
-  private _wallet?: Wallet;
-
-  // Optional voting keys for homomorphic encryption voting systems
-  private _votingPublicKey?: PublicKey;
-  private _votingPrivateKey?: PrivateKey;
+export class Member<TID extends PlatformID = Buffer>
+  extends BaseMember<TID>
+  implements IMember<TID>
+{
+  private readonly _nodeEciesService: ECIESService<TID>;
 
   /**
    * Creates a new Member instance.
@@ -104,103 +92,41 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     dateUpdated?: Date,
     creatorId?: TID,
   ) {
-    // Assign injected services
-    this._eciesService = eciesService;
-    // Assign original parameters
-    this._type = type;
-    // Handle ID initialization properly:
-    // - If id is provided, use it and derive bytes from it
-    // - If not provided, generate bytes first, then derive native ID
-    if (id !== undefined) {
-      this._id = id;
-      this._idBytes = this._eciesService.constants.idProvider.toBytes(
-        this._id,
-      ) as Buffer;
-    } else {
-      const generated = this._eciesService.constants.idProvider.generate();
-      this._idBytes = Buffer.isBuffer(generated)
-        ? (generated as Buffer)
-        : Buffer.from(generated);
-      this._id = this._eciesService.constants.idProvider.fromBytes(
-        toUint8Array(this._idBytes),
-      ) as TID;
-    }
-    this._name = name;
-    if (!this._name || this._name.length == 0) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingMemberName,
-        ),
-        MemberErrorType.MissingMemberName,
-      );
-    }
-    if (this._name.trim() != this._name) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidMemberNameWhitespace,
-        ),
-        MemberErrorType.InvalidMemberNameWhitespace,
-      );
-    }
-    this._email = email;
-    this._publicKey = publicKey;
-    this._privateKey = privateKey;
-    this._wallet = wallet;
-
-    // don't create a new date object with nearly identical values to the existing one
-    let _now: null | Date = null;
-    const now = function () {
-      if (!_now) {
-        _now = new Date();
-      }
-      return _now;
-    };
-    this._dateCreated = dateCreated ?? now();
-    this._dateUpdated = dateUpdated ?? now();
-    this._creatorId = creatorId ?? this._id;
-    this._creatorIdBytes =
-      this._creatorId === this._id
-        ? this._idBytes
-        : (this._eciesService.constants.idProvider.toBytes(
-            this._creatorId,
-          ) as Buffer);
+    // Pass to base constructor — Node ECIESService structurally satisfies
+    // IMemberECIESService<TID> which the base Member accepts.
+    super(
+      eciesService,
+      type,
+      name,
+      email,
+      publicKey, // Buffer is Uint8Array ✓
+      privateKey,
+      wallet,
+      id,
+      dateCreated,
+      dateUpdated,
+      creatorId,
+    );
+    // Store the Node-specific service for sync operations
+    this._nodeEciesService = eciesService;
   }
 
-  // Required getters
-  public get id(): TID {
-    return this._id;
+  // --- Covariant overrides (Buffer return types) ---
+  // These override the base class Uint8Array getters to return Buffer
+
+  public override get idBytes(): Buffer {
+    return Buffer.from(super.idBytes);
   }
-  public get idBytes(): Buffer {
-    return this._idBytes;
+  public override get creatorIdBytes(): Buffer {
+    return Buffer.from(super.creatorIdBytes);
   }
-  public get creatorIdBytes(): Buffer {
-    return this._creatorIdBytes;
-  }
-  public get type(): MemberType {
-    return this._type;
-  }
-  public get name(): string {
-    return this._name;
-  }
-  public get email(): EmailString {
-    return this._email;
-  }
-  public get publicKey(): Buffer {
-    return this._publicKey;
-  }
-  public get creatorId(): TID {
-    return this._creatorId;
-  }
-  public get dateCreated(): Date {
-    return this._dateCreated;
-  }
-  public get dateUpdated(): Date {
-    return this._dateUpdated;
+  public override get publicKey(): Buffer {
+    return Buffer.from(super.publicKey);
   }
 
   // Expose the service's idProvider for voting system compatibility
-  public get idProvider(): IIdProvider<TID> {
-    return this._eciesService.constants.idProvider as IIdProvider<TID>;
+  public override get idProvider(): IIdProvider<TID> {
+    return this._nodeEciesService.constants.idProvider as IIdProvider<TID>;
   }
   public get constants(): import('@digitaldefiance/ecies-lib').IECIESConstants {
     return Constants.ECIES;
@@ -208,82 +134,36 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
 
   // Helper methods for string conversion
   public getPublicKeyString(): string {
-    return this._publicKey.toString('hex');
+    return this.publicKey.toString('hex');
   }
 
   public getIdString(): string {
-    if (typeof this._id === 'string') {
-      return this._id;
-    } else if (Buffer.isBuffer(this._id)) {
-      return this._id.toString('hex');
-    } else if (this._id instanceof Types.ObjectId) {
-      return this._id.toString();
+    const id = this.id;
+    if (typeof id === 'string') {
+      return id;
+    } else if (Buffer.isBuffer(id)) {
+      return id.toString('hex');
+    } else if (id instanceof Types.ObjectId) {
+      return id.toString();
     }
     // Fallback for Uint8Array
-    return Buffer.from(this._id as Uint8Array).toString('hex');
+    return Buffer.from(id as Uint8Array).toString('hex');
   }
 
-  // Optional private data getters
-  public get privateKey(): SecureBuffer | undefined {
-    return this._privateKey;
-  }
-  public get wallet(): Wallet {
-    if (!this._wallet) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(NodeEciesStringKey.Error_Member_NoWallet),
-        MemberErrorType.NoWallet,
-      );
-    }
-    return this._wallet;
-  }
-
-  // Optional wallet getter for compatibility
-  public get walletOptional(): Wallet | undefined {
-    return this._wallet;
-  }
-
-  // State getters
-  public get hasPrivateKey(): boolean {
-    return this._privateKey !== undefined;
-  }
-
-  public get votingPublicKey(): PublicKey | undefined {
-    return this._votingPublicKey;
-  }
-
-  public get votingPrivateKey(): PrivateKey | undefined {
-    return this._votingPrivateKey;
-  }
-
-  public get hasVotingPrivateKey(): boolean {
-    return this._votingPrivateKey !== undefined;
-  }
-
-  public loadVotingKeys(
-    votingPublicKey: PublicKey,
-    votingPrivateKey?: PrivateKey,
-  ): void {
-    this._votingPublicKey = votingPublicKey;
-    if (votingPrivateKey) {
-      this._votingPrivateKey = votingPrivateKey;
-    }
-  }
-
-  public unloadVotingPrivateKey(): void {
-    this._votingPrivateKey = undefined;
-  }
+  // --- Node-specific overrides for methods that use Node ECIESService ---
 
   /**
    * Derive Paillier voting keys from this member's ECDH keys.
    * This bridges ECDSA/ECDH cryptography to homomorphic encryption for voting.
+   * Uses Node.js-specific voting service implementation.
    *
    * @param options - Configuration options for key derivation
    * @throws Error if private key is not loaded or paillier-bigint is not installed
    */
-  public async deriveVotingKeys(
+  public override async deriveVotingKeys(
     options?: import('./services/voting.service').DeriveVotingKeysOptions,
   ): Promise<void> {
-    if (!this._privateKey) {
+    if (!this.privateKey) {
       throw new NodeMemberError(
         getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
@@ -305,72 +185,43 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
 
     // Derive keys using ECDH bridge
     const keyPair = deriveVotingKeysFromECDH(
-      toUint8Array(this._privateKey.value),
-      toUint8Array(this._publicKey),
+      toUint8Array(this.privateKey.value),
+      toUint8Array(this.publicKey),
       options,
     );
 
     // Load the derived keys
-    this._votingPublicKey = keyPair.publicKey;
-    this._votingPrivateKey = keyPair.privateKey;
+    this.loadVotingKeys(keyPair.publicKey, keyPair.privateKey);
   }
 
-  public unloadPrivateKey(): void {
-    // Do not dispose here; tests expect the same SecureBuffer instance to remain usable
-    // when reloaded into another member in the same process.
-    this._privateKey = undefined;
-  }
-
-  public unloadWallet(): void {
-    this._wallet = undefined;
-  }
-
-  public unloadWalletAndPrivateKey(): void {
-    this.unloadWallet();
-    this.unloadPrivateKey();
-  }
-
-  public loadWallet(mnemonic: SecureString): void {
-    if (this._wallet) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_WalletAlreadyLoaded,
-        ),
-        MemberErrorType.WalletAlreadyLoaded,
-      );
+  public override loadWallet(mnemonic: SecureString): void {
+    // Delegate to base class — it handles wallet validation, key derivation,
+    // and storing _wallet/_privateKey (which are private in the base).
+    // The base uses this._eciesService which is the node service cast to base type,
+    // so walletAndSeedFromMnemonic and getPublicKey work correctly.
+    try {
+      super.loadWallet(mnemonic);
+    } catch (err: unknown) {
+      // Re-throw as NodeMemberError with i18n translations for consistency
+      if (err instanceof Error && 'type' in err) {
+        const memberErr = err as { type: MemberErrorType };
+        throw new NodeMemberError(
+          getLazyNodeEciesTranslation(
+            memberErr.type === MemberErrorType.WalletAlreadyLoaded
+              ? NodeEciesStringKey.Error_Member_WalletAlreadyLoaded
+              : memberErr.type === MemberErrorType.InvalidMnemonic
+                ? NodeEciesStringKey.Error_Member_InvalidMnemonic
+                : NodeEciesStringKey.Error_Member_MissingPrivateKey,
+          ),
+          memberErr.type,
+        );
+      }
+      throw err;
     }
-    const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
-    const privateKey = wallet.getPrivateKey();
-    const publicKeyWithPrefix = this._eciesService.getPublicKey(
-      Buffer.from(privateKey),
-    );
-
-    if (
-      publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
-    ) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_InvalidMnemonic,
-        ),
-        MemberErrorType.InvalidMnemonic,
-      );
-    }
-    this._wallet = wallet;
-    this._privateKey = new SecureBuffer(privateKey);
   }
 
-  /**
-   * Loads the private key and optionally the voting private key.
-   *
-   * @param privateKey The private key to load.
-   * @param votingPrivateKey The voting private key to load.
-   */
-  public loadPrivateKey(privateKey: SecureBuffer): void {
-    this._privateKey = privateKey;
-  }
-
-  public sign(data: Buffer): SignatureBuffer {
-    if (!this._privateKey) {
+  public override sign(data: Buffer): SignatureBuffer {
+    if (!this.privateKey) {
       throw new NodeMemberError(
         getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
@@ -378,14 +229,14 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         MemberErrorType.MissingPrivateKey,
       );
     }
-    return this._eciesService.signMessage(
-      Buffer.from(this._privateKey.value),
+    return this._nodeEciesService.signMessage(
+      Buffer.from(this.privateKey.value),
       data,
     );
   }
 
-  public signData(data: Buffer): SignatureBuffer {
-    if (!this._privateKey) {
+  public override signData(data: Buffer): SignatureBuffer {
+    if (!this.privateKey) {
       throw new NodeMemberError(
         getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
@@ -393,32 +244,33 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         MemberErrorType.MissingPrivateKey,
       );
     }
-    return this._eciesService.signMessage(
-      Buffer.from(this._privateKey.value),
+    return this._nodeEciesService.signMessage(
+      Buffer.from(this.privateKey.value),
       data,
     );
   }
 
-  public verify(signature: SignatureBuffer, data: Buffer): boolean {
-    return this._eciesService.verifyMessage(this._publicKey, data, signature);
+  public override verify(signature: SignatureBuffer, data: Buffer): boolean {
+    return this._nodeEciesService.verifyMessage(
+      this.publicKey,
+      data,
+      signature,
+    );
   }
 
-  public verifySignature(
+  public override verifySignature(
     data: Buffer,
     signature: Buffer,
     publicKey: Buffer,
   ): boolean {
-    return this._eciesService.verifyMessage(
+    return this._nodeEciesService.verifyMessage(
       publicKey,
       data,
       signature as SignatureBuffer,
     );
   }
 
-  private static readonly MAX_ENCRYPTION_SIZE = 1024 * 1024 * 10; // 10MB limit
-  private static readonly VALID_STRING_REGEX = /^[\x20-\x7E\n\r\t]*$/; // Printable ASCII + common whitespace
-
-  public encryptData(
+  public override encryptData(
     data: string | Buffer,
     recipientPublicKey?: Buffer,
   ): Buffer {
@@ -449,13 +301,16 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
     // Use recipient public key or self public key
-    const targetPublicKey = recipientPublicKey || this._publicKey;
+    const targetPublicKey = recipientPublicKey || this.publicKey;
 
-    return this._eciesService.encryptWithLength(targetPublicKey, bufferData);
+    return this._nodeEciesService.encryptWithLength(
+      targetPublicKey,
+      bufferData,
+    );
   }
 
-  public decryptData(encryptedData: Buffer): Buffer {
-    if (!this._privateKey) {
+  public override decryptData(encryptedData: Buffer): Buffer {
+    if (!this.privateKey) {
       throw new NodeMemberError(
         getLazyNodeEciesTranslation(
           NodeEciesStringKey.Error_Member_MissingPrivateKey,
@@ -464,87 +319,75 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
       );
     }
     // decryptSingleWithHeader now returns the Buffer directly
-    return this._eciesService.decryptWithLengthAndHeader(
-      Buffer.from(this._privateKey.value),
+    return this._nodeEciesService.decryptWithLengthAndHeader(
+      Buffer.from(this.privateKey.value),
       encryptedData,
     );
   }
 
-  public toJson(): string {
+  public override toJson(): string {
     const storage: IMemberStorageData = {
-      id: this._eciesService.constants.idProvider.serialize(
-        toUint8Array(this._idBytes),
+      id: this._nodeEciesService.constants.idProvider.serialize(
+        toUint8Array(this.idBytes),
       ),
-      type: this._type,
-      name: this._name,
-      email: this._email.toString(),
-      publicKey: this._publicKey.toString('base64'),
-      creatorId: this._eciesService.constants.idProvider.serialize(
-        toUint8Array(this._creatorIdBytes),
+      type: this.type,
+      name: this.name,
+      email: this.email.toString(),
+      publicKey: this.publicKey.toString('base64'),
+      creatorId: this._nodeEciesService.constants.idProvider.serialize(
+        toUint8Array(this.creatorIdBytes),
       ),
-      dateCreated: this._dateCreated.toISOString(),
-      dateUpdated: this._dateUpdated.toISOString(),
+      dateCreated: this.dateCreated.toISOString(),
+      dateUpdated: this.dateUpdated.toISOString(),
     };
     return JSON.stringify(storage);
   }
 
-  public dispose(): void {
-    // Ensure secret material is zeroized when disposing
-    try {
-      this._privateKey?.dispose();
-    } finally {
-      this.unloadWalletAndPrivateKey();
-    }
+  public override dispose(): void {
+    // Delegate to base class which handles zeroizing secret material
+    super.dispose();
   }
 
-  public async *encryptDataStream(
-    source: AsyncIterable<Buffer>,
+  public override async *encryptDataStream(
+    source: AsyncIterable<Buffer> | ReadableStream<Buffer>,
     options?: {
-      recipientPublicKey?: Buffer;
-      onProgress?: (progress: IStreamProgress) => void;
+      recipientPublicKey?: Uint8Array;
+      onProgress?: (progress: {
+        bytesProcessed: number;
+        chunksProcessed: number;
+      }) => void;
       signal?: AbortSignal;
     },
-  ): AsyncGenerator<IEncryptedChunk, void, unknown> {
-    const targetPublicKey = options?.recipientPublicKey || this._publicKey;
+  ): AsyncGenerator<IBaseEncryptedChunk, void, unknown> {
+    const targetPublicKey = options?.recipientPublicKey
+      ? Buffer.from(options.recipientPublicKey)
+      : this.publicKey;
     const stream = new EncryptionStream<TID>(
       Constants,
       Constants.ECIES_CONFIG,
-      this._eciesService,
+      this._nodeEciesService,
     );
 
-    for await (const chunk of stream.encryptStream(source, targetPublicKey, {
-      onProgress: options?.onProgress,
-      signal: options?.signal,
-    })) {
-      yield chunk;
-    }
-  }
+    // Convert ReadableStream to AsyncIterable if needed
+    const asyncSource: AsyncIterable<Buffer> =
+      Symbol.asyncIterator in source
+        ? (source as AsyncIterable<Buffer>)
+        : (async function* () {
+            const reader = (source as ReadableStream<Buffer>).getReader();
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                yield value;
+              }
+            } finally {
+              reader.releaseLock();
+            }
+          })();
 
-  public async *decryptDataStream(
-    source: AsyncIterable<Buffer>,
-    options?: {
-      onProgress?: (progress: IStreamProgress) => void;
-      signal?: AbortSignal;
-    },
-  ): AsyncGenerator<Buffer, void, unknown> {
-    if (!this._privateKey) {
-      throw new NodeMemberError(
-        getLazyNodeEciesTranslation(
-          NodeEciesStringKey.Error_Member_MissingPrivateKey,
-        ),
-        MemberErrorType.MissingPrivateKey,
-      );
-    }
-
-    const stream = new EncryptionStream<TID>(
-      Constants,
-      Constants.ECIES_CONFIG,
-      this._eciesService,
-    );
-
-    for await (const chunk of stream.decryptStream(
-      source,
-      Buffer.from(this._privateKey.value),
+    for await (const chunk of stream.encryptStream(
+      asyncSource,
+      targetPublicKey,
       {
         onProgress: options?.onProgress,
         signal: options?.signal,
@@ -554,24 +397,82 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
   }
 
-  public static fromJson<TID extends PlatformID = Buffer>(
+  public override async *decryptDataStream(
+    source: AsyncIterable<Buffer> | ReadableStream<Buffer>,
+    options?: {
+      onProgress?: (progress: {
+        bytesProcessed: number;
+        chunksProcessed: number;
+      }) => void;
+      signal?: AbortSignal;
+    },
+  ): AsyncGenerator<Buffer, void, unknown> {
+    if (!this.privateKey) {
+      throw new NodeMemberError(
+        getLazyNodeEciesTranslation(
+          NodeEciesStringKey.Error_Member_MissingPrivateKey,
+        ),
+        MemberErrorType.MissingPrivateKey,
+      );
+    }
+
+    const stream = new EncryptionStream<TID>(
+      Constants,
+      Constants.ECIES_CONFIG,
+      this._nodeEciesService,
+    );
+
+    // Convert ReadableStream to AsyncIterable if needed
+    const asyncSource: AsyncIterable<Buffer> =
+      Symbol.asyncIterator in source
+        ? (source as AsyncIterable<Buffer>)
+        : (async function* () {
+            const reader = (source as ReadableStream<Buffer>).getReader();
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                yield value;
+              }
+            } finally {
+              reader.releaseLock();
+            }
+          })();
+
+    for await (const chunk of stream.decryptStream(
+      asyncSource,
+      Buffer.from(this.privateKey.value),
+      {
+        onProgress: options?.onProgress,
+        signal: options?.signal,
+      },
+    )) {
+      yield chunk;
+    }
+  }
+
+  public static override fromJson<TID extends PlatformID = Buffer>(
     json: string,
     // Add injected services as parameters
-    eciesService: ECIESService<TID>,
+    eciesService?: ECIESService<TID> | IMemberECIESService<TID>,
   ): Member<TID> {
+    const nodeService =
+      eciesService instanceof ECIESService
+        ? eciesService
+        : new ECIESService<TID>();
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
 
     // Deserialize IDs using the service's idProvider
     const idBytes = Buffer.from(
-      eciesService.constants.idProvider.deserialize(storage.id),
+      nodeService.constants.idProvider.deserialize(storage.id),
     );
     const creatorIdBytes = Buffer.from(
-      eciesService.constants.idProvider.deserialize(storage.creatorId),
+      nodeService.constants.idProvider.deserialize(storage.creatorId),
     );
 
     // Optional validation: warn if ID length doesn't match configured idProvider
-    const expectedLength = eciesService.constants.idProvider.byteLength;
+    const expectedLength = nodeService.constants.idProvider.byteLength;
     if (idBytes.length !== expectedLength) {
       console.warn(
         `Member ID length (${idBytes.length}) does not match configured idProvider length (${expectedLength}). ` +
@@ -580,17 +481,17 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
 
     // Convert bytes to native types
-    const id = eciesService.constants.idProvider.fromBytes(
+    const id = nodeService.constants.idProvider.fromBytes(
       toUint8Array(idBytes),
     ) as TID;
-    const creatorId = eciesService.constants.idProvider.fromBytes(
+    const creatorId = nodeService.constants.idProvider.fromBytes(
       toUint8Array(creatorIdBytes),
     ) as TID;
 
     // Pass injected services to constructor
     const dateCreated = new Date(storage.dateCreated);
     return new Member<TID>(
-      eciesService,
+      nodeService,
       storage.type,
       storage.name,
       email,
@@ -604,21 +505,31 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     );
   }
 
-  public static fromMnemonic<TID extends PlatformID = Buffer>(
+  public static override fromMnemonic<TID extends PlatformID = Buffer>(
     mnemonic: SecureString,
-    eciesService: ECIESService<TID>,
-    memberType = MemberType.User,
+    eciesService: ECIESService<TID> | IMemberECIESService<TID>,
+    memberTypeOrEciesParams?:
+      | MemberType
+      | import('@digitaldefiance/ecies-lib').IECIESConstants,
     name = 'Test User',
     email = new EmailString('test@example.com'),
   ): Member<TID> {
-    const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
+    const nodeService =
+      eciesService instanceof ECIESService
+        ? eciesService
+        : new ECIESService<TID>();
+    const memberType =
+      typeof memberTypeOrEciesParams === 'number'
+        ? (memberTypeOrEciesParams as MemberType)
+        : MemberType.User;
+    const { wallet } = nodeService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
-    const publicKeyWithPrefix = eciesService.getPublicKey(
+    const publicKeyWithPrefix = nodeService.getPublicKey(
       Buffer.from(privateKey),
     );
 
     return new Member<TID>(
-      eciesService,
+      nodeService,
       memberType,
       name,
       email,
@@ -628,16 +539,22 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     );
   }
 
-  public static newMember<TID extends PlatformID = Buffer>(
+  public static override newMember<TID extends PlatformID = Buffer>(
     // Add injected services as parameters
-    eciesService: ECIESService<TID>,
+    eciesService: ECIESService<TID> | IMemberECIESService<TID>,
     // Original parameters
     type: MemberType,
     name: string,
     email: EmailString,
     forceMnemonic?: SecureString,
-    createdBy?: TID,
+    createdBy?: TID | Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _eciesParams?: import('@digitaldefiance/ecies-lib').IECIESConstants,
   ): { member: Member<TID>; mnemonic: SecureString } {
+    const nodeService =
+      eciesService instanceof ECIESService
+        ? eciesService
+        : new ECIESService<TID>();
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new NodeMemberError(
@@ -673,13 +590,13 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     }
 
     // Use injected services
-    const mnemonic = forceMnemonic ?? eciesService.generateNewMnemonic();
-    const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
+    const mnemonic = forceMnemonic ?? nodeService.generateNewMnemonic();
+    const { wallet } = nodeService.walletAndSeedFromMnemonic(mnemonic);
 
     // Get private key from wallet
     const privateKey = wallet.getPrivateKey();
     // Get compressed public key (33 bytes with 0x02 or 0x03 prefix)
-    const publicKeyWithPrefix = eciesService.getPublicKey(
+    const publicKeyWithPrefix = nodeService.getPublicKey(
       Buffer.from(privateKey),
     );
 
@@ -687,7 +604,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
     return {
       // Create member without specifying ID - constructor handles generation
       member: new Member<TID>(
-        eciesService,
+        nodeService,
         type,
         name,
         email,
@@ -697,7 +614,7 @@ export class Member<TID extends PlatformID = Buffer> implements IMember<TID> {
         undefined,
         dateCreated,
         dateCreated,
-        createdBy,
+        createdBy as TID | undefined,
       ),
       mnemonic,
     };
