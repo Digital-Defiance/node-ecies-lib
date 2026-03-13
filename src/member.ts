@@ -19,9 +19,8 @@ import {
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { Types } from '@digitaldefiance/mongoose-types';
 import { Wallet } from '@ethereumjs/wallet';
-import type { ObjectId } from 'mongodb';
+import { ObjectId } from 'bson';
 import type { PrivateKey, PublicKey } from 'paillier-bigint';
 
 import { getNodeRuntimeConfiguration } from './constants';
@@ -143,7 +142,7 @@ export class Member<TID extends PlatformID = Buffer>
       return id;
     } else if (Buffer.isBuffer(id)) {
       return id.toString('hex');
-    } else if (id instanceof Types.ObjectId) {
+    } else if (id instanceof ObjectId) {
       return id.toString();
     }
     // Fallback for Uint8Array
