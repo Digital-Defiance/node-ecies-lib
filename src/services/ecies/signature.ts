@@ -70,10 +70,14 @@ export class EciesSignature {
     // This bypasses verify()'s internal DER→compact fallback which uses
     // `instanceof DER.Err` — that check breaks when bundlers (e.g. Vite)
     // load multiple copies of @noble/curves/abstract/weierstrass.
-    const sig = secp256k1.Signature.fromCompact(signature);
-    return secp256k1.verify(sig, hash, publicKey, {
-      prehash: false,
-    });
+    try {
+      const sig = secp256k1.Signature.fromCompact(signature);
+      return secp256k1.verify(sig, hash, publicKey, {
+        prehash: false,
+      });
+    } catch {
+      return false;
+    }
   }
 
   /**
