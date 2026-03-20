@@ -111,6 +111,41 @@ describe('VotingService', () => {
         expect(millerRabinTest(0n, 10)).toBe(false);
         expect(millerRabinTest(1n, 10)).toBe(false);
       });
+
+      it('should execute Phase 2 FNV-derived witnesses when k > 12', () => {
+        // Mersenne prime 2^127 - 1 — known prime, should pass all rounds
+        const mersenne127 = (1n << 127n) - 1n;
+        // k=12 uses only Phase 1 (deterministic small-prime witnesses)
+        expect(millerRabinTest(mersenne127, 12)).toBe(true);
+        // k=50 forces Phase 2 (rounds 13-50 use FNV-derived witnesses)
+        expect(millerRabinTest(mersenne127, 50)).toBe(true);
+        // k=256 exercises the full configured round count
+        expect(millerRabinTest(mersenne127, 256)).toBe(true);
+      });
+
+      it('should produce deterministic results for Phase 2 witnesses', () => {
+        // A known prime — run twice with k > 12 to confirm determinism
+        const p = 104729n; // prime
+        const result1 = millerRabinTest(p, 100);
+        const result2 = millerRabinTest(p, 100);
+        expect(result1).toBe(true);
+        expect(result2).toBe(true);
+
+        // A known composite — should consistently fail
+        const c = 104729n * 3n; // composite
+        const cResult1 = millerRabinTest(c, 100);
+        const cResult2 = millerRabinTest(c, 100);
+        expect(cResult1).toBe(false);
+        expect(cResult2).toBe(false);
+      });
+
+      it('should reject composites even with high round counts', () => {
+        // Carmichael numbers are pseudoprimes to many bases
+        // 561 = 3 × 11 × 17 is the smallest Carmichael number
+        expect(millerRabinTest(561n, 256)).toBe(false);
+        // 1105 = 5 × 13 × 17
+        expect(millerRabinTest(1105n, 256)).toBe(false);
+      });
     });
 
     describe('Modular Arithmetic', () => {

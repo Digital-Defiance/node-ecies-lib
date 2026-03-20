@@ -70,7 +70,7 @@ export interface IVotingConsts {
   /**
    * Version number for key serialization format.
    */
-  readonly KEY_VERSION: 1;
+  readonly KEY_VERSION: 2;
 
   /**
    * Magic bytes for identifying BrightChain voting keys.
@@ -91,6 +91,12 @@ export interface IVotingConsts {
    * Length of instance ID in bytes (SHA-256 output).
    */
   readonly INSTANCE_ID_LENGTH: 32;
+
+  /**
+   * Length of SHA-256 checksum appended to serialized keys (bytes).
+   * Provides integrity protection against buffer corruption.
+   */
+  readonly CHECKSUM_LENGTH: 32;
 }
 
 /**
@@ -110,9 +116,10 @@ export const VOTING: IVotingConsts = Object.freeze({
   KEY_RADIX: 16 as const,
   KEY_FORMAT: 'hex' as const,
   DIGEST_FORMAT: 'hex' as const,
-  KEY_VERSION: 1 as const,
+  KEY_VERSION: 2 as const,
   KEY_MAGIC: 'BCVK' as const,
   DRBG_PRIME_ATTEMPTS: 20000 as const,
   KEY_ID_LENGTH: 32 as const,
   INSTANCE_ID_LENGTH: 32 as const,
+  CHECKSUM_LENGTH: 32 as const,
 });

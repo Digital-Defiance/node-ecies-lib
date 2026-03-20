@@ -76,7 +76,13 @@ export interface DeriveVotingKeysOptions {
 /**
  * Miller-Rabin primality test with deterministic witnesses
  *
- * SECURITY: With k=256 rounds, probability of false positive is < 2^-512
+ * Uses 12 small-prime deterministic witnesses, then generates additional
+ * deterministic witnesses derived from the candidate itself (via hashing)
+ * for rounds 13 through k. This ensures the test is fully deterministic
+ * (same candidate always gets the same witnesses) while achieving the
+ * configured number of rounds.
+ *
+ * SECURITY: With k=256 rounds, probability of false positive is < 4^(-256) ≈ 2^(-512)
  *
  * @param n - Number to test for primality
  * @param k - Number of rounds (witnesses to test)
@@ -94,8 +100,21 @@ export function millerRabinTest(n: bigint, k: number): boolean {
     r++;
   }
 
-  // Use first k prime numbers as witnesses
-  const witnesses = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n];
+  // First 12 small-prime deterministic witnesses
+  const deterministicWitnesses = [
+    2n,
+    3n,
+    5n,
+    7n,
+    11n,
+    13n,
+    17n,
+    19n,
+    23n,
+    29n,
+    31n,
+    37n,
+  ];
 
   // Witness loop
   const witnessLoop = (a: bigint): boolean => {
@@ -111,10 +130,30 @@ export function millerRabinTest(n: bigint, k: number): boolean {
     return false;
   };
 
-  // Test with deterministic witnesses
-  for (let i = 0; i < Math.min(k, witnesses.length); i++) {
-    const a = (witnesses[i] % (n - 2n)) + 2n;
+  // Phase 1: Test with deterministic small-prime witnesses
+  const deterministicRounds = Math.min(k, deterministicWitnesses.length);
+  for (let i = 0; i < deterministicRounds; i++) {
+    const a = (deterministicWitnesses[i] % (n - 2n)) + 2n;
     if (!witnessLoop(a)) return false;
+  }
+
+  // Phase 2: Generate additional deterministic witnesses from the candidate
+  // Each witness is derived via HMAC-SHA256(key=candidate, data=round_counter),
+  // a standard PRF that ensures determinism and uniform distribution.
+  if (k > deterministicWitnesses.length) {
+    const nBytes = Buffer.from(n.toString(16), 'utf-8');
+    for (let i = deterministicWitnesses.length; i < k; i++) {
+      // HMAC-SHA256(key=hex(n), data=hex(round)) → 32 bytes
+      const roundBytes = Buffer.from(i.toString(16), 'utf-8');
+      const digest = createHmac('sha256', nBytes).update(roundBytes).digest();
+      // Interpret the 32-byte digest as a big-endian unsigned integer
+      let hash = 0n;
+      for (let j = 0; j < digest.length; j++) {
+        hash = (hash << 8n) | BigInt(digest[j]);
+      }
+      const a = (hash % (n - 3n)) + 2n;
+      if (!witnessLoop(a)) return false;
+    }
   }
 
   return true;
@@ -415,11 +454,41 @@ export function generateDeterministicKeyPair(
   const p = generateDeterministicPrime(drbg, primeBits, primeTestIterations);
   const q = generateDeterministicPrime(drbg, primeBits, primeTestIterations);
 
+  // Safety check: p and q must be distinct for Paillier security.
+  // Probability of collision is ~2^(-1536), but checking is free.
+  if (p === q) {
+    throw new Error(
+      'Generated identical primes p and q — this should be astronomically unlikely. ' +
+        'The DRBG may be broken or the seed has insufficient entropy.',
+    );
+  }
+
+  // Safety check: |p - q| must be large to resist Fermat factoring.
+  // For random 1536-bit primes this is overwhelmingly likely, but we verify.
+  const pqDiff = p > q ? p - q : q - p;
+  const minDistance = 1n << BigInt(Math.floor(primeBits / 2)); // 2^768
+  if (pqDiff < minDistance) {
+    throw new Error(
+      `Primes p and q are too close: |p - q| has ${pqDiff.toString(2).length} bits, ` +
+        `minimum required is ${Math.floor(primeBits / 2)} bits. ` +
+        'This makes the modulus vulnerable to Fermat factoring.',
+    );
+  }
+
   // Calculate n = p * q
   const n = p * q;
 
   // Calculate lambda = lcm(p-1, q-1) using function from this module
   const lambda = lcm(p - 1n, q - 1n);
+
+  // Safety check: gcd(n, lambda) must be 1 for Paillier correctness.
+  // This is a technical requirement of the Paillier cryptosystem.
+  if (gcd(n, lambda) !== 1n) {
+    throw new Error(
+      'gcd(n, λ) ≠ 1 — Paillier key construction requires gcd(n, lcm(p-1, q-1)) = 1. ' +
+        'This indicates a degenerate prime pair.',
+    );
+  }
 
   // For Paillier, g = n + 1 (simplest form)
   const g = n + 1n;
@@ -481,7 +550,7 @@ export function deriveVotingKeysFromECDH(
     rawPublicKeyLength = 64,
     publicKeyLength = 65,
     hmacAlgorithm = 'sha512',
-    hkdfInfo = 'PaillierPrimeGen',
+    hkdfInfo = VOTING.PRIME_GEN_INFO,
     hkdfLength = 64,
     keypairBitLength = 3072,
     primeTestIterations = 256,
@@ -696,17 +765,21 @@ export class VotingService implements IVotingService {
    */
   public votingPublicKeyToBuffer(publicKey: PublicKey): Buffer {
     // Generate keyId from n
+    // IMPORTANT: keyId is SHA-256 of the hex string encoded as UTF-8 bytes,
+    // NOT the hex string parsed as raw hex digits. This matches verifyKeyId()
+    // and IsolatedPublicKey's keyId computation.
     const nHex = publicKey.n
       .toString(VOTING.KEY_RADIX)
       .padStart(VOTING.PUB_KEY_OFFSET, '0');
-    const nBytes = this.hexToBuffer(nHex);
-    const keyId = this.sha256(nBytes);
+    const nBytesForKeyId = Buffer.from(nHex, 'utf8');
+    const keyId = this.sha256(nBytesForKeyId);
 
     // Prepare n buffer
     const nHexBytes = Buffer.from(nHex, 'utf-8');
 
-    // Create buffer: magic(4) + version(1) + keyId(32) + n_length(4) + n
-    const result = Buffer.alloc(4 + 1 + 32 + 4 + nHexBytes.length);
+    // Create buffer: magic(4) + version(1) + keyId(32) + n_length(4) + n + checksum(32)
+    const payloadLength = 4 + 1 + 32 + 4 + nHexBytes.length;
+    const result = Buffer.alloc(payloadLength + VOTING.CHECKSUM_LENGTH);
 
     // Write magic
     const magicBytes = Buffer.from(VOTING.KEY_MAGIC, 'utf-8');
@@ -722,20 +795,24 @@ export class VotingService implements IVotingService {
     result.writeUInt32BE(nHexBytes.length, 37);
     nHexBytes.copy(result, 41);
 
+    // Append SHA-256 checksum of the payload
+    const checksum = this.sha256(result.subarray(0, payloadLength));
+    checksum.copy(result, payloadLength);
+
     return result;
   }
 
   /**
    * Deserialize a Paillier public key from buffer
-   * Format: [magic:4][version:1][keyId:32][n_length:4][n:variable]
+   * Format: [magic:4][version:1][keyId:32][n_length:4][n:variable][checksum:32]
    */
   public async bufferToVotingPublicKey(buffer: Buffer): Promise<PublicKey> {
     // Load PublicKey class
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
     const { PublicKey } = require('paillier-bigint');
 
-    // Minimum buffer length check
-    if (buffer.length < 41) {
+    // Minimum buffer length check (header + at least 1 byte n + checksum)
+    if (buffer.length < 41 + VOTING.CHECKSUM_LENGTH) {
       throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
     }
 
@@ -759,9 +836,20 @@ export class VotingService implements IVotingService {
     const nHex = buffer.subarray(41, 41 + nLength).toString('utf-8');
     const n = BigInt('0x' + nHex);
 
-    // Verify keyId
-    const nBytes = this.hexToBuffer(nHex);
-    const computedKeyId = this.sha256(nBytes);
+    // Verify checksum
+    const payloadLength = 41 + nLength;
+    const storedChecksum = buffer.subarray(
+      payloadLength,
+      payloadLength + VOTING.CHECKSUM_LENGTH,
+    );
+    const computedChecksum = this.sha256(buffer.subarray(0, payloadLength));
+    if (!storedChecksum.equals(computedChecksum)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyChecksum);
+    }
+
+    // Verify keyId — encode hex string as UTF-8 bytes (matching verifyKeyId)
+    const nBytesForKeyId = Buffer.from(nHex, 'utf8');
+    const computedKeyId = this.sha256(nBytesForKeyId);
     if (!keyId.equals(computedKeyId)) {
       throw new VotingError(VotingErrorType.InvalidPublicKeyIdMismatch);
     }
@@ -794,10 +882,9 @@ export class VotingService implements IVotingService {
     const lambdaBytes = Buffer.from(lambdaHex, 'utf-8');
     const muBytes = Buffer.from(muHex, 'utf-8');
 
-    // magic(4) + version(1) + lambda_length(4) + lambda + mu_length(4) + mu
-    const result = Buffer.alloc(
-      4 + 1 + 4 + lambdaBytes.length + 4 + muBytes.length,
-    );
+    // magic(4) + version(1) + lambda_length(4) + lambda + mu_length(4) + mu + checksum(32)
+    const payloadLength = 4 + 1 + 4 + lambdaBytes.length + 4 + muBytes.length;
+    const result = Buffer.alloc(payloadLength + VOTING.CHECKSUM_LENGTH);
 
     // Write magic
     magicBytes.copy(result, 0);
@@ -813,12 +900,16 @@ export class VotingService implements IVotingService {
     result.writeUInt32BE(muBytes.length, 9 + lambdaBytes.length);
     muBytes.copy(result, 13 + lambdaBytes.length);
 
+    // Append SHA-256 checksum of the payload
+    const checksum = this.sha256(result.subarray(0, payloadLength));
+    checksum.copy(result, payloadLength);
+
     return result;
   }
 
   /**
    * Deserialize a Paillier private key from buffer
-   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable][checksum:32]
    */
   public async bufferToVotingPrivateKey(
     buffer: Buffer,
@@ -828,8 +919,8 @@ export class VotingService implements IVotingService {
     // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
     const { PrivateKey } = require('paillier-bigint');
 
-    // Minimum buffer length check
-    if (buffer.length < 13) {
+    // Minimum buffer length check (header + at least 1 byte each + checksum)
+    if (buffer.length < 13 + VOTING.CHECKSUM_LENGTH) {
       throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferTooShort);
     }
 
@@ -857,13 +948,24 @@ export class VotingService implements IVotingService {
       .toString('utf-8');
     const mu = BigInt('0x' + muHex);
 
+    // Verify checksum
+    const payloadLength = 13 + lambdaLength + muLength;
+    const storedChecksum = buffer.subarray(
+      payloadLength,
+      payloadLength + VOTING.CHECKSUM_LENGTH,
+    );
+    const computedChecksum = this.sha256(buffer.subarray(0, payloadLength));
+    if (!storedChecksum.equals(computedChecksum)) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyChecksum);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return new PrivateKey(lambda, mu, publicKey);
   }
 
   /**
    * Serialize an IsolatedPublicKey to Buffer
-   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable]
+   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable][checksum:32]
    */
   public isolatedPublicKeyToBuffer(publicKey: SharedIsolatedPublicKey): Buffer {
     const key = publicKey as unknown as IsolatedPublicKey;
@@ -880,8 +982,9 @@ export class VotingService implements IVotingService {
     const magicBytes = Buffer.from(VOTING.KEY_MAGIC, 'utf-8');
     const nHexBytes = Buffer.from(nHex, 'utf-8');
 
-    // magic(4) + version(1) + keyId(32) + instanceId(32) + n_length(4) + n
-    const result = Buffer.alloc(4 + 1 + 32 + 32 + 4 + nHexBytes.length);
+    // magic(4) + version(1) + keyId(32) + instanceId(32) + n_length(4) + n + checksum(32)
+    const payloadLength = 4 + 1 + 32 + 32 + 4 + nHexBytes.length;
+    const result = Buffer.alloc(payloadLength + VOTING.CHECKSUM_LENGTH);
 
     // Write magic
     magicBytes.copy(result, 0);
@@ -899,18 +1002,22 @@ export class VotingService implements IVotingService {
     result.writeUInt32BE(nHexBytes.length, 69);
     nHexBytes.copy(result, 73);
 
+    // Append SHA-256 checksum of the payload
+    const checksum = this.sha256(result.subarray(0, payloadLength));
+    checksum.copy(result, payloadLength);
+
     return result;
   }
 
   /**
    * Deserialize an IsolatedPublicKey from Buffer
-   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable]
+   * Format: [magic:4][version:1][keyId:32][instanceId:32][n_length:4][n:variable][checksum:32]
    */
   public async bufferToIsolatedPublicKey(
     buffer: Buffer,
   ): Promise<SharedIsolatedPublicKey> {
     // Minimum buffer length check
-    if (buffer.length < 73) {
+    if (buffer.length < 73 + VOTING.CHECKSUM_LENGTH) {
       throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
     }
 
@@ -936,6 +1043,17 @@ export class VotingService implements IVotingService {
     const nLength = buffer.readUInt32BE(69);
     const nHex = buffer.subarray(73, 73 + nLength).toString('utf-8');
     const n = BigInt('0x' + nHex);
+
+    // Verify checksum
+    const payloadLength = 73 + nLength;
+    const storedChecksum = buffer.subarray(
+      payloadLength,
+      payloadLength + VOTING.CHECKSUM_LENGTH,
+    );
+    const computedChecksum = this.sha256(buffer.subarray(0, payloadLength));
+    if (!storedChecksum.equals(computedChecksum)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyChecksum);
+    }
 
     // g = n + 1 for simplified Paillier
     const g = n + 1n;
@@ -965,7 +1083,7 @@ export class VotingService implements IVotingService {
 
   /**
    * Deserialize an IsolatedPrivateKey from Buffer
-   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable]
+   * Format: [magic:4][version:1][lambda_length:4][lambda:variable][mu_length:4][mu:variable][checksum:32]
    */
   public async bufferToIsolatedPrivateKey(
     buffer: Buffer,
@@ -977,7 +1095,7 @@ export class VotingService implements IVotingService {
     }
 
     // Minimum buffer length check
-    if (buffer.length < 13) {
+    if (buffer.length < 13 + VOTING.CHECKSUM_LENGTH) {
       throw new VotingError(VotingErrorType.InvalidPrivateKeyBufferTooShort);
     }
 
@@ -1004,6 +1122,17 @@ export class VotingService implements IVotingService {
       .subarray(13 + lambdaLength, 13 + lambdaLength + muLength)
       .toString('utf-8');
     const mu = BigInt('0x' + muHex);
+
+    // Verify checksum
+    const payloadLength = 13 + lambdaLength + muLength;
+    const storedChecksum = buffer.subarray(
+      payloadLength,
+      payloadLength + VOTING.CHECKSUM_LENGTH,
+    );
+    const computedChecksum = this.sha256(buffer.subarray(0, payloadLength));
+    if (!storedChecksum.equals(computedChecksum)) {
+      throw new VotingError(VotingErrorType.InvalidPrivateKeyChecksum);
+    }
 
     return new IsolatedPrivateKey(
       lambda,

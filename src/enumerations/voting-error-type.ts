@@ -46,4 +46,8 @@ export enum VotingErrorType {
   InstanceIdMismatch = 'InstanceIdMismatch',
   InvalidCiphertextHmac = 'InvalidCiphertextHmac',
   CiphertextNotFromThisInstance = 'CiphertextNotFromThisInstance',
+
+  // Checksum errors
+  InvalidPublicKeyChecksum = 'InvalidPublicKeyChecksum',
+  InvalidPrivateKeyChecksum = 'InvalidPrivateKeyChecksum',
 }

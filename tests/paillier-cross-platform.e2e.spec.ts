@@ -19,6 +19,7 @@ import {
   MemberType,
   SecureString,
   EmailString as BackendEmailString,
+  millerRabinTest as frontendMillerRabinTest,
 } from '@digitaldefiance/ecies-lib';
 import { withConsoleMocks } from '@digitaldefiance/express-suite-test-utils';
 import { createECDH, randomBytes } from 'crypto';
@@ -27,7 +28,10 @@ import type { PrivateKey, PublicKey } from 'paillier-bigint';
 import { getNodeRuntimeConfiguration } from '../src/constants';
 import { Member as BackendMember } from '../src/member';
 import { ECIESService as BackendECIESService } from '../src/services/ecies/service';
-import { VotingService as BackendVotingService } from '../src/services/voting.service';
+import {
+  VotingService as BackendVotingService,
+  millerRabinTest as backendMillerRabinTest,
+} from '../src/services/voting.service';
 
 describe('Paillier Cross-Platform Compatibility', () => {
   // Set timeout for crypto-heavy tests
@@ -714,6 +718,69 @@ describe('Paillier Cross-Platform Compatibility', () => {
 
       expect(tally).toBe(expectedTally);
       expect(tally).toBe(3n); // 3 yes votes, 2 no votes
+    });
+  });
+
+  describe('HMAC-SHA256 Witness Consistency (Phase 2)', () => {
+    // This test verifies that the browser (@noble/hashes/hmac) and Node.js (crypto.createHmac)
+    // implementations of millerRabinTest produce identical results for the same candidates
+    // when k > 12, which triggers Phase 2 HMAC-SHA256-derived witnesses.
+
+    it('should produce identical Miller-Rabin results on both platforms for k > 12', () => {
+      // Test a range of candidates (primes and composites) with k=50 to exercise Phase 2
+      const candidates: bigint[] = [
+        // Small primes
+        104729n,
+        // Mersenne prime 2^127 - 1
+        (1n << 127n) - 1n,
+        // Carmichael numbers (composites that fool many bases)
+        561n,
+        1105n,
+        // A large composite
+        104729n * 104723n,
+        // A medium prime
+        999999999999999989n,
+      ];
+
+      for (const candidate of candidates) {
+        const backendResult = backendMillerRabinTest(candidate, 50);
+        const frontendResult = frontendMillerRabinTest(candidate, 50);
+        expect(backendResult).toBe(frontendResult);
+      }
+    });
+
+    it('should agree on primality for k=256 (full round count)', () => {
+      const candidates: bigint[] = [
+        (1n << 127n) - 1n, // Mersenne prime M127
+        561n, // Carmichael number
+        104729n, // prime
+        104729n * 3n, // composite
+      ];
+
+      for (const candidate of candidates) {
+        const backendResult = backendMillerRabinTest(candidate, 256);
+        const frontendResult = frontendMillerRabinTest(candidate, 256);
+        expect(backendResult).toBe(frontendResult);
+      }
+    });
+
+    it('should agree on DRBG-generated prime candidates across platforms', async () => {
+      // Generate a prime using the backend DRBG, then verify both platforms
+      // agree on its primality with Phase 2 witnesses
+      const seed = Buffer.from('CrossPlatformWitnessTest'.padEnd(64, '0'));
+      const backendKeyPair =
+        await backendVotingService.generateDeterministicKeyPair(
+          seed,
+          2048,
+          128,
+        );
+
+      // The modulus n = p * q; n itself is composite, but both platforms should agree
+      const n = backendKeyPair.publicKey.n;
+      const backendResult = backendMillerRabinTest(n, 50);
+      const frontendResult = frontendMillerRabinTest(n, 50);
+      expect(backendResult).toBe(frontendResult);
+      expect(backendResult).toBe(false); // n = p*q is composite
     });
   });
 
