@@ -71,8 +71,10 @@ export class EciesSignature {
     // `instanceof DER.Err` — that check breaks when bundlers (e.g. Vite)
     // load multiple copies of @noble/curves/abstract/weierstrass.
     try {
+      // Parse then re-serialize to validate the compact signature structure,
+      // then pass raw bytes to verify() which expects Uint8Array in @noble/curves ≥1.9
       const sig = secp256k1.Signature.fromCompact(signature);
-      return secp256k1.verify(sig, hash, publicKey, {
+      return secp256k1.verify(sig.toCompactRawBytes(), hash, publicKey, {
         prehash: false,
       });
     } catch {
