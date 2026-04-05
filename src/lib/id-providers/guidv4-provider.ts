@@ -183,7 +183,24 @@ export class GuidV4Provider extends BaseIdProvider<GuidV4Buffer> {
 
   parseSafe(str: string): GuidV4Buffer | undefined {
     try {
-      return GuidBuffer.parse(str.trim()) as GuidV4Buffer;
+      const trimmed = str.trim();
+
+      // Detect URL-safe base64 (22 chars without padding, or with URL-safe chars)
+      if (
+        trimmed.length === 22 ||
+        (trimmed.length === 24 &&
+          (trimmed.includes('-') || trimmed.includes('_')) &&
+          !trimmed.includes(' '))
+      ) {
+        return GuidBuffer.fromUrlSafeBase64(trimmed) as GuidV4Buffer;
+      }
+
+      // Detect bigint string (all digits, not a plausible hex-only string of known GUID lengths)
+      if (/^\d+$/.test(trimmed) && trimmed.length > 0) {
+        return GuidBuffer.parse(BigInt(trimmed)) as GuidV4Buffer;
+      }
+
+      return GuidBuffer.parse(trimmed) as GuidV4Buffer;
     } catch {
       return undefined;
     }

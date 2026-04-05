@@ -379,6 +379,94 @@ describe('Node.js parseSafe Tests', () => {
       });
     });
 
+    describe('Valid inputs — bigint string', () => {
+      it('should parse a bigint string representation of a v4 GUID', () => {
+        const guid = GuidBuffer.v4();
+        const bigintStr = guid.asBigIntGuid.toString();
+        const result = provider.parseSafe(bigintStr);
+
+        expect(result).toBeDefined();
+        expect(Buffer.from(result!).equals(guid.asRawBuffer)).toBe(true);
+      });
+
+      it('should round-trip 50 random GUIDs via bigint string', () => {
+        for (let i = 0; i < 50; i++) {
+          const guid = GuidBuffer.v4();
+          const bigintStr = guid.asBigIntGuid.toString();
+          const parsed = provider.parseSafe(bigintStr);
+
+          expect(parsed).toBeDefined();
+          expect(Buffer.from(parsed!).equals(guid.asRawBuffer)).toBe(true);
+        }
+      });
+
+      it('should parse bigint string for nil GUID (0)', () => {
+        const result = provider.parseSafe('0');
+        expect(result).toBeDefined();
+        expect(result!.isEmpty()).toBe(true);
+      });
+
+      it('should parse bigint string for max GUID', () => {
+        const maxBigint = BigInt(
+          '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF',
+        ).toString();
+        const result = provider.parseSafe(maxBigint);
+        expect(result).toBeDefined();
+      });
+
+      it('should parse bigint string with leading whitespace', () => {
+        const guid = GuidBuffer.v4();
+        const bigintStr = guid.asBigIntGuid.toString();
+        const result = provider.parseSafe(`  ${bigintStr}  `);
+
+        expect(result).toBeDefined();
+        expect(Buffer.from(result!).equals(guid.asRawBuffer)).toBe(true);
+      });
+    });
+
+    describe('Valid inputs — URL-safe base64', () => {
+      it('should parse a URL-safe base64 representation (22 chars, no padding)', () => {
+        const guid = GuidBuffer.v4();
+        const urlSafe = guid.asUrlSafeBase64;
+        const result = provider.parseSafe(urlSafe);
+
+        expect(result).toBeDefined();
+        expect(Buffer.from(result!).equals(guid.asRawBuffer)).toBe(true);
+      });
+
+      it('should round-trip 50 random GUIDs via URL-safe base64', () => {
+        for (let i = 0; i < 50; i++) {
+          const guid = GuidBuffer.v4();
+          const urlSafe = guid.asUrlSafeBase64;
+          const parsed = provider.parseSafe(urlSafe);
+
+          expect(parsed).toBeDefined();
+          expect(Buffer.from(parsed!).equals(guid.asRawBuffer)).toBe(true);
+        }
+      });
+
+      it('should parse URL-safe base64 with leading/trailing whitespace', () => {
+        const guid = GuidBuffer.v4();
+        const urlSafe = guid.asUrlSafeBase64;
+        const result = provider.parseSafe(`  ${urlSafe}  `);
+
+        expect(result).toBeDefined();
+        expect(Buffer.from(result!).equals(guid.asRawBuffer)).toBe(true);
+      });
+
+      it('should produce same bytes as standard base64 for the same GUID', () => {
+        const guid = GuidBuffer.v4();
+        const fromBase64 = provider.parseSafe(guid.asBase64Guid);
+        const fromUrlSafe = provider.parseSafe(guid.asUrlSafeBase64);
+
+        expect(fromBase64).toBeDefined();
+        expect(fromUrlSafe).toBeDefined();
+        expect(Buffer.from(fromBase64!).equals(Buffer.from(fromUrlSafe!))).toBe(
+          true,
+        );
+      });
+    });
+
     describe('Invalid inputs — should return undefined, never throw', () => {
       const invalidInputs: [string, unknown][] = [
         ['empty string', ''],
@@ -398,6 +486,11 @@ describe('Node.js parseSafe Tests', () => {
         ['array coerced', [] as any],
         ['NaN coerced', NaN as any],
         ['hex with 0x prefix (not a GUID format)', '0x' + 'a'.repeat(32)],
+        ['negative bigint string', '-1'],
+        [
+          'bigint string exceeding 128-bit max',
+          (BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF') + 1n).toString(),
+        ],
       ];
 
       for (const [label, input] of invalidInputs) {
