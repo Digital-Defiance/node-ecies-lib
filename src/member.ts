@@ -52,9 +52,12 @@ export class NodeMemberError extends Error {
 /**
  * A member of an ECIES interchange
  */
-export class Member<TID extends PlatformID = Buffer>
-  extends BaseMember<TID>
-  implements IMember<TID>
+export class Member<
+  TID extends PlatformID = Buffer,
+  TDate extends Date | number = Date,
+>
+  extends BaseMember<TID, TDate>
+  implements IMember<TID, SignatureBuffer, TDate>
 {
   private readonly _nodeEciesService: ECIESService<TID>;
 
@@ -87,9 +90,12 @@ export class Member<TID extends PlatformID = Buffer>
     privateKey?: SecureBuffer,
     wallet?: Wallet,
     id?: TID,
-    dateCreated?: Date,
-    dateUpdated?: Date,
+    dateCreated?: TDate,
+    dateUpdated?: TDate,
     creatorId?: TID,
+    dateFactory?: () => TDate,
+    dateSerializer?: (date: TDate) => string,
+    dateDeserializer?: (iso: string) => TDate,
   ) {
     // Pass to base constructor — Node ECIESService structurally satisfies
     // IMemberECIESService<TID> which the base Member accepts.
@@ -105,6 +111,9 @@ export class Member<TID extends PlatformID = Buffer>
       dateCreated,
       dateUpdated,
       creatorId,
+      dateFactory,
+      dateSerializer,
+      dateDeserializer,
     );
     // Store the Node-specific service for sync operations
     this._nodeEciesService = eciesService;
@@ -336,8 +345,8 @@ export class Member<TID extends PlatformID = Buffer>
       creatorId: this._nodeEciesService.constants.idProvider.serialize(
         toUint8Array(this.creatorIdBytes),
       ),
-      dateCreated: this.dateCreated.toISOString(),
-      dateUpdated: this.dateUpdated.toISOString(),
+      dateCreated: this._dateSerializer(this.dateCreated),
+      dateUpdated: this._dateSerializer(this.dateUpdated),
     };
     return JSON.stringify(storage);
   }
@@ -450,11 +459,17 @@ export class Member<TID extends PlatformID = Buffer>
     }
   }
 
-  public static override fromJson<TID extends PlatformID = Buffer>(
+  public static override fromJson<
+    TID extends PlatformID = Buffer,
+    TDate extends Date | number = Date,
+  >(
     json: string,
     // Add injected services as parameters
     eciesService?: ECIESService<TID> | IMemberECIESService<TID>,
-  ): Member<TID> {
+    dateDeserializer?: (iso: string) => TDate,
+    dateSerializer?: (date: TDate) => string,
+    dateFactory?: () => TDate,
+  ): Member<TID, TDate> {
     const nodeService =
       eciesService instanceof ECIESService
         ? eciesService
@@ -487,9 +502,13 @@ export class Member<TID extends PlatformID = Buffer>
       toUint8Array(creatorIdBytes),
     ) as TID;
 
-    // Pass injected services to constructor
-    const dateCreated = new Date(storage.dateCreated);
-    return new Member<TID>(
+    // Deserialize dates — use provided deserializer or fall back to standard Date
+    const deserialize: (iso: string) => TDate =
+      dateDeserializer ?? ((iso: string) => new Date(iso) as unknown as TDate);
+    const dateCreated = deserialize(storage.dateCreated);
+    const dateUpdated = deserialize(storage.dateUpdated);
+
+    return new Member<TID, TDate>(
       nodeService,
       storage.type,
       storage.name,
@@ -499,8 +518,11 @@ export class Member<TID extends PlatformID = Buffer>
       undefined,
       id,
       dateCreated,
-      new Date(storage.dateUpdated),
+      dateUpdated,
       creatorId,
+      dateFactory,
+      dateSerializer,
+      dateDeserializer,
     );
   }
 
@@ -538,7 +560,10 @@ export class Member<TID extends PlatformID = Buffer>
     );
   }
 
-  public static override newMember<TID extends PlatformID = Buffer>(
+  public static override newMember<
+    TID extends PlatformID = Buffer,
+    TDate extends Date | number = Date,
+  >(
     // Add injected services as parameters
     eciesService: ECIESService<TID> | IMemberECIESService<TID>,
     // Original parameters
@@ -549,7 +574,10 @@ export class Member<TID extends PlatformID = Buffer>
     createdBy?: TID | Uint8Array,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _eciesParams?: import('@digitaldefiance/ecies-lib').IECIESConstants,
-  ): { member: Member<TID>; mnemonic: SecureString } {
+    dateFactory?: () => TDate,
+    dateSerializer?: (date: TDate) => string,
+    dateDeserializer?: (iso: string) => TDate,
+  ): { member: Member<TID, TDate>; mnemonic: SecureString } {
     const nodeService =
       eciesService instanceof ECIESService
         ? eciesService
@@ -599,10 +627,14 @@ export class Member<TID extends PlatformID = Buffer>
       Buffer.from(privateKey),
     );
 
-    const dateCreated = new Date();
+    // Use dateFactory for the creation date, or fall back to new Date()
+    const now: () => TDate =
+      dateFactory ?? (() => new Date() as unknown as TDate);
+    const dateCreated = now();
+
     return {
       // Create member without specifying ID - constructor handles generation
-      member: new Member<TID>(
+      member: new Member<TID, TDate>(
         nodeService,
         type,
         name,
@@ -614,6 +646,9 @@ export class Member<TID extends PlatformID = Buffer>
         dateCreated,
         dateCreated,
         createdBy as TID | undefined,
+        dateFactory,
+        dateSerializer,
+        dateDeserializer,
       ),
       mnemonic,
     };

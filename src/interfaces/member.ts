@@ -27,7 +27,8 @@ import type { PlatformID } from './platform-id';
 export interface IMember<
   TID extends PlatformID = Buffer,
   TSignature extends Buffer = SignatureBuffer,
-> extends IBaseMember<TID, TSignature> {
+  TDate extends Date | number = Date,
+> extends IBaseMember<TID, TSignature, TDate> {
   // --- Node.js-specific additions (not in base IMember) ---
 
   /** ECIES constants from the underlying service */

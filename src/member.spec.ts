@@ -204,6 +204,12 @@ describe('Member', () => {
       expect(member.hasPrivateKey).toBe(true);
       expect(member.privateKey).toEqual(originalPrivateKey);
     });
+
+    it('should expose walletOptional getter', () => {
+      expect(member.walletOptional).toBeDefined();
+      member.unloadWallet();
+      expect(member.walletOptional).toBeUndefined();
+    });
   });
 
   describe('Cryptographic Operations - Sign/Verify', () => {
@@ -596,11 +602,39 @@ describe('Member', () => {
       ).rejects.toThrow('Key size must be even');
     });
 
+    it('should handle voting key serialization', async () => {
+      await member.deriveVotingKeys({
+        keypairBitLength: 2048,
+        primeTestIterations: 64,
+      });
+
+      const publicKeySerialized = votingService.serializePublicKey(
+        member.votingPublicKey!,
+      );
+      const privateKeySerialized = votingService.serializePrivateKey(
+        member.votingPrivateKey!,
+      );
+
+      expect(publicKeySerialized).toBeDefined();
+      expect(privateKeySerialized).toBeDefined();
+
+      const publicKeyDeserialized =
+        await votingService.deserializePublicKey(publicKeySerialized);
+      const privateKeyDeserialized = await votingService.deserializePrivateKey(
+        privateKeySerialized,
+        publicKeyDeserialized,
+      );
+
+      expect(publicKeyDeserialized.n).toBe(member.votingPublicKey!.n);
+      expect(privateKeyDeserialized.lambda).toBe(
+        member.votingPrivateKey!.lambda,
+      );
+    });
+
     it('should handle prime generation edge cases', () => {
-      const seed = Buffer.alloc(64, 0x00); // Use all zeros to make prime generation harder
+      const seed = Buffer.alloc(64, 0x00);
       const drbg = votingService.createDRBG(seed);
 
-      // Test with very small attempts limit and difficult seed
       expect(() => {
         votingService.generateDeterministicPrime(drbg, 1024, 64, 1);
       }).toThrow('Failed to generate prime after 1 attempts');
@@ -693,6 +727,27 @@ describe('Member', () => {
 
       expect(parsed.privateKey).toBeUndefined();
       expect(parsed.wallet).toBeUndefined();
+    });
+
+    it('should round-trip through fromJson correctly', () => {
+      const json = member.toJson();
+      const restored = Member.fromJson(json);
+
+      expect(restored.id).toBeDefined();
+      expect(restored.type).toBe(member.type);
+      expect(restored.name).toBe(member.name);
+      expect(restored.email.toString()).toBe(member.email.toString());
+      expect(restored.publicKey.toString('hex')).toBe(
+        member.publicKey.toString('hex'),
+      );
+      expect(restored.dateCreated.toISOString()).toBe(
+        member.dateCreated.toISOString(),
+      );
+      expect(restored.dateUpdated.toISOString()).toBe(
+        member.dateUpdated.toISOString(),
+      );
+      // Restored member has no private key (public-only)
+      expect(restored.hasPrivateKey).toBe(false);
     });
   });
 
