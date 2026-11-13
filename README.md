@@ -764,6 +764,8 @@ describe('Integration with suite-core-lib', () => {
 ```
 
 ## ChangeLog
+### v5.2.3 - Dependency Sync
+- Depends on `@digitaldefiance/i18n-lib` 4.8.0 and `@digitaldefiance/ecies-lib` 5.2.3; no code changes
 
 ### v4.19.11 - GUID Improvements & Version Sync
 
