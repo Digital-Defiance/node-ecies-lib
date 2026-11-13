@@ -7,7 +7,7 @@
  *
  * Validates: Requirements 7.1, 7.2
  */
-import fc from 'fast-check';
+import * as fc from 'fast-check';
 import { generateRandomKeysSync as generateKeyPair } from 'paillier-bigint';
 
 // Node.js imports

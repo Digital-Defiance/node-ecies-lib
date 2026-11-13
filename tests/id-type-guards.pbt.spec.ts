@@ -4,7 +4,7 @@
  * Validates: Requirements 1.1
  */
 
-import fc from 'fast-check';
+import * as fc from 'fast-check';
 
 import {
   convertId,

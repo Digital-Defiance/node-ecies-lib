@@ -3,7 +3,7 @@
  * Feature: fix-ecies-circular-dependency
  */
 
-import fc from 'fast-check';
+import * as fc from 'fast-check';
 import madge from 'madge';
 import * as path from 'path';
 
